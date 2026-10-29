@@ -157,6 +157,7 @@ Each module has `router.py`, `schemas.py` (Pydantic), `service.py` (business log
 - Three DB roles, three URLs: `DATABASE_URL` (`eduzone_app`, asyncpg), `ADMIN_DATABASE_URL`
   (`eduzone_admin`, asyncpg), `MIGRATION_DATABASE_URL` (`eduzone_owner`, psycopg, Alembic only).
   `docker/postgres/init-roles.sh` creates the two runtime roles with passwords on first start.
+- The database must use **UTF-8** encoding (Sinhala and Tamil text). The Docker image does by default.
 - Migrations are hand-written SQL (no autogenerate: RLS, triggers and `SECURITY DEFINER`
   functions can't be expressed by it). `0001` runs `backend/migrations/sql/0001_baseline.sql`,
   a **frozen** copy of `db/eduzone_v1_schema.sql`; never edit it, add a new migration instead.
@@ -399,6 +400,31 @@ the tenant host):
 - Pagination: cursor-based for long lists (`limit`, `cursor`).
 - Errors: `{ "error": { "code": "ACCESS_DENIED", "message": "..." } }`.
 - Every state-changing org/platform action writes an `audit_logs` row.
+
+### How the code follows these (from step 4)
+- **Staff routes** take `actor: StaffActor` (owner/admin/teacher, else 403) plus `session: TenantSession`.
+  `actor.manages_all` is true for owners and admins; a teacher manages only classes they teach.
+  Anything the caller may not manage is a **404**, never a 403, so its existence doesn't leak.
+- **Audit:** services call `app.core.audit.write_audit` in the same transaction as the change.
+- **Pagination:** `app.core.pagination` (opaque cursor over `created_at DESC, id DESC`, limit 1–100,
+  response `{items, next_cursor}`).
+- **Partial updates (PATCH):** only fields sent are applied; fields in `non_nullable` may be
+  omitted but not set to null; unknown fields are 422.
+- **ORM models** (`app/modules/*/models.py`) map existing tables only; migrations stay hand-written SQL.
+- **Deletes** that hit a foreign key return 409 `IN_USE` (run inside a savepoint).
+
+### Catalogue rules (`/api/v1/org`, step 4)
+- Classes: `GET/POST /classes`, `GET/PATCH/DELETE /classes/{id}`. Slug is generated from the
+  title when omitted (409 `SLUG_TAKEN` on clash). Status flow: draft → published/archived,
+  published → archived, archived → published; never back to draft. `pricing_model` can change
+  only on a draft class with no months or lessons. Only draft classes can be deleted.
+  Only owners/admins assign or reassign the teacher, who must be active staff of the tenant.
+- Months (monthly classes only): `GET/POST /classes/{id}/months`, `PATCH/DELETE /months/{id}`.
+  `month_start` is the 1st of a month; `fee_cents` NULL means the class fee (`effective_fee_cents`
+  in responses). A month with lessons can't be deleted.
+- Lessons: `GET/POST /classes/{id}/lessons` (`?month_id=`), `PATCH/DELETE /lessons/{id}`.
+  Monthly-class lessons need a month of that class; others must have none. Live lessons need
+  `scheduled_at` (with time zone); only live lessons may have a Zoom link (https only).
 
 ---
 

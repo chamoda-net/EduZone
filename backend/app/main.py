@@ -8,6 +8,7 @@ from sqlalchemy import text
 from app.core.db import AppSession, dispose_engines
 from app.core.errors import install_error_handlers
 from app.modules.auth.router import router as auth_router
+from app.modules.catalog.router import org_router as catalog_org_router
 from app.modules.tenants.router import public_router as tenants_public_router
 
 
@@ -34,6 +35,7 @@ async def health() -> HealthResponse:
 
 api.include_router(tenants_public_router)
 api.include_router(auth_router)
+api.include_router(catalog_org_router)
 
 
 app = FastAPI(title="EduZone API", version="0.1.0", lifespan=lifespan)

@@ -7,7 +7,7 @@ with dev data.
 """
 
 import secrets
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
@@ -87,16 +87,19 @@ class Seed:
     suspended: SeededTenant  # status = 'suspended'
 
 
+_NON_CASCADING = ("audit_logs", "access_grants")
+
+
 @pytest.fixture
-async def seed() -> AsyncIterator[Seed]:
+async def seed(phones: Callable[[], str]) -> AsyncIterator[Seed]:
+    # Depends on `phones` so its user cleanup runs after the tenants are gone.
     run = uuid4().hex[:8]
     base = get_settings().base_domain
     tenants: dict[str, SeededTenant] = {}
-    user_ids: list[UUID] = []
 
     async with AdminSession() as s, s.begin():
         for key, status in (("a", "active"), ("b", "active"), ("suspended", "suspended")):
-            slug, name, phone = f"t-{run}-{key[0]}", f"Tenant {key.upper()} {run}", random_phone()
+            slug, name, phone = f"t-{run}-{key[0]}", f"Tenant {key.upper()} {run}", phones()
             tenant_id = (await s.execute(
                 text("INSERT INTO tenants (name, slug, status) VALUES (:n, :s, :st) RETURNING id"),
                 {"n": name, "s": slug, "st": status},
@@ -115,15 +118,37 @@ async def seed() -> AsyncIterator[Seed]:
                      "VALUES (:t, :m, :title, 'physics', 'free') RETURNING id"),
                 {"t": tenant_id, "m": member_id, "title": f"Physics {key}"},
             )).scalar_one()
-            user_ids.append(user_id)
             tenants[key] = SeededTenant(tenant_id, slug, name, f"{slug}.{base}", member_id, phone, class_id)
 
     try:
         yield Seed(**tenants)
     finally:
+        ids = [t.id for t in tenants.values()]
         async with AdminSession() as s, s.begin():
-            await s.execute(text("DELETE FROM tenants WHERE id = ANY(:ids)"),
-                            {"ids": [t.id for t in tenants.values()]})
-            await s.execute(text("DELETE FROM otp_codes WHERE destination = ANY(:p)"),
-                            {"p": [t.teacher_phone for t in tenants.values()]})
-            await s.execute(text("DELETE FROM users WHERE id = ANY(:ids)"), {"ids": user_ids})
+            # Tables whose rows don't cascade from a tenant delete, children first.
+            for table in _NON_CASCADING:
+                await s.execute(text(f"DELETE FROM {table} WHERE tenant_id = ANY(:ids)"), {"ids": ids})
+            await s.execute(text("DELETE FROM tenants WHERE id = ANY(:ids)"), {"ids": ids})
+
+
+AddMember = Callable[..., Awaitable[str]]
+
+
+@pytest.fixture
+async def members(phones: Callable[[], str]) -> AddMember:
+    """Factory: add a member with a role to a seeded tenant; returns their phone."""
+
+    async def add(tenant: SeededTenant, role: str, status: str = "active") -> str:
+        phone = phones()
+        async with AdminSession() as s, s.begin():
+            user_id = (await s.execute(
+                text("INSERT INTO users (phone, full_name) VALUES (:p, :n) RETURNING id"),
+                {"p": phone, "n": f"{role.title()} {phone[-4:]}"},
+            )).scalar_one()
+            await s.execute(
+                text("INSERT INTO tenant_members (tenant_id, user_id, role, status) VALUES (:t, :u, :r, :st)"),
+                {"t": tenant.id, "u": user_id, "r": role, "st": status},
+            )
+        return phone
+
+    return add

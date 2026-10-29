@@ -48,3 +48,28 @@ def client_ip(request: Request) -> str | None:
 
 def user_agent(request: Request) -> str | None:
     return request.headers.get("user-agent", "")[:512] or None
+
+
+STAFF_ROLES = frozenset({"owner", "admin", "teacher"})
+
+
+@dataclass(frozen=True, slots=True)
+class Actor:
+    """A signed-in staff member making a change (for permission checks and audit rows)."""
+
+    auth: AuthContext
+    ip: str | None
+
+    @property
+    def manages_all(self) -> bool:
+        # Owners and admins manage every class; teachers only the classes they teach.
+        return self.auth.role in ("owner", "admin")
+
+
+async def staff_actor(request: Request, auth: CurrentMember) -> Actor:
+    if auth.role not in STAFF_ROLES:
+        raise ApiError("ACCESS_DENIED", "Only organization staff can do this.", status_code=403)
+    return Actor(auth, client_ip(request))
+
+
+StaffActor = Annotated[Actor, Depends(staff_actor, scope="function")]
