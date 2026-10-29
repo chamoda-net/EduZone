@@ -1,0 +1,33 @@
+# Local development services. The backend runs on the host (see CLAUDE.md).
+services:
+  postgres:
+    image: postgres:16.10
+    environment:
+      POSTGRES_DB: eduzone
+      POSTGRES_USER: eduzone_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      EDUZONE_APP_PASSWORD: ${EDUZONE_APP_PASSWORD:?set EDUZONE_APP_PASSWORD in .env}
+      EDUZONE_ADMIN_PASSWORD: ${EDUZONE_ADMIN_PASSWORD:?set EDUZONE_ADMIN_PASSWORD in .env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduzone_owner -d eduzone"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
