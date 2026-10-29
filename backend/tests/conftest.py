@@ -16,6 +16,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
+import psycopg
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -94,9 +95,28 @@ class Seed:
     suspended: SeededTenant  # status = 'suspended'
 
 
-_NON_CASCADING = (
-    "audit_logs", "lesson_progress", "access_grants", "late_month_requests", "class_enrollments", "lesson_resources",
-)
+_TENANT_TABLES: list[str] = []
+
+
+def purge_tenants(ids: list[UUID]) -> None:
+    """Remove test tenants and everything under them.
+
+    The ledger is append-only (triggers block DELETE even for the admin role), so this runs
+    as the schema owner with triggers paused. Test databases only.
+    """
+    url = get_settings().migration_database_url.replace("postgresql+psycopg", "postgresql")
+    with psycopg.connect(url) as conn:
+        conn.execute("SET session_replication_role = replica")   # skip triggers and FK checks
+        if not _TENANT_TABLES:
+            _TENANT_TABLES.extend(r[0] for r in conn.execute("""
+                SELECT c.relname FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'tenant_id' AND NOT a.attisdropped
+                WHERE n.nspname = 'public' AND c.relkind = 'r'
+            """))
+        for table in _TENANT_TABLES:
+            conn.execute(f"DELETE FROM {table} WHERE tenant_id = ANY(%s)", (ids,))  # type: ignore[arg-type]
+        conn.execute("DELETE FROM tenants WHERE id = ANY(%s)", (ids,))
 
 
 @pytest.fixture
@@ -132,12 +152,7 @@ async def seed(phones: Callable[[], str]) -> AsyncIterator[Seed]:
     try:
         yield Seed(**tenants)
     finally:
-        ids = [t.id for t in tenants.values()]
-        async with AdminSession() as s, s.begin():
-            # Tables whose rows don't cascade from a tenant delete, children first.
-            for table in _NON_CASCADING:
-                await s.execute(text(f"DELETE FROM {table} WHERE tenant_id = ANY(:ids)"), {"ids": ids})
-            await s.execute(text("DELETE FROM tenants WHERE id = ANY(:ids)"), {"ids": ids})
+        purge_tenants([t.id for t in tenants.values()])
 
 
 AddMember = Callable[..., Awaitable[str]]

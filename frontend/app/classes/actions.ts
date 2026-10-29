@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { api } from "@/lib/api";
 import { errorText, t } from "@/lib/i18n";
-import type { OpenResource } from "@/lib/types";
+import type { CheckoutResult, GatewayRedirect, OpenResource, Order, OrderStatus } from "@/lib/types";
 
 import type { FormState } from "../org/classes/actions";
 
@@ -39,4 +39,23 @@ export async function openResource(resourceId: string): Promise<OpenResult> {
   const res = await api<OpenResource>(`/student/resources/${resourceId}/open`, { method: "POST" });
   if (!res.ok) return { ok: false, error: errorText(t, res.error) };
   return { ok: true, data: res.data };
+}
+
+export type StartCheckoutResult = { ok: true; redirect: GatewayRedirect } | { ok: false; error: string };
+
+/** Creates the order and payment; the browser is then sent to the gateway. Access is granted
+ * only when the gateway's notification reaches the API, never by coming back to our site. */
+export async function startCheckout(classId: string, monthId: string | null): Promise<StartCheckoutResult> {
+  const res = await api<CheckoutResult>("/student/checkout", {
+    method: "POST",
+    body: { class_id: classId, ...(monthId ? { class_month_id: monthId } : {}) },
+  });
+  if (res.status === 401) return { ok: false, error: t("errors.UNAUTHORIZED") };
+  if (!res.ok) return { ok: false, error: errorText(t, res.error) };
+  return { ok: true, redirect: res.data.redirect };
+}
+
+export async function getOrderStatus(orderId: string): Promise<OrderStatus | null> {
+  const res = await api<Order>(`/student/orders/${orderId}`);
+  return res.ok ? res.data.status : null;
 }

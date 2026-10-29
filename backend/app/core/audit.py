@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def write_audit(
     session: AsyncSession,
     *,
-    actor_user_id: UUID,
+    actor_user_id: UUID | None,           # None = the system (e.g. a gateway webhook)
     action: str,
     entity_type: str,
     entity_id: UUID | None,

@@ -70,6 +70,20 @@ class Settings(BaseSettings):
     max_video_bytes: int = 10 * 1024**3
     max_document_bytes: int = 50 * 1024**2
 
+    # --- Payments (CLAUDE.md section 8) ---------------------------------------------
+    # 'fake' is a local stand-in (ENVIRONMENT=local only); 'payhere' needs the merchant keys.
+    payment_gateway: Literal["fake", "payhere"] = "fake"
+    payhere_merchant_id: str | None = None
+    payhere_merchant_secret: str | None = None
+    payhere_sandbox: bool = True
+    # Gateway fee booked at sale time, in basis points; trued up from the settlement report.
+    # Set from the merchant agreement.
+    gateway_fee_estimate_bps: int = Field(default=300, ge=0, le=10000)
+    # Public base URL of this API (the gateway calls {api_public_url}/api/v1/webhooks/<gateway>).
+    api_public_url: str = "http://localhost:8000"
+    # Scheme the tenant sites are served on (for return URLs built from the user's host).
+    site_scheme: Literal["http", "https"] = "https"
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -130,12 +130,14 @@ async def insert_late_request(session: AsyncSession, member_id: UUID, month_id: 
 
 
 async def insert_grant(session: AsyncSession, *, member_id: UUID, class_id: UUID, month_id: UUID | None,
-                       source: str, granted_by: UUID | None) -> UUID:
+                       source: str, granted_by: UUID | None, order_item_id: UUID | None = None) -> UUID:
     return (await session.execute(text("""
-        INSERT INTO access_grants (tenant_id, student_member_id, class_id, class_month_id, source, granted_by)
-        VALUES (current_tenant_id(), :m, :c, :mo, :src, :by)
+        INSERT INTO access_grants
+            (tenant_id, student_member_id, class_id, class_month_id, source, granted_by, order_item_id)
+        VALUES (current_tenant_id(), :m, :c, :mo, :src, :by, :item)
         RETURNING id
-    """), {"m": member_id, "c": class_id, "mo": month_id, "src": source, "by": granted_by})).scalar_one()
+    """), {"m": member_id, "c": class_id, "mo": month_id, "src": source, "by": granted_by,
+           "item": order_item_id})).scalar_one()
 
 
 # --- resources and views --------------------------------------------------------------

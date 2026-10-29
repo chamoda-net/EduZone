@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n/client";
 const ITEMS = [
   { href: "/org/classes", key: "org.nav.classes" },
   { href: "/org/requests", key: "org.nav.requests" },
+  { href: "/org/payments", key: "org.nav.payments" },
   { href: "/org/media", key: "org.nav.media" },
 ] as const;
 

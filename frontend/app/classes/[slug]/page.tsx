@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ActionButton } from "@/components/action-button";
+import { PayButton } from "@/components/pay-button";
 import { StudentHeader } from "@/components/student-header";
 import { Badge, Card, ErrorText, buttonClass } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -77,6 +78,10 @@ export default async function ClassPage({ params }: PageProps<"/classes/[slug]">
           )}
           {me && view.enrolled && <Badge tone="published">{t("class.joined")}</Badge>}
           {view.has_class_access && <Badge tone="published">{t("class.classAccess")}</Badge>}
+          {me && c.pricing_model === "one_time" && !view.has_class_access && c.one_time_price_cents !== null && (
+            <PayButton classId={c.id} monthId={null}
+                       label={t("pay.button", { amount: formatMoney(c.one_time_price_cents, c.currency) })} />
+          )}
         </div>
 
         {monthly && view.months.length > 0 && (
@@ -84,7 +89,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[slug]">
             <h2 className="mb-1 text-lg font-semibold">{t("class.months")}</h2>
             <ul className="divide-y divide-border">
               {view.months.map((m) => (
-                <MonthRow key={m.id} m={m} slug={slug} signedIn={Boolean(me)} enrolled={view.enrolled} />
+                <MonthRow key={m.id} m={m} slug={slug} classId={c.id} signedIn={Boolean(me)} enrolled={view.enrolled} />
               ))}
             </ul>
           </Card>
@@ -137,7 +142,9 @@ export default async function ClassPage({ params }: PageProps<"/classes/[slug]">
   );
 }
 
-function MonthRow({ m, slug, signedIn, enrolled }: { m: StudentMonth; slug: string; signedIn: boolean; enrolled: boolean }) {
+function MonthRow({ m, slug, classId, signedIn, enrolled }: {
+  m: StudentMonth; slug: string; classId: string; signedIn: boolean; enrolled: boolean;
+}) {
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 py-2.5">
       <div>
@@ -146,8 +153,9 @@ function MonthRow({ m, slug, signedIn, enrolled }: { m: StudentMonth; slug: stri
       </div>
       <div className="flex flex-col items-end gap-1">
         {signedIn && <Badge tone={accessTone[m.access]}>{t(`class.access.${m.access}`)}</Badge>}
-        {(m.access === "buy" || m.access === "approved") && (
-          <span className="text-xs text-muted">{t("class.payComingSoon")}</span>
+        {signedIn && (m.access === "buy" || m.access === "approved") && (
+          <PayButton classId={classId} monthId={m.id} small
+                     label={t("pay.button", { amount: formatMoney(m.fee_cents, m.currency) })} />
         )}
         {signedIn && m.access === "request" &&
           (enrolled ? (

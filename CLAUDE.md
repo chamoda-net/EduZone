@@ -355,6 +355,33 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 `create_checkout(order) -> redirect`, `verify_webhook(request) -> GatewayEvent`,
 `refund(payment, amount) -> result`. Never store card numbers; `card_last4` only.
 
+### How it's built (step 7: `app/modules/checkout`, `app/modules/ledger`, `app/integrations/gateways`)
+- **Gateways:** `get_gateway()` returns `PayHereGateway` (checkout form + MD5 hash, notify verification;
+  re-check the formulas against the PayHere sandbox before launch) or `FakeGateway` (local only: a page at
+  `/api/v1/dev/fake-gateway/<key>` with Pay / Card declined / Cancel that posts a signed notification).
+  `refund()` is not implemented yet. Settings: `PAYMENT_GATEWAY`, `PAYHERE_*`, `GATEWAY_FEE_ESTIMATE_BPS`,
+  `API_PUBLIC_URL` (notify URL base), `SITE_SCHEME` (return URL scheme).
+- **Checkout** (`POST /api/v1/student/checkout {class_id, class_month_id?}`): checks the rules above,
+  enrols the student, creates order + one item (commission and teacher snapshot) + payment with a random
+  `idempotency_key` (sent to the gateway as its order id), and returns `{order, redirect}`; the browser
+  posts the redirect form. `GET /student/orders[/{id}]` (history excludes pending; the return page polls),
+  `GET /org/orders` (teachers: their classes only).
+- **Webhook** (`POST /api/v1/webhooks/{payhere|fake}`, form-encoded): `process_notification` stores the raw
+  event (repeat = `duplicate`), rejects a bad signature with 400 (row kept, `process_error` set), finds the
+  tenant with `resolve_payment_tenant`, then `_apply` in one tenant transaction. Success after failure wins;
+  failure after success is ignored; amount/currency mismatch leaves the order pending. Paying twice for the
+  same access books the money but adds no second grant (logged: needs a refund).
+- **Ledger** (`ledger/posting.py`): pure entry builders `sale_entries`, `fee_settlement_entries`,
+  `refund_entries`, `payout_entries` + `post()` (refuses unbalanced input). `checkout.service.settle_fee()`
+  books the true-up (platform admin / reconciliation job, step 9). Tests: `test_ledger.py`, `test_checkout.py`.
+- **Frontend:** Pay buttons on the class page (months marked buy/approved, one-time classes),
+  `/checkout/[id]` (return page polling the order), `/payments` + `/payments/[id]` (printable receipt),
+  console `/org/payments`.
+- **Test cleanup:** `purge_tenants()` in `tests/conftest.py` deletes test tenants as the schema owner with
+  triggers paused (the ledger is append-only even for `eduzone_admin`). Test databases only.
+- Open: refunds (gateway API + refund flow), PayHere needs an email (phone-only students have none),
+  receipts wording pending the legal review of collecting on behalf of organizations.
+
 ---
 
 ## 9. Video, files, and cost control (Bunny)
@@ -497,7 +524,7 @@ the tenant host):
 - Routes: `/` (tenant home), `/login`, `/org/classes` (+ `/new`, `/[id]` with months, lessons and lesson
   files), `/org/media` (+ `/[id]` preview). Videos upload from the browser straight to Bunny (tus-js-client);
   PDFs go through the streaming route `/api/upload/document`, which proxy.ts skips.
-  The student app gets its routes with steps 6 and 7.
+  Student routes: `/classes/[slug]`, `/my`, `/lessons/[id]`, `/checkout/[id]`, `/payments[/[id]]`.
 - Local dev: `API_URL` in `frontend/.env.local`; open `http://<slug>.localhost:3000` with the API
   on `BASE_DOMAIN=localhost`. Checks: `npx next typegen && npx tsc --noEmit`, `npx eslint .`, `npx next build`.
 

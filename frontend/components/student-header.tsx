@@ -21,6 +21,9 @@ export async function StudentHeader() {
           <Link href="/my" className={`${buttonClass.link} text-sm`}>
             {t("nav.myClasses")}
           </Link>
+          <Link href="/payments" className={`${buttonClass.link} hidden text-sm sm:inline`}>
+            {t("nav.payments")}
+          </Link>
           <SignOutButton />
         </>
       ) : (

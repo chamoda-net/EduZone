@@ -223,3 +223,33 @@ export type LateRequest = {
   created_at: string;
   decided_at: string | null;
 };
+
+// --- payments (step 7) ----------------------------------------------------------------
+
+export type OrderStatus = "pending" | "paid" | "failed" | "cancelled" | "refunded" | "partially_refunded";
+
+export type Order = {
+  id: string;
+  order_no: string;
+  status: OrderStatus;
+  currency: string;
+  total_cents: number;
+  created_at: string;
+  paid_at: string | null;
+  method: string | null;
+  card_last4: string | null;
+  item: {
+    id: string;
+    class_id: string;
+    class_slug: string;
+    class_month_id: string | null;
+    description: string;
+    amount_cents: number;
+  };
+};
+
+export type GatewayRedirect = { method: "GET" | "POST"; url: string; fields: Record<string, string> };
+export type CheckoutResult = { order: Order; redirect: GatewayRedirect };
+
+export type OrgOrder = Order & { student_name: string; student_phone: string | null };
+export type OrgOrderPage = { items: OrgOrder[]; next_cursor: string | null };
