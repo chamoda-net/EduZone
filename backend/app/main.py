@@ -12,6 +12,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import org_router as catalog_org_router
 from app.modules.checkout import router as checkout
 from app.modules.learning import router as learning
+from app.modules.ledger.router import org_router as ledger_org_router
 from app.modules.media.router import org_router as media_org_router
 from app.modules.media.router import webhook_router as media_webhook_router
 from app.modules.tenants.router import public_router as tenants_public_router
@@ -51,6 +52,7 @@ api.include_router(checkout.student_router)
 api.include_router(checkout.org_router)
 api.include_router(checkout.webhook_router)
 api.include_router(checkout.dev_router)
+api.include_router(ledger_org_router)
 
 
 app = FastAPI(title="EduZone API", version="0.1.0", lifespan=lifespan)

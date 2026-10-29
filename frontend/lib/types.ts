@@ -253,3 +253,35 @@ export type CheckoutResult = { order: Order; redirect: GatewayRedirect };
 
 export type OrgOrder = Order & { student_name: string; student_phone: string | null };
 export type OrgOrderPage = { items: OrgOrder[]; next_cursor: string | null };
+
+// --- money (step 8) -----------------------------------------------------------------
+
+export type CashflowFigures = {
+  gross_sales_cents: number;
+  refunds_cents: number;
+  gateway_fees_cents: number;
+  commission_cents: number;
+  net_cents: number;
+  paid_out_cents: number;
+};
+
+export type Cashflow = {
+  currency: string;
+  commission_bps: number;
+  gateway_fee_bearer: "tenant" | "platform";
+  balance_due_cents: number;
+  months: (CashflowFigures & { month: string })[];
+  totals: CashflowFigures;
+};
+
+export type TeacherEarning = {
+  teacher_member_id: string;
+  teacher_name: string;
+  sales_count: number;
+  gross_sales_cents: number;
+  refunds_cents: number;
+  commission_cents: number;
+  net_cents: number;
+};
+
+export type Earnings = { month: string; currency: string; teachers: TeacherEarning[]; total_net_cents: number };

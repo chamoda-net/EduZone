@@ -331,6 +331,17 @@ so who absorbs them follows `gateway_fee_bearer`.
 ### Posting: payout
 `tenant_payable +X`, `bank −X`, linked to a `payouts` row. Created only by platform admin.
 
+### Reports (step 8: `app/modules/ledger/service.py`, read-only, ledger only)
+- `GET /api/v1/org/cashflow?from=YYYY-MM&to=YYYY-MM` (default: last 12 months, max 36): every month in
+  the range (zeros included, Colombo calendar months) from `v_tenant_cashflow_monthly`, range totals, and
+  `balance_due_cents` from `v_tenant_balance` (all time). **Owners and admins only** (403 for teachers).
+- `GET /api/v1/org/earnings?month=YYYY-MM` (default: this month): per teacher, from ledger entries joined
+  to their order item's teacher: payments count, gross, refunds, commission, net. Owners/admins see every
+  teacher; a teacher sees only their own line.
+- Console: `/org/money` (balance due, range presets, totals, monthly table; cards on phones) and
+  `/org/earnings` (month by month). The "Money" nav item shows for owners and admins only.
+- When EduZone bears gateway fees, the fees line is labelled as paid by EduZone and doesn't reduce net.
+
 ---
 
 ## 8. Payment flow

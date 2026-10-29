@@ -70,3 +70,15 @@ export function formatDuration(seconds: number): string {
   const s = seconds % 60;
   return h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
 }
+
+/** The current month in Colombo as "YYYY-MM". */
+export function colomboMonth(now: Date = new Date()): string {
+  return isoToColomboLocal(now.toISOString()).slice(0, 7);
+}
+
+/** "2026-10" moved by n months -> "2027-01" etc. */
+export function shiftMonth(month: string, n: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const total = y * 12 + (m - 1) + n;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`;
+}

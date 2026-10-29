@@ -24,7 +24,7 @@ export default async function OrgLayout({ children }: LayoutProps<"/org">) {
       </SiteHeader>
       {isStaff(me) ? (
         <>
-          <OrgNav />
+          <OrgNav managesAll={me.role === "owner" || me.role === "admin"} />
           <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 px-4 py-6">{children}</main>
         </>
       ) : (
