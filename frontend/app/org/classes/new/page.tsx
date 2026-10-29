@@ -1,0 +1,19 @@
+import Link from "next/link";
+
+import { Card, buttonClass } from "@/components/ui";
+import { t } from "@/lib/i18n";
+
+import { createClass } from "../actions";
+import { ClassForm } from "../class-form";
+
+export default function NewClassPage() {
+  return (
+    <>
+      <Link href="/org/classes" className={`${buttonClass.link} text-sm`}>← {t("classes.back")}</Link>
+      <h1 className="text-2xl font-semibold">{t("classes.new")}</h1>
+      <Card>
+        <ClassForm action={createClass} />
+      </Card>
+    </>
+  );
+}

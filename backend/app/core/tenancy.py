@@ -40,6 +40,17 @@ def parse_slug(host: str, base_domain: str) -> str | None:
     return slug if _SLUG_RE.fullmatch(slug) else None
 
 
+def request_host(request: Request) -> str:
+    """The host the user is on. X-Forwarded-Host (set by the frontend server or a reverse
+    proxy, which can't override Host) wins over Host.
+
+    Not a trust boundary: any client can already send whatever Host it likes. Tenant
+    access is enforced by RLS and by the tenant id inside each access token.
+    """
+    forwarded = request.headers.get("x-forwarded-host", "").split(",")[0].strip()
+    return forwarded or request.headers.get("host", "")
+
+
 async def _resolve(slug: str) -> TenantContext | None:
     # resolve_tenant() is SECURITY DEFINER: RLS hides `tenants` until the tenant is known.
     async with AppSession() as session:
@@ -52,7 +63,7 @@ async def _resolve(slug: str) -> TenantContext | None:
 
 
 async def current_tenant(request: Request) -> TenantContext:
-    slug = parse_slug(request.headers.get("host", ""), get_settings().base_domain)
+    slug = parse_slug(request_host(request), get_settings().base_domain)
     tenant = await _resolve(slug) if slug else None
     if tenant is None:
         raise ApiError("TENANT_NOT_FOUND", "This organization does not exist.", status_code=404)

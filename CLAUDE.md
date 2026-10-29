@@ -177,7 +177,8 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
 
 1. **Every business table has `tenant_id`.** Platform-level tables (`tenants`, `users`,
    `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`) are the only exceptions.
-2. **Tenant resolution:** read the `Host` header → `<slug>.eduzone.lk` → call
+2. **Tenant resolution:** read `X-Forwarded-Host` if present (set by the frontend server or a
+   reverse proxy, which can't override `Host`), else the `Host` header → `<slug>.eduzone.lk` → call
    `resolve_tenant(slug)` (a `SECURITY DEFINER` function, because RLS hides `tenants` until
    `app.tenant_id` is set). Unknown or non-active tenant → 404. (v1.1 adds a custom-domain lookup first.)
 3. **Every request runs in a DB transaction that begins with**
@@ -434,6 +435,24 @@ the tenant host):
 - Tenant branding (name, logo, primary colour) is loaded by host on the server and applied as CSS variables.
 - All user-facing text goes through i18n keys from day one (`en` now; `si`, `ta` later).
 - Show money as `Rs. 2,000.00`.
+
+### How the frontend is built (`frontend/`, Next.js 16, App Router)
+- Read `frontend/AGENTS.md` first: Next 16 differs from older versions (e.g. `proxy.ts`
+  replaces middleware). Its docs ship in `frontend/node_modules/next/dist/docs/`.
+- **Backend calls happen only on the Next server** (`lib/api.ts`: Server Components and Server
+  Actions), sending `X-Forwarded-Host` with the user's host. The browser never calls the API.
+- **Tokens live in httpOnly cookies** (`lib/cookies.ts`); browser JavaScript never sees them.
+  `proxy.ts` refreshes the access token shortly before it expires and drops dead sessions.
+  A per-browser `ez_device` cookie is the `device_id` for the one-device rule.
+- **Every page renders per request** (tenant host + session); `cacheComponents` is off.
+- **i18n:** keys in `lib/i18n/en.ts`; server code uses `t`, client components `useT()`.
+  API errors go through `errorText()` (known codes get our own text).
+- **Formatting:** `lib/format.ts` (money from cents, Colombo date/time, `<input type="datetime-local">`
+  read as Colombo time with a fixed +05:30 offset).
+- Routes: `/` (tenant home), `/login`, `/org/classes` (+ `/new`, `/[id]` with months and lessons).
+  The student app gets its routes with steps 6 and 7.
+- Local dev: `API_URL` in `frontend/.env.local`; open `http://<slug>.localhost:3000` with the API
+  on `BASE_DOMAIN=localhost`. Checks: `npx next typegen && npx tsc --noEmit`, `npx eslint .`, `npx next build`.
 
 ---
 

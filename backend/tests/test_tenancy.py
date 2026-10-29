@@ -39,6 +39,13 @@ async def test_each_host_sees_its_own_tenant(client: AsyncClient, seed: Seed) ->
         }
 
 
+async def test_forwarded_host_wins(client: AsyncClient, seed: Seed) -> None:
+    # The frontend server calls the API on an internal address and passes the user's host.
+    resp = await client.get("/api/v1/public/tenant",
+                            headers={"host": "api.internal:8000", "x-forwarded-host": seed.b.host})
+    assert resp.json()["slug"] == seed.b.slug
+
+
 @pytest.mark.parametrize("host", ["nobody-here.eduzone.lk", "eduzone.lk", "localhost", "evil.com"])
 async def test_unknown_host_is_404(client: AsyncClient, seed: Seed, host: str) -> None:
     resp = await client.get("/api/v1/public/tenant", headers={"host": host})
