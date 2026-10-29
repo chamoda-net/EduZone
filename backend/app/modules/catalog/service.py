@@ -264,6 +264,12 @@ async def _check_lesson(session: AsyncSession, c: ClassModel, *, class_month_id:
         raise ApiError("ZOOM_NOT_ALLOWED", "Only live lessons have a Zoom link.")
 
 
+async def load_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID) -> tuple[Lesson, ClassModel]:
+    """A lesson (locked for update) and its class, if the actor may manage it; else 404.
+    Shared with the media module for lesson files."""
+    return await _load_lesson(session, actor, lesson_id)
+
+
 async def _load_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID) -> tuple[Lesson, ClassModel]:
     lesson = await repo.get_lesson(session, lesson_id, for_update=True)
     if lesson is None:

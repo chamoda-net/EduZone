@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { OrgNav } from "@/components/org-nav";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SiteHeader } from "@/components/site-header";
 import { buttonClass } from "@/components/ui";
@@ -23,13 +24,7 @@ export default async function OrgLayout({ children }: LayoutProps<"/org">) {
       </SiteHeader>
       {isStaff(me) ? (
         <>
-          <nav className="border-b border-border bg-surface">
-            <div className="mx-auto flex w-full max-w-4xl gap-4 px-4 text-sm">
-              <Link href="/org/classes" className="border-b-2 border-brand py-2.5 font-medium">
-                {t("org.nav.classes")}
-              </Link>
-            </div>
-          </nav>
+          <OrgNav />
           <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 px-4 py-6">{children}</main>
         </>
       ) : (

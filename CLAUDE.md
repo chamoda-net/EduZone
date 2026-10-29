@@ -349,6 +349,27 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 - Bunny pricing must be checked before plan limits are set. Plan rule: a tenant's maximum Bunny
   cost must stay below EduZone's expected earnings from that tenant.
 
+### How it's built (step 5: `app/integrations/bunny`, `app/modules/media`)
+- **Keys from env only:** `BUNNY_STREAM_LIBRARIES` (JSON `{"<library_id>": {"api_key", "token_key"}}`),
+  `BUNNY_STORAGE_*`, `BUNNY_CDN_*`, `BUNNY_WEBHOOK_TOKEN`. Missing config → 503 `MEDIA_NOT_CONFIGURED`.
+  Setting `tenants.bunny_library_id` (platform admin, step 9; by SQL until then) enables video for a tenant.
+- **Video upload:** `POST /org/media/videos` creates the Bunny video + a `media_assets` row (`uploading`)
+  and returns a TUS endpoint and signed headers (valid 12 h); the browser uploads with tus-js-client.
+- **Status:** never trust the webhook payload: `POST /webhooks/bunny/stream?token=…` only says which video
+  changed, and we re-read it from Bunny (`resolve_bunny_library_tenant()` finds the tenant, migration 0003).
+  `GET /org/media/{id}` also syncs a pending video, which covers missed webhooks and local dev.
+- **PDFs:** `POST /org/media/documents` (multipart, `%PDF-` check, 50 MB) → Bunny Storage at
+  `<tenant_id>/documents/<asset_id>/<safe-name>.pdf`, sent with a SHA-256 checksum.
+- **Quota:** sum of non-deleted, non-failed `media_assets.size_bytes` vs `storage_limit_bytes` (409 `STORAGE_LIMIT_REACHED`).
+- **Signed URLs:** `signing.embed_url` (Stream embed token, 4 h) and `signing.cdn_url` (pull zone token,
+  10 min). `media.service.signed_url()` is what student playback (step 6) calls after the access check.
+- **Lesson files:** `lesson_resources`; videos only on live/recorded lessons, never downloadable.
+  Media in use can't be deleted; deleting removes it at Bunny and marks the row `deleted`.
+- Teachers see the files they uploaded; owners/admins see all (same rule as classes).
+- Tests use `FakeBunny` (httpx MockTransport) in `tests/test_media.py`; no Bunny account needed.
+  **Re-check the signature formulas and video status codes against a real Bunny library before launch.**
+- Not built yet: the daily usage sync into `tenant_usage_daily` and bandwidth warnings (with step 9).
+
 ---
 
 ## 10. Content protection (v1)
@@ -449,7 +470,9 @@ the tenant host):
   API errors go through `errorText()` (known codes get our own text).
 - **Formatting:** `lib/format.ts` (money from cents, Colombo date/time, `<input type="datetime-local">`
   read as Colombo time with a fixed +05:30 offset).
-- Routes: `/` (tenant home), `/login`, `/org/classes` (+ `/new`, `/[id]` with months and lessons).
+- Routes: `/` (tenant home), `/login`, `/org/classes` (+ `/new`, `/[id]` with months, lessons and lesson
+  files), `/org/media` (+ `/[id]` preview). Videos upload from the browser straight to Bunny (tus-js-client);
+  PDFs go through the streaming route `/api/upload/document`, which proxy.ts skips.
   The student app gets its routes with steps 6 and 7.
 - Local dev: `API_URL` in `frontend/.env.local`; open `http://<slug>.localhost:3000` with the API
   on `BASE_DOMAIN=localhost`. Checks: `npx next typegen && npx tsc --noEmit`, `npx eslint .`, `npx next build`.

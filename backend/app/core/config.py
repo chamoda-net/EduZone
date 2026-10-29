@@ -2,11 +2,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # The repo-root .env is shared with docker-compose.
 REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+class BunnyLibraryKeys(BaseModel):
+    api_key: str                 # library API key: create/read/delete videos, sign TUS uploads
+    token_key: str               # embed token authentication key: signs playback URLs
 
 
 class Settings(BaseSettings):
@@ -41,6 +46,29 @@ class Settings(BaseSettings):
     # 'console' logs the message (local dev). Real providers are added behind
     # app.integrations.sms once one is chosen.
     sms_provider: Literal["console"] = "console"
+
+    # --- Bunny (CLAUDE.md section 9) ---------------------------------------------
+    # One Stream library per tenant (tenants.bunny_library_id). Keys per library come from
+    # the environment as JSON: {"<library_id>": {"api_key": "...", "token_key": "..."}}.
+    bunny_stream_libraries: dict[str, BunnyLibraryKeys] = {}
+    bunny_stream_api_base: str = "https://video.bunnycdn.com"
+    bunny_stream_tus_endpoint: str = "https://video.bunnycdn.com/tusupload"
+    bunny_stream_embed_base: str = "https://iframe.mediadelivery.net"
+    # Shared secret in the Stream webhook URL (?token=...); unset disables the webhook.
+    bunny_webhook_token: str | None = None
+    # PDFs: one storage zone, files under /<tenant_id>/..., served by a pull zone with
+    # token authentication. All unset = document uploads are disabled.
+    bunny_storage_zone: str | None = None
+    bunny_storage_host: str = "storage.bunnycdn.com"   # regional, e.g. sg.storage.bunnycdn.com
+    bunny_storage_api_key: str | None = None
+    bunny_cdn_host: str | None = None                  # e.g. eduzone-files.b-cdn.net
+    bunny_cdn_token_key: str | None = None
+
+    upload_signature_ttl_seconds: int = 12 * 3600      # slow connections, big lessons
+    video_url_ttl_seconds: int = 4 * 3600              # a long lesson must not expire mid-way
+    document_url_ttl_seconds: int = 10 * 60
+    max_video_bytes: int = 10 * 1024**3
+    max_document_bytes: int = 50 * 1024**2
 
 
 @lru_cache

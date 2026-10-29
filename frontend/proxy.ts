@@ -54,6 +54,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Pages and Server Actions only; skip static assets.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)"],
+  // Pages and Server Actions only; skip static assets and the streamed upload route.
+  matcher: ["/((?!_next/static|_next/image|api/upload|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)"],
 };

@@ -7,7 +7,8 @@ import { api } from "@/lib/api";
 import { classMeta, priceLabel } from "@/lib/catalog";
 import { formatDateTime, formatMoney, formatMonth } from "@/lib/format";
 import { errorText, t } from "@/lib/i18n";
-import type { ClassItem, Lesson, Month } from "@/lib/types";
+import { mediaTone } from "@/lib/media";
+import type { ClassItem, Lesson, LessonResource, MediaPage, Month } from "@/lib/types";
 
 import {
   createLesson,
@@ -19,9 +20,12 @@ import {
   setLessonPublished,
   setMonthStatus,
   updateClass,
+  updateLesson,
 } from "../actions";
 import { ClassForm } from "../class-form";
-import { AddLessonForm, AddMonthForm } from "./add-forms";
+import { attachFile, removeFile } from "../../media/actions";
+import { AddMonthForm, LessonForm } from "./add-forms";
+import { AttachFileForm } from "./lesson-files";
 
 export default async function ClassDetailPage({ params }: PageProps<"/org/classes/[id]">) {
   const { id } = await params;
@@ -38,6 +42,14 @@ export default async function ClassDetailPage({ params }: PageProps<"/org/classe
   ]);
   const months = monthsRes?.ok ? monthsRes.data : [];
   const lessons = lessonsRes.ok ? lessonsRes.data : [];
+  const [mediaRes, ...resourceRes] = await Promise.all([
+    api<MediaPage>("/org/media?limit=100"),
+    ...lessons.map((l) => api<LessonResource[]>(`/org/lessons/${l.id}/resources`)),
+  ]);
+  const media = mediaRes.ok ? (mediaRes.data as MediaPage).items : [];
+  const filesByLesson = new Map(
+    lessons.map((l, i) => [l.id, resourceRes[i].ok ? (resourceRes[i].data as LessonResource[]) : []]),
+  );
   const pricingLocked = c.status !== "draft" || months.length > 0 || lessons.length > 0;
 
   return (
@@ -114,7 +126,8 @@ export default async function ClassDetailPage({ params }: PageProps<"/org/classe
             {group.label && <h3 className="text-sm font-semibold text-muted">{group.label}</h3>}
             <ul className="divide-y divide-border">
               {group.lessons.map((l) => (
-                <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                <li key={l.id} className="flex flex-col gap-2 py-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-medium">
                       {l.title}{" "}
@@ -139,6 +152,46 @@ export default async function ClassDetailPage({ params }: PageProps<"/org/classe
                     />
                     <ActionButton action={deleteLesson.bind(null, c.id, l.id)} label={t("lessons.delete")} variant="danger" small />
                   </div>
+                  </div>
+                  <details className="rounded-lg border border-border px-3 py-2 [&[open]]:pb-3">
+                    <summary className="cursor-pointer text-sm font-medium text-brand">
+                      {t("files.title")} ({filesByLesson.get(l.id)?.length ?? 0})
+                    </summary>
+                    <div className="flex flex-col gap-3 pt-3">
+                      {(filesByLesson.get(l.id) ?? []).length === 0 && (
+                        <p className="text-sm text-muted">{t("files.empty")}</p>
+                      )}
+                      <ul className="flex flex-col gap-1">
+                        {(filesByLesson.get(l.id) ?? []).map((f) => (
+                          <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                            <span className="min-w-0">
+                              <Link href={`/org/media/${f.media.id}`} className={buttonClass.link}>
+                                {f.title || f.media.name}
+                              </Link>{" "}
+                              <span className="text-muted">· {t(`media.kind.${f.media.kind}`)}</span>{" "}
+                              {f.media.status !== "ready" && (
+                                <Badge tone={mediaTone[f.media.status]}>{t(`media.status.${f.media.status}`)}</Badge>
+                              )}{" "}
+                              {f.is_downloadable && <Badge tone="upcoming">{t("files.downloadableBadge")}</Badge>}
+                            </span>
+                            <ActionButton action={removeFile.bind(null, c.id, f.id)} label={t("files.remove")} variant="danger" small />
+                          </li>
+                        ))}
+                      </ul>
+                      <AttachFileForm action={attachFile.bind(null, c.id, l.id)} media={media} lessonType={l.lesson_type} />
+                    </div>
+                  </details>
+                  <details className="rounded-lg border border-border px-3 py-2 [&[open]]:pb-3">
+                    <summary className="cursor-pointer text-sm font-medium text-brand">{t("lessons.edit")}</summary>
+                    <div className="pt-3">
+                      <LessonForm
+                        action={updateLesson.bind(null, c.id, l.id)}
+                        months={months}
+                        monthly={monthly}
+                        initial={l}
+                      />
+                    </div>
+                  </details>
                 </li>
               ))}
             </ul>
@@ -147,7 +200,7 @@ export default async function ClassDetailPage({ params }: PageProps<"/org/classe
         {monthly && months.length === 0 ? (
           <p className="text-sm text-muted">{t("lessons.noMonthsYet")}</p>
         ) : (
-          <AddLessonForm action={createLesson.bind(null, c.id)} months={months} monthly={monthly} />
+          <LessonForm action={createLesson.bind(null, c.id)} months={months} monthly={monthly} />
         )}
       </Card>
 

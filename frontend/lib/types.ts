@@ -74,3 +74,35 @@ export type Lesson = {
   created_at: string;
   updated_at: string;
 };
+
+export type MediaKind = "video" | "document";
+export type MediaStatus = "uploading" | "processing" | "ready" | "failed";
+
+export type Media = {
+  id: string;
+  kind: MediaKind;
+  name: string;
+  mime_type: string | null;
+  size_bytes: number;
+  duration_seconds: number | null;
+  status: MediaStatus;
+  created_at: string;
+};
+
+export type MediaPage = { items: Media[]; next_cursor: string | null };
+
+export type VideoUpload = {
+  media: Media;
+  upload: { endpoint: string; headers: Record<string, string>; expires_at: string };
+};
+
+export type Preview = { url: string; expires_at: string };
+
+export type LessonResource = {
+  id: string;
+  lesson_id: string;
+  title: string | null;
+  sort_order: number;
+  is_downloadable: boolean;
+  media: Media;
+};

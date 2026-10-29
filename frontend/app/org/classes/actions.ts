@@ -109,23 +109,34 @@ export async function deleteMonth(classId: string, monthId: string): Promise<For
 
 // --- lessons ---------------------------------------------------------------------
 
-export async function createLesson(classId: string, _: FormState, fd: FormData): Promise<FormState> {
+function lessonBody(fd: FormData): Record<string, unknown> {
   const type = text(fd, "lesson_type");
   const live = type === "live";
   const when = text(fd, "scheduled_at");
+  return {
+    // Only monthly classes send a month; omitting the key leaves it unchanged on edit.
+    ...(fd.has("class_month_id") ? { class_month_id: textOrNull(fd, "class_month_id") } : {}),
+    title: text(fd, "title"),
+    lesson_type: type,
+    scheduled_at: live && when ? colomboLocalToIso(when) : null,
+    duration_minutes: live ? intOrNull(fd, "duration_minutes") : null,
+    zoom_join_url: live ? textOrNull(fd, "zoom_join_url") : null,
+    is_free_preview: checked(fd, "is_free_preview"),
+  };
+}
+
+export async function createLesson(classId: string, _: FormState, fd: FormData): Promise<FormState> {
   const res = await api<Lesson>(`/org/classes/${classId}/lessons`, {
     method: "POST",
-    body: {
-      class_month_id: textOrNull(fd, "class_month_id"),
-      title: text(fd, "title"),
-      lesson_type: type,
-      scheduled_at: live && when ? colomboLocalToIso(when) : null,
-      duration_minutes: live ? intOrNull(fd, "duration_minutes") : null,
-      zoom_join_url: live ? textOrNull(fd, "zoom_join_url") : null,
-      is_published: checked(fd, "is_published"),
-      is_free_preview: checked(fd, "is_free_preview"),
-    },
+    body: { ...lessonBody(fd), is_published: checked(fd, "is_published") },
   });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  refresh(classId);
+  return { ok: true, at: Date.now() };
+}
+
+export async function updateLesson(classId: string, lessonId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api<Lesson>(`/org/lessons/${lessonId}`, { method: "PATCH", body: lessonBody(fd) });
   if (!res.ok) return { error: errorText(t, res.error) };
   refresh(classId);
   return { ok: true, at: Date.now() };

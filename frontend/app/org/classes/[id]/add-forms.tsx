@@ -3,9 +3,9 @@
 import { useActionState, useState } from "react";
 
 import { ErrorText, Field, Input, Select, buttonClass } from "@/components/ui";
-import { formatMonth } from "@/lib/format";
+import { formatMonth, isoToColomboLocal } from "@/lib/format";
 import { useT } from "@/lib/i18n/client";
-import type { LessonType, Month } from "@/lib/types";
+import type { Lesson, LessonType, Month } from "@/lib/types";
 
 import type { FormState } from "../actions";
 
@@ -40,17 +40,34 @@ export function AddMonthForm({ action, suggested }: { action: Action; suggested:
   );
 }
 
-export function AddLessonForm({ action, months, monthly }: { action: Action; months: Month[]; monthly: boolean }) {
+/** Add a lesson, or edit one when `initial` is given (visibility is toggled separately). */
+export function LessonForm({
+  action,
+  months,
+  monthly,
+  initial,
+}: {
+  action: Action;
+  months: Month[];
+  monthly: boolean;
+  initial?: Lesson;
+}) {
   const t = useT();
   const [state, submit, pending] = useActionState(action, {});
-  const [type, setType] = useState<LessonType>("live");
+  const [type, setType] = useState<LessonType>(initial?.lesson_type ?? "live");
   const live = type === "live";
+  const defaultMonth = initial?.class_month_id ?? months.find((m) => m.status === "open")?.id ?? months[0]?.id;
 
   return (
-    <form key={state.at} action={submit} className="flex flex-col gap-3 border-t border-border pt-4">
+    // A new key after each successful add resets the inputs.
+    <form
+      key={initial ? undefined : state.at}
+      action={submit}
+      className={`flex flex-col gap-3 ${initial ? "" : "border-t border-border pt-4"}`}
+    >
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label={t("lessons.lessonTitle")}>
-          <Input name="title" required maxLength={200} />
+          <Input name="title" required maxLength={200} defaultValue={initial?.title} />
         </Field>
         <Field label={t("lessons.type")}>
           <Select name="lesson_type" value={type} onChange={(e) => setType(e.target.value as LessonType)}>
@@ -61,7 +78,7 @@ export function AddLessonForm({ action, months, monthly }: { action: Action; mon
         </Field>
         {monthly && (
           <Field label={t("lessons.month")}>
-            <Select name="class_month_id" required defaultValue={months.find((m) => m.status === "open")?.id ?? months[0]?.id}>
+            <Select name="class_month_id" required defaultValue={defaultMonth}>
               {months.map((m) => (
                 <option key={m.id} value={m.id}>{formatMonth(m.month_start)}</option>
               ))}
@@ -71,32 +88,43 @@ export function AddLessonForm({ action, months, monthly }: { action: Action; mon
         {live && (
           <>
             <Field label={t("lessons.scheduledAt")}>
-              <Input name="scheduled_at" type="datetime-local" required />
+              <Input
+                name="scheduled_at"
+                type="datetime-local"
+                required
+                defaultValue={initial?.scheduled_at ? isoToColomboLocal(initial.scheduled_at) : undefined}
+              />
             </Field>
             <Field label={t("lessons.duration")}>
-              <Input name="duration_minutes" type="number" min={1} max={1440} defaultValue={120} />
+              <Input name="duration_minutes" type="number" min={1} max={1440} defaultValue={initial?.duration_minutes ?? 120} />
             </Field>
             <Field label={`${t("lessons.zoom")} (${t("common.optional")})`}>
-              <Input name="zoom_join_url" type="url" placeholder="https://zoom.us/j/…" />
+              <Input name="zoom_join_url" type="url" placeholder="https://zoom.us/j/…" defaultValue={initial?.zoom_join_url ?? ""} />
             </Field>
           </>
         )}
       </div>
-      {type === "recorded" && <p className="text-xs text-muted">{t("lessons.videoLater")}</p>}
       <div className="flex flex-wrap gap-4">
+        {!initial && (
+          <label className="flex min-h-11 items-center gap-2">
+            <input type="checkbox" name="is_published" defaultChecked />
+            {t("lessons.published")}
+          </label>
+        )}
         <label className="flex min-h-11 items-center gap-2">
-          <input type="checkbox" name="is_published" defaultChecked />
-          {t("lessons.published")}
-        </label>
-        <label className="flex min-h-11 items-center gap-2">
-          <input type="checkbox" name="is_free_preview" />
+          <input type="checkbox" name="is_free_preview" defaultChecked={initial?.is_free_preview} />
           {t("lessons.freePreview")}
         </label>
       </div>
       <ErrorText>{state.error}</ErrorText>
-      <button className={`${buttonClass.secondary} self-start`} disabled={pending}>
-        {pending ? t("common.saving") : t("lessons.add")}
-      </button>
+      <div className="flex items-center gap-3">
+        <button className={`${buttonClass.secondary} self-start`} disabled={pending}>
+          {pending ? t("common.saving") : initial ? t("classForm.save") : t("lessons.add")}
+        </button>
+        {initial && state.ok && !pending && (
+          <span className="text-sm text-green-700 dark:text-green-400">{t("classForm.saved")}</span>
+        )}
+      </div>
     </form>
   );
 }

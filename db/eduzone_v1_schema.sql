@@ -801,3 +801,13 @@ ALTER FUNCTION resolve_tenant(text) OWNER TO eduzone_admin;
 ALTER FUNCTION resolve_payment_tenant(text, text) OWNER TO eduzone_admin;
 REVOKE ALL ON FUNCTION resolve_tenant(text), resolve_payment_tenant(text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION resolve_tenant(text), resolve_payment_tenant(text, text) TO eduzone_app;
+
+-- Bunny Stream webhook -> tenant that owns the video library (migration 0003).
+CREATE OR REPLACE FUNCTION resolve_bunny_library_tenant(p_library_id bigint)
+RETURNS uuid
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
+    SELECT t.id FROM tenants t WHERE t.bunny_library_id = p_library_id
+$$;
+ALTER FUNCTION resolve_bunny_library_tenant(bigint) OWNER TO eduzone_admin;
+REVOKE ALL ON FUNCTION resolve_bunny_library_tenant(bigint) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION resolve_bunny_library_tenant(bigint) TO eduzone_app;

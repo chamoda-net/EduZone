@@ -87,7 +87,7 @@ class Seed:
     suspended: SeededTenant  # status = 'suspended'
 
 
-_NON_CASCADING = ("audit_logs", "access_grants")
+_NON_CASCADING = ("audit_logs", "access_grants", "lesson_resources")
 
 
 @pytest.fixture
