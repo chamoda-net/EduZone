@@ -111,6 +111,14 @@ CREATE TABLE platform_admin_sessions (
 );
 CREATE INDEX idx_admin_sessions_active ON platform_admin_sessions (user_id) WHERE revoked_at IS NULL;
 
+-- Authenticator (TOTP) second factor for platform admins (migration 0004). Admin role only.
+CREATE TABLE platform_admins (
+    user_id         uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    totp_secret     text NOT NULL,                   -- base32, for an authenticator app
+    last_totp_step  bigint NOT NULL DEFAULT 0,       -- replay protection: each code works once
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+
 -- One-time passcodes for login / verification. Store only a hash of the code.
 CREATE TABLE otp_codes (
     id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),

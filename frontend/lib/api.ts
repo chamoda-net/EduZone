@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies, headers } from "next/headers";
 
-import { ACCESS_COOKIE } from "./cookies";
+import { ACCESS_COOKIE, PADMIN_ACCESS_COOKIE, isAdminHost } from "./cookies";
 
 export const API_URL = process.env.API_URL ?? "http://localhost:8000";
 
@@ -24,11 +24,14 @@ export async function userHost(): Promise<string> {
 
 /** Calls the EduZone API from the server. Never throws for HTTP or network errors. */
 export async function api<T>(path: string, { method = "GET", body, token }: Options = {}): Promise<ApiResult<T>> {
-  const accessToken = token === undefined ? (await cookies()).get(ACCESS_COOKIE)?.value : token;
+  const host = await userHost();
+  // On the admin host the session is the platform admin's; elsewhere it's the tenant member's.
+  const cookieName = isAdminHost(host) ? PADMIN_ACCESS_COOKIE : ACCESS_COOKIE;
+  const accessToken = token === undefined ? (await cookies()).get(cookieName)?.value : token;
   const requestHeaders: Record<string, string> = {
     accept: "application/json",
     // fetch() can't override Host, so the user's host travels in X-Forwarded-Host.
-    "x-forwarded-host": await userHost(),
+    "x-forwarded-host": host,
   };
   if (body !== undefined) requestHeaders["content-type"] = "application/json";
   if (accessToken) requestHeaders.authorization = `Bearer ${accessToken}`;

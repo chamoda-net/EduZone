@@ -472,6 +472,30 @@ the tenant host):
 - Platform admins (`users.is_platform_admin`) use a separate login path and session
   (`platform_admin_sessions`, via `eduzone_admin`). `eduzone_app` cannot write `is_platform_admin`.
 
+### Platform admin (step 9: `app/modules/platform`)
+- **Create an admin:** `python scripts/create_platform_admin.py --phone … --name …` (sets
+  `is_platform_admin`, stores a TOTP secret in `platform_admins` (migration 0004, no `eduzone_app` grant),
+  prints the authenticator setup link once, and ends that admin's sessions). Running it again issues a new secret.
+- **Sign-in** (`/api/v1/platform/auth/...`): `otp/request` (same 202 for everyone; SMS only to real admins)
+  → `login {phone, code, totp}` (SMS code checked first so guesses are counted; then the authenticator code,
+  one-time per 30 s step; one error message for any failure) → tokens with `typ: "platform"` (never accepted by
+  tenant routes, and tenant tokens never by platform routes). Access 15 min; session 12 h, not extended by refresh.
+- **Network allowlist:** `PLATFORM_ALLOWED_CIDRS` (e.g. the VPN range). Empty is allowed only with
+  `ENVIRONMENT=local`; otherwise every platform route is a 404.
+- **Endpoints** (each takes `Admin` + `AdminTx`, an `eduzone_admin` transaction): `GET/POST /tenants`
+  (create with owner: existing users keep their name; reserved slugs refused), `GET/PATCH /tenants/{id}`
+  (status, commission, fee bearer, branding colour, Bunny library, limits, payout bank display fields),
+  `GET/POST /tenants/{id}/payouts` (records money already sent: `payouts` row `sent` + ledger payout posting,
+  refused above the balance due), `GET /payments` (all organizations, cursor). Every change writes `audit_logs`
+  (`platform.*`); tenant-scoped rows set `app.tenant_id` in the admin transaction first.
+- **Usage:** tenant rows show storage (from `media_assets`) and this month's bandwidth from
+  `tenant_usage_daily`. The daily Bunny usage sync job is **not built yet** (needs Bunny's account API).
+- **Frontend:** served only on `admin.<base domain>` (`proxy.ts` sends every other path there to `/platform`,
+  and tenant hosts get 404 for `/platform`), with its own cookies (`ez_padmin_*`). Pages: `/platform/login`,
+  `/platform` (organizations), `/platform/tenants/new`, `/platform/tenants/[id]` (figures, record payout,
+  history, edit), `/platform/payments`. FRONTEND.md wants this as a separate app on the private network;
+  the pages are self-contained under `app/platform/` so they can move.
+
 ---
 
 ## 12. API conventions

@@ -10,6 +10,7 @@ Language = Literal["en", "si", "ta"]
 _CATALOGUES: dict[str, dict[str, str]] = {
     "en": {
         "sms.login_code": "{code} is your {org} login code. It expires in {minutes} minutes. Do not share it.",
+        "sms.admin_code": "{code} is your EduZone admin sign-in code. It expires in {minutes} minutes. Never share it.",
     },
 }
 

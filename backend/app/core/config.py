@@ -84,6 +84,13 @@ class Settings(BaseSettings):
     # Scheme the tenant sites are served on (for return URLs built from the user's host).
     site_scheme: Literal["http", "https"] = "https"
 
+    # --- Platform admin (EduZone staff) --------------------------------------------
+    # Client networks allowed to reach /api/v1/platform (e.g. the VPN). Empty = any network,
+    # which is refused outside ENVIRONMENT=local.
+    platform_allowed_cidrs: list[str] = []
+    platform_access_ttl_seconds: int = 15 * 60
+    platform_session_hours: int = 12            # admins sign in again at least twice a day
+
 
 @lru_cache
 def get_settings() -> Settings:

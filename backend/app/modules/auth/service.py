@@ -58,7 +58,7 @@ async def request_otp(tenant: TenantContext, phone: str, ip: str | None, sms: Sm
     return OtpRequested(expires_in=s.otp_ttl_seconds, resend_after=s.otp_resend_cooldown_seconds)
 
 
-async def _check_and_consume_otp(phone: str, code: str, full_name: str | None) -> None:
+async def check_and_consume_otp(phone: str, code: str, full_name: str | None) -> None:
     """Runs in its own transaction so a wrong guess is counted even though the request fails."""
     s = get_settings()
     failure: ApiError | None = None
@@ -84,7 +84,7 @@ async def _check_and_consume_otp(phone: str, code: str, full_name: str | None) -
 async def login_with_otp(
     tenant: TenantContext, body: OtpVerify, ip: str | None, user_agent: str | None
 ) -> TokenPair:
-    await _check_and_consume_otp(body.phone, body.code, body.full_name)
+    await check_and_consume_otp(body.phone, body.code, body.full_name)
 
     s = get_settings()
     async with tenant_transaction(tenant.id) as session:

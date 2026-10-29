@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Noto_Sans_Sinhala } from "next/font/google";
 import type { CSSProperties } from "react";
 
+import { userHost } from "@/lib/api";
+import { isAdminHost } from "@/lib/cookies";
 import { t, getMessages } from "@/lib/i18n";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getBranding } from "@/lib/session";
@@ -13,19 +15,22 @@ const sans = Geist({ variable: "--font-geist", subsets: ["latin"] });
 const sinhala = Noto_Sans_Sinhala({ variable: "--font-sinhala", subsets: ["sinhala"] });
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (isAdminHost(await userHost())) return { title: "EduZone Admin", robots: { index: false, follow: false } };
   const branding = await getBranding();
   return { title: branding?.name ?? "EduZone" };
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const branding = await getBranding();
+  // The admin host has no tenant: EduZone's own plain styling, no branding lookup.
+  const admin = isAdminHost(await userHost());
+  const branding = admin ? null : await getBranding();
   const style = { "--brand": branding?.primary_color ?? "#1e6fd9" } as CSSProperties;
 
   return (
     <html lang="en" className={`${sans.variable} ${sinhala.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans" style={style}>
         <I18nProvider messages={getMessages("en")}>
-          {branding ? children : <TenantNotFound />}
+          {admin || branding ? children : <TenantNotFound />}
         </I18nProvider>
       </body>
     </html>

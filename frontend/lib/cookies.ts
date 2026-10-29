@@ -42,3 +42,16 @@ export function expiresSoon(token: string, skewSeconds = 30): boolean {
     return true;
   }
 }
+
+// Platform admin (EduZone staff) session, on the admin host only. Separate names, so a tenant
+// session and an admin session never mix.
+export const PADMIN_ACCESS_COOKIE = "ez_padmin_access";
+export const PADMIN_REFRESH_COOKIE = "ez_padmin_refresh";
+export const PADMIN_SESSION_MAX_AGE = 12 * 60 * 60; // matches the backend's platform_session_hours
+
+export const padminRefreshCookie = () => base(PADMIN_SESSION_MAX_AGE);
+
+/** The admin console is served only on `admin.<base domain>`. */
+export function isAdminHost(host: string | null | undefined): boolean {
+  return (host ?? "").toLowerCase().split(".")[0] === "admin";
+}

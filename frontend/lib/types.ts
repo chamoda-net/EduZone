@@ -285,3 +285,65 @@ export type TeacherEarning = {
 };
 
 export type Earnings = { month: string; currency: string; teachers: TeacherEarning[]; total_net_cents: number };
+
+// --- platform admin (step 9) --------------------------------------------------------
+
+export type TenantStatus = "pending" | "active" | "suspended" | "closed";
+
+export type PlatformTenant = {
+  id: string;
+  name: string;
+  slug: string;
+  org_type: "individual" | "institute" | "corporate";
+  status: TenantStatus;
+  currency: string;
+  commission_bps: number;
+  gateway_fee_bearer: "tenant" | "platform";
+  primary_color: string | null;
+  logo_url: string | null;
+  bunny_library_id: number | null;
+  payout_bank_name: string | null;
+  payout_account_masked: string | null;
+  created_at: string;
+  members: number;
+  students: number;
+  balance_due_cents: number;
+  sales_this_month_cents: number;
+  storage_used_bytes: number;
+  storage_limit_bytes: number | null;
+  bandwidth_this_month_bytes: number;
+  bandwidth_limit_bytes: number | null;
+  usage_synced_on: string | null;
+};
+
+export type PlatformPayment = {
+  order_id: string;
+  order_no: string;
+  status: OrderStatus;
+  tenant_id: string;
+  tenant_name: string;
+  student_name: string;
+  student_phone: string | null;
+  description: string;
+  total_cents: number;
+  currency: string;
+  gateway: string | null;
+  gateway_payment_ref: string | null;
+  created_at: string;
+  paid_at: string | null;
+};
+
+export type PlatformPaymentPage = { items: PlatformPayment[]; next_cursor: string | null };
+
+export type Payout = {
+  id: string;
+  tenant_id: string;
+  amount_cents: number;
+  period_start: string;
+  period_end: string;
+  status: "scheduled" | "sent" | "failed" | "cancelled";
+  bank_reference: string | null;
+  created_by_name: string | null;
+  sent_at: string | null;
+  created_at: string;
+};
