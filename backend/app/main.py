@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from app.core.db import AppSession, dispose_engines
 from app.core.errors import install_error_handlers
+from app.modules.tenants.router import public_router as tenants_public_router
 
 
 @asynccontextmanager
@@ -28,6 +29,9 @@ async def health() -> HealthResponse:
     async with AppSession() as session:
         await session.execute(text("SELECT 1"))
     return HealthResponse(status="ok", database="ok")
+
+
+api.include_router(tenants_public_router)
 
 
 app = FastAPI(title="EduZone API", version="0.1.0", lifespan=lifespan)

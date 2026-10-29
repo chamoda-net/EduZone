@@ -181,6 +181,10 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
    `app.tenant_id` is set). Unknown or non-active tenant → 404. (v1.1 adds a custom-domain lookup first.)
 3. **Every request runs in a DB transaction that begins with**
    `SET LOCAL app.tenant_id = '<tenant uuid>'`. Without it, RLS returns zero rows.
+   In code (`app/core/tenancy.py`): tenant-facing routes take `session: TenantSession`
+   (or `tenant: CurrentTenant` if they need no DB). This is a FastAPI dependency rather than
+   middleware, so platform and webhook routes simply don't use it. It commits before the
+   response is sent and rolls back on any error. Services and jobs use `tenant_transaction(tenant_id)`.
 4. **Never accept `tenant_id` from the client.** It always comes from the resolved request context.
 5. The app connects as role **`eduzone_app`** (subject to RLS). Platform admin endpoints and
    background jobs use **`eduzone_admin`** (BYPASSRLS) through a separate session factory.
@@ -196,6 +200,9 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
 7. A user is global; their role is per tenant (`tenant_members`). Authorization always checks
    the member row for the current tenant, never a global role.
 8. Tests must include an isolation test for every new tenant-scoped table.
+   `tests/test_isolation.py` already fails if any table with `tenant_id` lacks a forced RLS
+   policy; add behavioural read/write tests for a table when a module starts using it
+   (the `seed` fixture in `tests/conftest.py` gives two active tenants and a suspended one).
 
 ---
 
