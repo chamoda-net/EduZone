@@ -368,6 +368,22 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 - Short-lived access JWT (includes `user_id`, `tenant_id`, `member_id`, `role`) +
   refresh token stored **hashed** in `user_sessions`.
 - A JWT issued for tenant A must be rejected on tenant B's host.
+
+Implemented in `app/modules/auth` (routes under `/api/v1/auth`, shared by students and staff on
+the tenant host):
+- `POST /otp/request` → 6-digit code by SMS, HMAC-hashed with `OTP_SECRET`, valid 5 minutes.
+  Limits: 60 s resend cooldown, 5 per phone per hour, 20 per IP per hour (`otp_codes.request_ip`).
+- `POST /otp/verify` → token pair. 5 wrong guesses lock the code; a wrong guess is committed in
+  its own transaction so it counts. A new phone gets `NAME_REQUIRED` (code not spent) until
+  `full_name` is sent. First login on a tenant creates a `student` member; `suspended` members get 403.
+- `POST /refresh` rotates the refresh token (old one stops working). `POST /logout`, `GET /me`.
+- The one-device rule revokes a **student's** other sessions in that tenant on login; staff may
+  use several devices. `CurrentMember` checks the session row on **every** request, so revocation
+  and suspension take effect immediately, and the role comes from the member row, not the token.
+- Phone input accepts local forms (`0771234567`, `94771234567`) and is normalised to E.164.
+- SMS goes through `app.integrations.sms` (`SMS_PROVIDER=console` logs the code locally).
+- `client_ip()` uses the direct peer address; behind a proxy or CDN it must read the trusted
+  forwarded header instead.
 - Platform admins (`users.is_platform_admin`) use a separate login path and session
   (`platform_admin_sessions`, via `eduzone_admin`). `eduzone_app` cannot write `is_platform_admin`.
 

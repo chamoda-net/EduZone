@@ -120,9 +120,11 @@ CREATE TABLE otp_codes (
     attempts        smallint NOT NULL DEFAULT 0,
     expires_at      timestamptz NOT NULL,
     consumed_at     timestamptz,
-    created_at      timestamptz NOT NULL DEFAULT now()
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    request_ip      inet                             -- per-IP rate limit (migration 0002)
 );
 CREATE INDEX idx_otp_lookup ON otp_codes (destination, purpose, created_at DESC);
+CREATE INDEX idx_otp_ip ON otp_codes (request_ip, created_at DESC) WHERE request_ip IS NOT NULL;
 
 -- Raw gateway webhooks, stored before processing. Unique event id = idempotency.
 CREATE TABLE gateway_webhook_events (

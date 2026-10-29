@@ -1,13 +1,14 @@
 """Tests run against a real PostgreSQL with migrations applied (alembic upgrade head).
-Connection URLs come from .env / the environment.
+Connection URLs and secrets come from .env / the environment.
 
 Seed data is written through the admin role and removed after each test, using
-per-run slugs so tests never collide with each other or with dev data.
+per-run slugs and random phone numbers so tests never collide with each other or
+with dev data.
 """
 
 import secrets
-from collections.abc import AsyncIterator
-from dataclasses import dataclass
+from collections.abc import AsyncIterator, Callable, Iterator
+from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
 import pytest
@@ -16,13 +17,56 @@ from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.core.db import AdminSession
+from app.integrations.sms import get_sms_sender
 from app.main import app
+
+
+def random_phone() -> str:
+    return f"+9470{secrets.randbelow(10**7):07d}"
 
 
 @pytest.fixture
 async def client() -> AsyncIterator[AsyncClient]:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+    # A fresh client IP per test keeps per-IP OTP limits from spilling across tests.
+    ip = f"10.{secrets.randbelow(256)}.{secrets.randbelow(256)}.{secrets.randbelow(254) + 1}"
+    transport = ASGITransport(app=app, client=(ip, 40000))
+    async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
+
+
+@dataclass
+class FakeSms:
+    sent: list[tuple[str, str]] = field(default_factory=list)
+
+    async def send(self, phone: str, message: str) -> None:
+        self.sent.append((phone, message))
+
+    def last_code(self, phone: str) -> str:
+        message = next(m for p, m in reversed(self.sent) if p == phone)
+        return message.split()[0]
+
+
+@pytest.fixture
+def sms() -> Iterator[FakeSms]:
+    fake = FakeSms()
+    app.dependency_overrides[get_sms_sender] = lambda: fake
+    yield fake
+    app.dependency_overrides.pop(get_sms_sender, None)
+
+
+@pytest.fixture
+async def phones() -> AsyncIterator[Callable[[], str]]:
+    """Factory for fresh phone numbers; users and OTP rows for them are removed afterwards."""
+    made: list[str] = []
+
+    def make() -> str:
+        made.append(random_phone())
+        return made[-1]
+
+    yield make
+    async with AdminSession() as s, s.begin():
+        await s.execute(text("DELETE FROM otp_codes WHERE destination = ANY(:p)"), {"p": made})
+        await s.execute(text("DELETE FROM users WHERE phone = ANY(:p)"), {"p": made})
 
 
 @dataclass(frozen=True)
@@ -31,7 +75,8 @@ class SeededTenant:
     slug: str
     name: str
     host: str
-    member_id: UUID
+    member_id: UUID      # a teacher
+    teacher_phone: str
     class_id: UUID
 
 
@@ -51,14 +96,14 @@ async def seed() -> AsyncIterator[Seed]:
 
     async with AdminSession() as s, s.begin():
         for key, status in (("a", "active"), ("b", "active"), ("suspended", "suspended")):
-            slug, name = f"t-{run}-{key[0]}", f"Tenant {key.upper()} {run}"
+            slug, name, phone = f"t-{run}-{key[0]}", f"Tenant {key.upper()} {run}", random_phone()
             tenant_id = (await s.execute(
                 text("INSERT INTO tenants (name, slug, status) VALUES (:n, :s, :st) RETURNING id"),
                 {"n": name, "s": slug, "st": status},
             )).scalar_one()
             user_id = (await s.execute(
                 text("INSERT INTO users (phone, full_name) VALUES (:p, :n) RETURNING id"),
-                {"p": f"+9470{secrets.randbelow(10**7):07d}", "n": f"Teacher {key}"},
+                {"p": phone, "n": f"Teacher {key}"},
             )).scalar_one()
             member_id = (await s.execute(
                 text("INSERT INTO tenant_members (tenant_id, user_id, role) "
@@ -71,7 +116,7 @@ async def seed() -> AsyncIterator[Seed]:
                 {"t": tenant_id, "m": member_id, "title": f"Physics {key}"},
             )).scalar_one()
             user_ids.append(user_id)
-            tenants[key] = SeededTenant(tenant_id, slug, name, f"{slug}.{base}", member_id, class_id)
+            tenants[key] = SeededTenant(tenant_id, slug, name, f"{slug}.{base}", member_id, phone, class_id)
 
     try:
         yield Seed(**tenants)
@@ -79,4 +124,6 @@ async def seed() -> AsyncIterator[Seed]:
         async with AdminSession() as s, s.begin():
             await s.execute(text("DELETE FROM tenants WHERE id = ANY(:ids)"),
                             {"ids": [t.id for t in tenants.values()]})
+            await s.execute(text("DELETE FROM otp_codes WHERE destination = ANY(:p)"),
+                            {"p": [t.teacher_phone for t in tenants.values()]})
             await s.execute(text("DELETE FROM users WHERE id = ANY(:ids)"), {"ids": user_ids})

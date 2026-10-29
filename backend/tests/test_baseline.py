@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from alembic.script import ScriptDirectory
 from sqlalchemy import text
 
 from app.core.db import AdminSession, AppSession
@@ -11,7 +14,8 @@ EXPECTED_TABLES = {
 }
 
 
-async def test_baseline_applied() -> None:
+async def test_migrated_to_head() -> None:
+    script = ScriptDirectory(str(Path(__file__).resolve().parents[1] / "migrations"))
     async with AdminSession() as session:
         version = (await session.execute(text("SELECT version_num FROM alembic_version"))).scalar_one()
         tables = set(
@@ -19,7 +23,7 @@ async def test_baseline_applied() -> None:
                 "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
             ))).scalars()
         )
-    assert version == "0001"
+    assert version == script.get_current_head()
     assert EXPECTED_TABLES <= tables
 
 
