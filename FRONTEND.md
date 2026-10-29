@@ -1,424 +1,436 @@
 # EduZone — Frontend Design
 
-> Companion to `CLAUDE.md`. Read both before frontend work.
-> Where this file and `CLAUDE.md` disagree, **this file wins** (see section 1); `CLAUDE.md` will be
-> updated to match.
+> Companion to `CLAUDE.md`. Read both before frontend work. Backend contracts, money rules and schema
+> changes live in `CLAUDE.md`; this file covers sites, screens, UX and the design system.
 
 ---
 
-## 1. Decisions that change `CLAUDE.md`
-
-| Topic | Old (`CLAUDE.md`) | New |
-|---|---|---|
-| Domain | `eduzone.lk` | **`eduzone.switchops.tech`** |
-| Teachers / institutes | Own subdomain each | **Live inside the main site** as a marketplace: `eduzone.switchops.tech/t/<slug>` |
-| Companies | v1.1 corporate features | **Own private subdomain**: `<company>.eduzone.switchops.tech` |
-| Public site | Branding + home page only | **Marketplace**: browse and search classes from all approved teachers |
-| Teacher onboarding | Created by EduZone staff | **Self-registration**, then **EduZone approval** before publishing or selling |
-| Student login | Phone OTP is primary | **Email is primary** (Google sign-in or email). **Unique mobile number required**, verified by SMS OTP |
-| SMS OTP use | Every login | Only at **registration, new device, and account recovery** |
-| Company staff | Not defined | Company **verifies its email domain** (DNS TXT); admin bulk-adds staff; staff with that domain can self-register |
-| Platform admin | `admin.eduzone.lk` + IP allowlist | **Private: reachable only over VPN**, separate app, 2FA |
-
-**Build order assumption:** marketplace (teachers + students) first, company subdomains after.
-
----
-
-## 2. Platform map
+## 1. Platform map
 
 ```
-                         eduzone.switchops.tech
- ┌──────────────────────────────────────────────────────────────────┐
- │  PUBLIC MARKETPLACE        /            /classes   /teachers      │
- │  TEACHER PUBLIC PAGES      /t/<slug>    /t/<slug>/c/<class-slug>  │
- │  STUDENT AREA              /learn/...   (one account, all teachers)│
- │  TEACHER / INSTITUTE CONSOLE /teach/<slug>/...                     │
- │  AUTH                      /login /register /verify-phone ...     │
- └──────────────────────────────────────────────────────────────────┘
+                              eduzone.switchops.tech
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │ MARKETPLACE         /   /classes   /teachers   /institutes             │
+ │ SUBJECT PAGES       /<subject>                    e.g. /physics         │
+ │ TEACHER PAGES       /<subject>/<teacher>          e.g. /physics/jhone   │
+ │ CLASS PAGES         /<subject>/<teacher>/<class>                        │
+ │ INSTITUTE PAGES     /institutes/<slug>                                  │
+ │ CART & CHECKOUT     /cart   /checkout/<checkout-no>                     │
+ │ STUDENT AREA        /learn/...      (one account, every teacher)        │
+ │ TEACHER CONSOLE     /teach/<tenant-slug>/...                            │
+ │ AUTH                /login  /register  /verify-phone  /recover          │
+ └────────────────────────────────────────────────────────────────────────┘
 
-                    <company>.eduzone.switchops.tech
- ┌──────────────────────────────────────────────────────────────────┐
- │  COMPANY LEARNING SITE  /         (staff only, fully white-label) │
- │  EMPLOYEE AREA          /learn/...                                │
- │  COMPANY CONSOLE        /manage/...                               │
- └──────────────────────────────────────────────────────────────────┘
+                      <company>.eduzone.switchops.tech   (v1.1)
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │ COMPANY SITE  /    EMPLOYEE AREA  /learn/...    COMPANY CONSOLE /manage │
+ └────────────────────────────────────────────────────────────────────────┘
 
-          Private hostname, reachable only over the SwitchOps VPN
- ┌──────────────────────────────────────────────────────────────────┐
- │  PLATFORM ADMIN  (separate Next.js app, never deployed publicly)  │
- └──────────────────────────────────────────────────────────────────┘
+                   Private hostname — SwitchOps VPN only
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │ PLATFORM ADMIN  (separate Next.js app, never deployed publicly)         │
+ └────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Surface | Who | Branding |
 |---|---|---|
-| Public marketplace | Everyone | EduZone brand |
-| Teacher public page | Everyone | EduZone shell + teacher's logo and accent colour on their page |
-| Student area | Registered students | EduZone brand |
-| Teacher console | Teacher, institute owner/admin/teachers | EduZone brand |
-| Company site | Company staff only | **Fully the company's** brand |
+| Marketplace, subject, teacher, class pages | Everyone | EduZone brand. **Teachers have a profile, not their own theme.** |
+| Student area, cart, checkout | Students | EduZone brand |
+| Teacher console | Teachers, institute owners/admins | EduZone brand |
+| Company site (v1.1) | Company staff | **Company's own brand** (logo + colour) |
 | Platform admin | SwitchOps staff | Plain internal UI |
 
 ---
 
-## 3. Applications and hosting
+## 2. Applications and repository
 
 | App | Serves | Deployed |
 |---|---|---|
-| `web` (Next.js) | Marketplace, teacher pages, student area, teacher console, company sites | Public |
-| `admin` (Next.js) | Platform admin | **Private network only** (VPN). Its code never ships to the public server. |
-
-One codebase (`frontend/`) with two apps sharing a `packages/ui` component library.
+| `web` | Marketplace, student area, cart/checkout, teacher console, company sites | Public |
+| `admin` | Platform admin | **Private network only**; its code never ships to the public server |
 
 ```
 frontend/
 ├── apps/
 │   ├── web/
 │   │   ├── app/
-│   │   │   ├── (marketplace)/        # /, /classes, /teachers, /t/[slug]/...
-│   │   │   ├── (auth)/               # /login, /register, /verify-phone, /forgot
-│   │   │   ├── (student)/learn/      # my classes, lessons, payments, profile
-│   │   │   ├── (teacher)/teach/[slug]/
-│   │   │   ├── (company)/            # rendered when host is a company subdomain
-│   │   │   └── api/                  # BFF route handlers (proxy to FastAPI)
-│   │   ├── middleware.ts             # host → site type; auth guard
-│   │   └── i18n/                     # en.json, si.json, ta.json
+│   │   │   ├── (marketplace)/            # /, /classes, /teachers, /institutes, /[subject]/...
+│   │   │   ├── (auth)/                   # /login, /register, /verify-phone, /recover
+│   │   │   ├── (shop)/                   # /cart, /checkout/[no]
+│   │   │   ├── (student)/learn/
+│   │   │   ├── (teacher)/teach/[tenant]/
+│   │   │   ├── (company)/                # rendered when the host is a company subdomain
+│   │   │   └── api/                      # BFF route handlers → FastAPI
+│   │   ├── middleware.ts
+│   │   └── i18n/{en,si,ta}.json
 │   └── admin/
 ├── packages/
-│   ├── ui/                           # design system components
-│   ├── api-client/                   # typed client generated from FastAPI OpenAPI
-│   └── config/                       # tailwind preset, tsconfig, eslint
-└── e2e/                              # Playwright
+│   ├── ui/                               # design system
+│   ├── api-client/                       # generated from FastAPI OpenAPI
+│   └── config/                           # tailwind preset, tsconfig, eslint
+└── e2e/                                  # Playwright
 ```
 
 ---
 
-## 4. Site and tenant resolution
+## 3. Routing and resolution
 
-`middleware.ts` decides **which site** a request belongs to:
+`middleware.ts` decides the site; the API always resolves and authorizes tenants itself.
 
-| Host / path | Site type | Tenant context |
+| Request | Site | How the backend finds data |
 |---|---|---|
-| `eduzone.switchops.tech` `/`, `/classes`, `/teachers` | marketplace | none (cross-tenant public catalog) |
-| `eduzone.switchops.tech/t/<slug>/...` | teacher public page | teacher tenant by `<slug>` |
-| `eduzone.switchops.tech/learn/...` | student area | the signed-in user; spans many tenants |
-| `eduzone.switchops.tech/teach/<slug>/...` | teacher console | `<slug>`, **only if the user is a member** |
-| `<company>.eduzone.switchops.tech` | company site | company tenant by subdomain |
-| anything else | 404 | — |
+| main host, `/`, `/classes`, `/teachers`, `/institutes` | marketplace | public catalog |
+| main host, `/<subject>` | subject page | public catalog filtered by subject |
+| main host, `/<subject>/<teacher>` | teacher page | teacher profile slug; 404 if the teacher has no published class in that subject |
+| main host, `/<subject>/<teacher>/<class>` | class page | class slug within that teacher's tenant |
+| main host, `/learn/...`, `/cart`, `/checkout/...` | student | signed-in user (`app.user_id`), across tenants |
+| main host, `/teach/<tenant>/...` | console | tenant slug **+ membership check** |
+| `<company>.eduzone.switchops.tech` | company site | host → company tenant |
 
 Rules:
-1. The browser may **name** a tenant (slug in the URL). The **API always resolves and verifies it**:
-   tenant exists, is active, and (for consoles) the user is a member with the right role.
-2. The browser never sends a tenant UUID as a trusted value.
-3. Reserved slugs that no tenant can take: `admin`, `api`, `www`, `app`, `learn`, `teach`, `t`,
-   `login`, `register`, `support`, `status`, `mail`, `static`, `assets`.
-4. A **company subdomain never shows marketplace content**, and the marketplace never lists company classes.
+- The first path segment is matched in this order: **reserved routes** → **subject slugs** → 404.
+  Subject slugs come from the EduZone-managed `subjects` list, so they can never collide with routes.
+- A teacher teaching several subjects has one page per subject (`/physics/jhone`, `/combined-maths/jhone`),
+  each with a link to their other subjects.
+- Teacher slugs are unique platform-wide (`jhone`, `jhone-perera`, …).
+- Company subdomains never show marketplace content; the marketplace never lists company classes.
 
 ---
 
-## 5. Security in the browser
+## 4. Browser security
 
-- **BFF pattern:** the browser talks only to Next.js route handlers on the same host; they call FastAPI.
+- **BFF:** the browser only calls Next.js route handlers on the same host; they call FastAPI.
   Tokens never reach browser JavaScript.
-- **Cookies:** `__Host-ez_session`: `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`, **no `Domain`**.
-  A company subdomain session is never sent to the main site or other subdomains.
-- **No tokens in `localStorage`** or `sessionStorage`.
-- **CSRF:** `SameSite=Lax` + a CSRF token header on every state-changing request.
-- **CSP:** default-src self; allow Bunny video/CDN hosts, the payment gateway, Google sign-in, and fonts only.
-- **Signed video and file URLs** are fetched per play and never cached or logged.
-- **Rate-limit feedback:** OTP and login forms show cooldown timers from the API.
+- **Cookies:** `__Host-ez_session` — `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`, **no `Domain`**.
+- **No tokens** in `localStorage` / `sessionStorage`. The **cart** may live in `localStorage` until sign-in,
+  then syncs to the server.
+- **CSRF:** `SameSite=Lax` + CSRF token header on every state-changing request.
+- **CSP:** allow only self, Bunny video/CDN hosts, the payment gateway, Google sign-in, and fonts.
+- Signed video/file URLs are fetched per play and never cached or logged.
+- OTP and login forms show cooldown timers from the API's rate limits.
 
 ---
 
-## 6. Identity and sign-in UX
+## 5. Identity UX
 
-### Student registration (marketplace)
-1. **Register**: "Continue with Google" or email + password (email verification link).
-2. **Verify mobile** (required): enter `07X XXX XXXX` → normalise to `+947XXXXXXXX` → SMS OTP → verified.
-   A number already used by another account is rejected with a recovery link.
-3. **Profile**: name, preferred language, optional exam/year and school.
-4. Land on the marketplace or return to the class they were trying to join.
+### Student registration
+1. **Continue with Google**, or email + password (verification link sent).
+2. **Verify mobile** (required, unique): `07X XXX XXXX` → `+947XXXXXXXX` → 6-digit SMS OTP.
+   Number already used → "This number is linked to another account" + recover link.
+3. **About you**: name, preferred language, optional exam + year + school.
+4. Return to where they were (class page or cart).
 
-### Student sign-in
-- Google or email + password.
-- **New device** → SMS OTP to the verified number. Signing in revokes the older device's session
-  (one-device rule); the old device shows "You were signed out because you signed in on another device".
+Users may browse and add to cart without an account; registration and phone verification happen at
+**checkout**, not before.
+
+### Sign-in
+- Google or email + password. Known device: done, **no SMS**.
+- **New device** → SMS OTP to the verified number → older device signed out; it shows
+  "You were signed out because your account was used on another device."
+- **Recovery** → email link + SMS OTP.
 
 ### Teacher / institute registration
-1. Register like a student (same account type; a person can be both).
-2. "Teach on EduZone" → **application**: individual or institute, display name, slug, subjects,
-   NIC/business registration document, bank details for payouts, accept teacher terms.
-3. Status page: **Pending review** → **Approved** (can publish and sell) or **Changes requested**.
-4. While pending, the console works in **draft mode**: classes can be created but not published.
+Register as a normal user → **Teach on EduZone** → application (individual or institute, name,
+profile slug, subjects, ID/business document, payout bank details, terms) → **Pending review**
+(console in draft mode, publish disabled with an explanation) → **Approved** → publish.
 
-### Company setup (after marketplace launch)
-1. EduZone staff creates the company and its subdomain.
-2. Company admin adds their email domain → shown a **DNS TXT record** → verification status updates.
-3. Admin bulk-adds staff (CSV of emails) or staff self-register with a matching company email.
-4. Public domains (`gmail.com`, `yahoo.com`, etc.) can never be claimed.
-
-### Platform admin
-Separate app on the private network, separate admin login, **2FA required** (authenticator app or passkey).
+### Company staff (v1.1)
+Company email + verification link; no phone verification.
 
 ---
 
-## 7. Screens
+## 6. Screens
 
-### 7.1 Public marketplace (`eduzone.switchops.tech`)
-
-| Route | Screen | Contents |
+### 6.1 Marketplace
+| Route | Screen | Key content |
 |---|---|---|
-| `/` | Home | Search bar, browse by exam (Grade 5 / O/L / A/L), subject chips, featured classes, "Teach on EduZone" |
-| `/classes` | Catalog | Filters: exam, subject, batch year, medium, price, teacher. Sort: newest, popular. Card grid. |
-| `/teachers` | Teachers | Approved teachers and institutes with subject tags |
-| `/t/<slug>` | Teacher page | Logo, bio, subjects, their published classes |
-| `/t/<slug>/c/<class>` | Class page | Description, schedule, months with fees, free preview lessons, **Join / Pay** |
-| `/about`, `/terms`, `/privacy`, `/refund-policy` | Static | Required for the payment gateway |
+| `/` | Home | Search, exam tabs (Grade 5 / O/L / A/L), subject grid, popular classes, "Starting this month", Teach on EduZone |
+| `/classes` | Catalog | Filters: exam, subject, batch year, medium, price, live/recorded. Mobile: filters in a bottom sheet |
+| `/<subject>` | Subject page | All teachers and classes for that subject, filter by exam/year/medium |
+| `/teachers`, `/institutes` | Directories | Cards with subjects, class count |
+| `/<subject>/<teacher>` | **Teacher page** | See 6.2 |
+| `/<subject>/<teacher>/<class>` | Class page | What you'll learn, schedule (day/time), months with fees and status, free preview lessons, teacher card, **Add to cart / Buy now** |
+| `/institutes/<slug>` | Institute page | About, teachers, classes by subject |
+| `/about`, `/terms`, `/privacy`, `/refund-policy`, `/contact` | Static | Required for gateway approval |
 
-Class card: cover, title, teacher, exam + year + medium badges, `Rs. 2,000 / month`.
+### 6.2 Teacher page — built for teachers to market
+Purpose: a page a teacher proudly shares on WhatsApp, Facebook and printed posters.
 
-### 7.2 Student area (`/learn`)
+Contents (top to bottom):
+1. **Photo, name, headline** (e.g. "B.Sc Physics · 12 years teaching"), subjects, medium
+2. **Primary action**: "View classes" / "Join October" for the current month
+3. **Classes in this subject** with schedule, fee, exam year, seats/students count (optional)
+4. **Highlights**: results, qualifications (teacher-entered, short)
+5. **Free preview lesson** if available
+6. **About** (bio)
+7. **Other subjects** this teacher teaches
 
-| Route | Screen | Contents |
+Sharing tools (in the console and on the page):
+- **Copy link** and **Share to WhatsApp** (pre-filled message in the teacher's chosen language)
+- **QR code** download (PNG/SVG) for posters and tute covers
+- Rich link preview (Open Graph image auto-generated: photo, name, subject, EduZone mark)
+
+No teacher logo or custom colours; every teacher page looks consistent and trustworthy.
+
+### 6.3 Cart and checkout
+| Route | Screen | Key content |
 |---|---|---|
-| `/learn` | **Today** (home) | Next live class with countdown + Join, unpaid-month banners, recent recordings |
-| `/learn/classes` | My classes | All joined classes **across all teachers**, grouped by teacher |
-| `/learn/classes/<id>` | Class | Months list: **Paid / Unpaid / Closed – request access / Pending approval** |
-| `/learn/classes/<id>/m/<month>` | Month | Lessons of that month (live, recorded, tutes) |
-| `/learn/lessons/<id>` | Lesson | Video player, views left, Zoom join, tute downloads, previous/next |
-| `/learn/checkout/<order>` | Checkout | Order summary → pay with the gateway |
-| `/learn/checkout/<order>/return` | Payment result | Polls order status: Processing → Paid / Failed |
-| `/learn/payments` | Payments | History; each row opens a **printable receipt** |
-| `/learn/requests` | Past-month requests | Pending / approved (pay now) / rejected |
-| `/learn/profile` | Profile | Name, email, verified phone, language, devices, sign out |
+| `/cart` | Cart | Items **grouped by teacher**: class, month, fee. Remove item. Total. Notes when an item became unavailable. |
+| `/checkout/<no>` | Review | Sign-in / phone verification if needed → summary → **Pay Rs. X** → gateway |
+| `/checkout/<no>/return` | Result | "Confirming your payment…" (polls) → success list of unlocked months with links, or failure + retry |
 
-### 7.3 Teacher / institute console (`/teach/<slug>`)
+Rules shown to the user: past months need approval first; already-owned months can't be added.
 
-| Route | Screen | Contents |
+### 6.4 Student area (`/learn`)
+| Route | Screen | Key content |
 |---|---|---|
-| `/teach/<slug>` | Dashboard | This month: collected, unpaid students, pending requests, upcoming live classes |
-| `/teach/<slug>/classes` | Classes | List, create, edit, publish (blocked until approved) |
-| `/teach/<slug>/classes/<id>` | Class detail | Months, lessons (add, edit, reorder, show/hide), settings (fee, view limit, late months) |
-| `/teach/<slug>/media` | Media library | Upload video/PDF, processing status, storage used vs limit, attach to lessons |
-| `/teach/<slug>/students` | Students | Per class and month: paid / not paid; search; manual access (scholarship/free) |
-| `/teach/<slug>/requests` | Late-month inbox | Approve / reject with a note |
-| `/teach/<slug>/payments` | Payments | Orders, refunds (request a refund) |
-| `/teach/<slug>/cashflow` | Cash flow | Monthly: gross, gateway fees, EduZone commission, net, refunds, paid out, **balance due** |
-| `/teach/<slug>/earnings` | Teacher earnings | Institutes only: net per teacher per month |
-| `/teach/<slug>/team` | Team | Institutes: invite teachers/admins by email |
-| `/teach/<slug>/profile` | Public profile | Logo, accent colour (contrast-checked), bio, subjects |
-| `/teach/<slug>/payout` | Payout details | Bank details (masked), payout history |
-| `/teach/apply` | Application | Teacher registration and approval status |
+| `/learn` | **Today** | Next live class (countdown + Join), "Pay for November" cards, new recordings, continue watching |
+| `/learn/classes` | My classes | Every joined class across all teachers |
+| `/learn/classes/<id>` | Class | Months: **Paid · Unpaid (Pay) · Closed (Request) · Pending approval** |
+| `/learn/classes/<id>/m/<month>` | Month | Lessons: live, recorded, tutes |
+| `/learn/lessons/<id>` | Lesson | Player, views left, Zoom button, downloads, previous/next |
+| `/learn/schedule` | Schedule | Week view of upcoming live classes from all teachers |
+| `/learn/payments` | Payments | Checkouts with their items grouped by teacher; **printable receipt** per checkout |
+| `/learn/requests` | Requests | Past-month requests and their status |
+| `/learn/profile` | Profile | Name, email, phone (verified), language, signed-in device, sign out |
 
-If a user belongs to more than one tenant, a **workspace switcher** sits in the console header.
-
-### 7.4 Company site (`<company>.eduzone.switchops.tech`)
-
+### 6.5 Teacher / institute console (`/teach/<tenant>`)
 | Route | Screen |
 |---|---|
-| `/` | Company-branded home: assigned courses, progress, due dates |
-| `/learn/...` | Same lesson player and course pages as students, **no checkout** |
-| `/manage` | Company admin dashboard: staff count, completion rate, overdue |
-| `/manage/staff` | Staff list, CSV import, departments |
-| `/manage/domains` | Email domains + DNS TXT verification status |
-| `/manage/courses` | Courses, assign to staff/departments with due dates |
-| `/manage/reports` | Completion per person/department, CSV export |
-| `/manage/branding` | Logo, colours |
+| `/` | Dashboard: collected this month, unpaid students, pending requests, upcoming live classes, approval status banner |
+| `/classes`, `/classes/<id>` | Classes, months, lessons (add, edit, reorder, show/hide), class settings |
+| `/media` | Upload video/PDF, processing status, storage used vs limit |
+| `/students` | Per class/month paid vs unpaid; manual access (scholarship/free) |
+| `/requests` | Late-month inbox: approve / reject with note |
+| `/payments` | Orders and refund requests |
+| `/cashflow` | Monthly gross, gateway fees, commission, net, refunds, paid out, **balance due** |
+| `/earnings` | Institutes: net per teacher per month |
+| `/team` | Institutes: invite teachers/admins by email |
+| `/profile` | Teacher page editor with live preview + **share tools** (link, WhatsApp, QR) |
+| `/payout` | Bank details (masked), payout history |
+| `/teach/apply` | Application and approval status |
 
-### 7.5 Platform admin (private)
+Workspace switcher in the header if the user belongs to more than one tenant.
 
-| Screen | Contents |
-|---|---|
-| Teacher applications | Review documents, approve / request changes / reject |
-| Tenants | All teachers, institutes, companies; status; suspend |
-| Payments | All payments, failed payments, refunds |
-| Balances & payouts | Balance due per tenant; record payouts with bank reference |
-| Usage | Bunny storage and bandwidth per tenant vs limits |
-| Users | Search users, devices, reset phone verification |
-| Audit log | Every admin action |
+### 6.6 Company site (v1.1)
+`/` assigned courses + due dates · `/learn/...` same player, no checkout · `/manage` dashboard ·
+`/manage/staff` CSV import, departments · `/manage/domains` DNS TXT status · `/manage/courses` assign ·
+`/manage/reports` completion + CSV · `/manage/branding` logo and colour.
 
----
-
-## 8. Key flows
-
-### Pay for a month
-1. Class page → month → **Pay Rs. 2,000** (signed in and phone-verified, else redirect to finish setup).
-2. API creates the order → redirect to the gateway.
-3. Return page shows **"Confirming payment…"** and polls the order. It **never** grants access itself.
-4. Paid → "You now have access to October" → button to the month.
-5. Failed or cancelled → retry button, no access.
-
-### Request a past month
-1. Closed month shows **Request access**, with an optional note.
-2. Status **Pending** appears on the month and in `/learn/requests`.
-3. Teacher approves → student is notified → month shows **Pay now**.
-
-### Watch a lesson
-1. Lesson page asks the API for a play session (access check + view count).
-2. Allowed → short-lived signed HLS URL → player starts. Denied → clear reason (not paid / views used up).
-
-### Teacher onboarding
-Register → apply → pending (draft mode) → approved → publish first class → share `eduzone.switchops.tech/t/<slug>`.
+### 6.7 Platform admin (private)
+Teacher applications · Tenants (suspend, list/unlist) · Subjects list · Checkouts and payments ·
+Balances and payouts · Bunny usage · Users and devices · Audit log.
 
 ---
 
-## 9. Video player
+## 7. Key flows
 
-- **Own player**: `hls.js` (native HLS on iOS Safari) inside our container. Not Bunny's iframe.
-- **Watermark** inside the player container: student's name + last digits of phone, semi-transparent,
-  **moves position every ~20 seconds**, stays visible in fullscreen.
-- **Fullscreen** is applied to the container (video + watermark), never the bare `<video>` element.
-- **Quality**: auto by default, starting at **480p on mobile**; manual 360p / 480p / 720p / 1080p.
-- **Speed**: 0.75× to 2×.
-- **Resume** from the last position; progress saved every 15 seconds and on pause/exit.
-- **View limit**: "2 of 3 views left" shown before play; a view counts once per play session.
-- Right-click menu disabled and no download button (deterrence only; the watermark is the real protection).
+**Buy classes from two teachers**
+Physics (Jhone) October → Add to cart → Chemistry (Ana) October → Add to cart → Cart shows two groups →
+Checkout → sign in / verify phone if needed → Pay once → return page confirms → both months unlocked.
+
+**Request a past month**
+Closed month → Request access (optional note) → Pending → teacher approves → notification → Pay now (via cart).
+
+**Watch a lesson**
+Lesson page → API play session (access + view count) → short-lived HLS URL → player.
+Denied → plain reason and the action to fix it (Pay for this month / Views used up – contact teacher).
+
+**Teacher onboarding**
+Register → Apply → Pending (draft) → Approved → Publish first class → Profile → Share link/QR.
 
 ---
 
-## 10. Design system
+## 8. UX principles
 
-### Principles
-1. **Neutral base, one accent.** White and grey surfaces, dark text. The accent colour only for primary
-   buttons, links, active states, and highlights.
-2. **Any accent must work.** Teacher and company colours are contrast-checked; button text switches
-   between white and near-black automatically.
-3. **Mobile first.** Design at 360 px width, then scale up.
-4. **Content over decoration.** Students come to study, not browse a brochure.
+The audience is students on budget Android phones and mobile data, parents paying fees, and teachers
+who are not technical. Design every screen against these rules:
 
-### Tokens (CSS variables)
+1. **The next class is never more than one tap away.** "Today" opens on the next live class or the
+   lesson the student was watching.
+2. **Payment status is always obvious.** Every month shows one clear pill: Paid, Unpaid, Pending, Closed.
+   Never make a student guess whether they have access.
+3. **Explain every block.** Locked content always says why and offers the one action that unlocks it.
+4. **Ask only when needed.** Browse and build a cart without an account; ask for registration and phone
+   verification only at checkout.
+5. **Plain, local language.** "Pay for October", not "Purchase entitlement". Sinhala/Tamil copy written
+   by native speakers, not machine-translated.
+6. **Thumb-first layout.** Primary actions in the bottom half of the screen on mobile; sticky bottom bar
+   on class pages and in the cart.
+7. **Fast on slow networks.** Skeletons instead of spinners; content readable before images load;
+   optimistic UI for small actions.
+8. **Forgiving forms.** Accept `0771234567`, `077 123 4567` and `+94771234567`; keep input on errors;
+   errors next to the field, in plain words.
+9. **Trust signals for parents.** Clear fees, receipts, refund policy link, teacher qualifications,
+   secure-payment note at checkout.
+10. **Teachers are busy.** Console defaults to the most common next step (add this month's lessons,
+    see who hasn't paid). Bulk actions where repetition is common.
+
+---
+
+## 9. Design system
+
+### Brand
+EduZone's final logo and colours will be announced later. Use the **placeholder tokens** below; all
+components must read colours from tokens only, so the real brand drops in with no code changes.
+
+### Tokens
 ```css
 :root {
-  --ez-brand: #2D5BFF;          /* EduZone accent (placeholder until brand is set) */
-  --ez-accent: var(--ez-brand);  /* replaced per teacher page / company site */
-  --ez-accent-fg: #FFFFFF;       /* computed for contrast */
-  --ez-bg: #FFFFFF;
-  --ez-surface: #F6F7F9;
-  --ez-border: #E3E6EA;
-  --ez-text: #14171C;
+  /* Brand (placeholder) */
+  --ez-brand-600: #2D5BFF;
+  --ez-brand-700: #2148D6;
+  --ez-brand-50:  #EEF2FF;
+  --ez-on-brand:  #FFFFFF;
+
+  /* Accent used by components; equals brand on the main site,
+     replaced by the company colour on company sites only */
+  --ez-accent:    var(--ez-brand-600);
+  --ez-on-accent: var(--ez-on-brand);
+
+  /* Neutrals */
+  --ez-bg:         #FFFFFF;
+  --ez-surface:    #F6F7F9;
+  --ez-border:     #E3E6EA;
+  --ez-text:       #14171C;
   --ez-text-muted: #5B6470;
-  --ez-success: #1E8E3E;
-  --ez-warning: #B26A00;
-  --ez-danger: #C62828;
-  --ez-radius: 10px;
+
+  /* Status (never themed) */
+  --ez-success: #1E8E3E;  --ez-success-bg: #E8F5EC;
+  --ez-warning: #B26A00;  --ez-warning-bg: #FFF4E0;
+  --ez-danger:  #C62828;  --ez-danger-bg:  #FDECEC;
+  --ez-info:    #1F6FB2;  --ez-info-bg:    #E8F1FA;
+
+  /* Shape and spacing */
+  --ez-radius-sm: 6px;  --ez-radius: 10px;  --ez-radius-lg: 16px;
+  --ez-space: 4px;      /* scale: 4, 8, 12, 16, 24, 32, 48 */
+  --ez-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.06);
 }
 ```
-Status colours are fixed and never replaced by a tenant's accent.
+Company colours (v1.1) are contrast-checked; `--ez-on-accent` switches between white and near-black
+automatically to meet WCAG AA.
 
 ### Typography
 - Latin: **Inter** (variable, subset). Sinhala: **Noto Sans Sinhala**. Tamil: **Noto Sans Tamil**.
-- Load a script's font **only when that language is active**.
-- Base size 16 px; minimum 14 px; line-height 1.5 (1.6 for Sinhala/Tamil).
+- Load each script's font only when that language is active.
+- Scale: 12 / 14 / 16 (base) / 18 / 20 / 24 / 30. Line-height 1.5; 1.6 for Sinhala and Tamil.
+- Numbers in tables and money use tabular figures.
 
-### Components (`packages/ui`)
-Built on Radix primitives (shadcn/ui style, copied into the repo, not a heavy dependency):
-Button, IconButton, Input, PhoneInput (LK), OtpInput, Select, Checkbox, Switch, Textarea, FileUpload
-(with progress), Dialog, Sheet (mobile drawer), Toast, Tabs, Badge, StatusPill (Paid/Unpaid/Pending/Closed),
-Card, ClassCard, Table (becomes cards on mobile), EmptyState, ErrorState, Skeleton, Pagination,
-Money, DateTime, Countdown, ProgressBar, StatTile, VideoPlayer, Watermark, Receipt.
+### Components (`packages/ui`, Radix primitives, shadcn/ui style)
+Button, IconButton, Input, PasswordInput, PhoneInput (LK), OtpInput, Select, Combobox, Checkbox, Switch,
+Textarea, FileUpload (progress, resumable), Dialog, BottomSheet, Toast, Tabs, Badge, **StatusPill**,
+Card, **ClassCard**, **TeacherCard**, **MonthRow**, **CartGroup**, Table (cards on mobile), EmptyState,
+ErrorState, Skeleton, Pagination, **Money**, DateTime, Countdown, ProgressBar, StatTile, **VideoPlayer**,
+Watermark, **Receipt**, **ShareSheet** (link, WhatsApp, QR), StickyActionBar.
 
 ### Every data screen has four states
-**Loading** (skeleton), **Empty** (explains what to do next), **Error** (retry), **Success**.
+**Loading** (skeleton) · **Empty** (what to do next) · **Error** (retry) · **Success**.
 
 ### Dark mode
-Not in v1. Tokens are structured so it can be added later.
+Not in v1; tokens allow it later.
+
+---
+
+## 10. Video player
+
+- Own player: **hls.js** (native HLS on iOS Safari), inside our container — not Bunny's iframe.
+- **Watermark** inside the container: student name + last 4 phone digits, semi-transparent,
+  repositions every ~20 s, visible in fullscreen.
+- **Fullscreen** applies to the container (video + watermark).
+- **Quality**: auto, starting at 480p on mobile; manual 360p–1080p. **Data saver** toggle in profile caps at 360p.
+- Speed 0.75×–2×; resume position; progress saved every 15 s and on pause/exit.
+- "2 of 3 views left" shown before play; a view counts once per play session.
+- No download button, context menu disabled (deterrence; the watermark is the real protection).
 
 ---
 
 ## 11. Formatting and language
 
-- i18n library: `next-intl`. All user-facing text uses keys; `en` complete, `si` and `ta` added before wider launch.
-- Language switcher in the header and profile; choice saved to the user's profile.
-- **Money:** API sends integer cents → display `Rs. 2,000.00` (lists may drop `.00`).
-- **Dates:** API sends UTC → display in `Asia/Colombo`, e.g. `Sat, 4 Oct · 8:00 AM`.
-- **Phone:** input accepts `07X XXX XXXX`, stored as `+947XXXXXXXX`, shown as `077 123 4567`.
+- `next-intl`; all text via keys. **Pilot: English complete; Sinhala for the student area if the pilot
+  teachers need it.** Tamil before wider launch.
+- Language switcher in the header and profile; saved to the user.
+- Money: integer cents from the API → `Rs. 2,000.00` (lists may drop `.00`).
+- Dates: UTC from the API → `Asia/Colombo`, e.g. `Sat, 4 Oct · 8:00 AM`.
+- Phone shown as `077 123 4567`.
 
 ---
 
-## 12. Performance budget (students on mobile data)
+## 12. Performance budget
 
 | Metric | Target (mid-range Android, 4G) |
 |---|---|
 | Largest Contentful Paint | < 2.5 s |
-| JS on marketplace and lesson pages | < 170 KB gzipped |
+| JS on marketplace, class and lesson pages | < 170 KB gzipped |
 | Interaction to Next Paint | < 200 ms |
 
-- Server Components by default; client components only where interaction is needed.
-- `next/image` with WebP/AVIF; class covers ≤ 80 KB.
-- No large chart or animation libraries on student pages; console charts load lazily.
-- Marketplace catalog and teacher pages are cached and revalidated when classes change.
+- Server Components by default; client components only where needed.
+- Marketplace, subject, teacher and class pages are statically cached and revalidated when classes change
+  (also good for search engines).
+- `next/image`, WebP/AVIF, covers ≤ 80 KB, teacher photos ≤ 60 KB.
+- Console charts lazy-loaded; no heavy chart library on student pages.
 - Test on a real low-end Android phone before the pilot.
 
 ---
 
 ## 13. Accessibility
 
-- WCAG 2.1 AA contrast (enforced for tenant colours too).
-- Touch targets ≥ 44 × 44 px; visible focus rings; every input has a label.
-- Keyboard-usable dialogs and player controls.
-- Status never shown by colour alone (Paid / Unpaid pills include text).
+WCAG 2.1 AA contrast · touch targets ≥ 44 px · visible focus · labelled inputs · keyboard-usable dialogs
+and player · status never by colour alone · respects reduced-motion (watermark moves without animation).
 
 ---
 
-## 14. Frontend tech choices
+## 14. SEO and sharing
+
+- Teacher and class pages are the main way students find EduZone: server-rendered, clean titles
+  ("Jhone — A/L Physics Classes | EduZone"), descriptions, `Course` / `Person` structured data.
+- Auto-generated Open Graph images for teacher and class pages (WhatsApp/Facebook previews).
+- Sitemap of all public subject, teacher and class pages.
+
+---
+
+## 15. Frontend tech choices
 
 | Need | Choice |
 |---|---|
-| Framework | Next.js (App Router) + TypeScript (strict) |
-| Styling | Tailwind CSS + CSS variables for tokens |
+| Framework | Next.js (App Router) + TypeScript strict |
+| Styling | Tailwind + CSS variable tokens |
 | Components | Radix primitives, shadcn/ui-style in `packages/ui` |
-| Server data | Server Components + route handlers; TanStack Query only for client-side polling/mutations |
+| Data | Server Components + route handlers; TanStack Query for polling and mutations |
 | Forms | react-hook-form + zod |
-| API types | Generated from FastAPI's OpenAPI schema into `packages/api-client` |
+| API types | Generated from FastAPI OpenAPI |
 | Video | hls.js |
+| QR codes | Generated server-side (small library) |
 | i18n | next-intl |
-| Testing | Vitest (units), Playwright (E2E at 360 px and desktop) |
+| Tests | Vitest + Playwright (360 px and desktop) |
 
 ---
 
-## 15. Backend changes this design needs
+## 16. Build order (frontend)
 
-These are not frontend work, but the screens depend on them:
-
-1. **Path-based tenant resolution** for `/t/<slug>` and `/teach/<slug>`, alongside host-based for companies.
-2. **Public catalog endpoint** across tenants: published classes of approved, marketplace-listed tenants only,
-   public fields only. Implemented as a narrow read path (e.g. a `SECURITY DEFINER` function or a dedicated
-   view), never by disabling RLS broadly.
-3. **Student cross-tenant reads**: "My classes", "Today", payments and requests span many teacher tenants.
-   Needs a user-scoped read path that returns only the signed-in user's own rows.
-4. **Identity**: `user_identities` (Google), email + password, email verification, phone verification
-   state, new-device OTP.
-5. **Teacher applications** table and approval workflow; tenant `pending` → `active`.
-6. **Tenant fields**: `site_type` (`marketplace` | `company`), `is_listed`, `accent_color`.
-7. **Company domains**: `tenant_email_domains` with DNS TXT verification state; public-domain blocklist.
-8. **Reserved slugs** enforced in the API.
+1. Groundwork: monorepo, tokens, core components, i18n, middleware routing, BFF + cookies
+2. Auth rework: Google + email, phone verification, new-device OTP, recovery, profile
+3. Marketplace: home, catalog, subject pages, teacher pages, class pages, institutes
+4. Teacher application + approval states; move existing console slice under `/teach/<tenant>`;
+   profile editor + share tools
+5. Media library + video player
+6. Student area: Today, My classes, months, lessons, schedule, requests; console students + inbox
+7. Cart, checkout, return page, payments, receipts; console payments
+8. Cash flow, earnings, team, payout details
+9. Platform admin app (private)
+10. Polish: Sinhala, Playwright suite, low-end phone pass
+11. v1.1: company sites
 
 ---
 
-## 16. Build order
+## 17. Resolved and open
 
-1. Groundwork: monorepo layout, `packages/ui` core components, tokens, i18n, middleware site resolution, BFF + cookies
-2. Auth: register (Google + email), phone verification, sign-in, new-device OTP, profile
-3. Marketplace: home, catalog with filters, teacher page, class page
-4. Teacher application + approval status; console dashboard; classes/months/lessons (move existing slice under `/teach/<slug>`)
-5. Media library + video player (with backend step 5)
-6. Student area: Today, My classes, months, lessons, late-month requests; console students list and request inbox (backend step 6)
-7. Checkout, return page, payments, receipts; console payments (backend step 7)
-8. Cash flow, teacher earnings, team, payout details (backend step 8)
-9. Platform admin app on the private network (backend step 9)
-10. Company sites (after marketplace pilot)
-11. Sinhala/Tamil, Playwright suite, low-end phone polish
-
----
-
-## 17. Open questions
-
-| Question | Assumption until answered |
+| Topic | Decision |
 |---|---|
-| Pilot order | Marketplace teachers first, companies later |
-| Cart across several teachers | One teacher per order in v1 (orders and ledger are per tenant) |
-| Teacher page branding | Teacher's logo + accent on their own pages only; rest of the site is EduZone brand |
-| Email sign-in method | Email + password, plus Google |
-| Company staff phone verification | Not required; verified company email is enough |
-| Company learning cost to staff | Free to staff; company pays a subscription |
-| Institute public page | Lists its teachers and all their classes |
-| EduZone brand colour and logo | Placeholder until decided |
+| Pilot order | Marketplace first, companies later ✅ |
+| Multi-teacher cart | One checkout, one payment; one order per item, grouped by teacher on screen ✅ |
+| Teacher branding | No logo/colour; marketable profile at `/<subject>/<teacher>` ✅ |
+| Company staff | Free to staff, no checkout, no phone verification ✅ |
+| Sign-in | Google or email + password; SMS only at registration, new device, recovery ✅ |
+| EduZone brand | **Open** — placeholder tokens until announced |
+| Institute URL | `/institutes/<slug>` (assumed) |
+| Sinhala at pilot | **Open** — depends on pilot teachers |

@@ -1,31 +1,38 @@
 # EduZone — Project Guide
 
 > Read this file before every task. It is the single source of truth for what EduZone is,
-> what has been decided, and the rules the code must follow.
+> what has been decided, and the rules the code must follow. `FRONTEND.md` is its companion for
+> sites, screens, UX and the design system; backend contracts, money rules and schema live here.
 > The database schema lives in `db/eduzone_v1_schema.sql`, which is authoritative for tables and columns.
+>
+> **Status (2026-10-30): migrating to the marketplace design.** Build steps 1-9 were built on the
+> earlier one-subdomain-per-organization design. Rules below describe the **target**; paragraphs
+> headed **Built (pre-migration)** describe today's code until its migration phase replaces it.
+> The phases are in section 16 and `docs/frontend-migration-plan.md`.
 
 ---
 
 ## 1. What EduZone is
 
-EduZone is a **multi-tenant, white-label learning platform**. An organization (a tuition teacher,
-an institute, and later a company) gets its own branded learning site on a subdomain
-(`<slug>.eduzone.lk`) and, in v1.1, on its own domain. Students of that organization log in,
-pay fees, watch recorded lessons, join live classes, and download tutes. They only ever see
-that organization's world.
+EduZone is a **multi-tenant learning marketplace** on `eduzone.switchops.tech`. Tuition teachers and
+institutes (tenants) publish classes; students browse every approved teacher, buy months from several
+teachers in **one cart and one payment**, and learn in one student area with **one account**.
+Teachers have a marketable profile page (`/<subject>/<teacher>`), not their own theme. Later (v1.1),
+companies get a private, fully white-label site on their own subdomain for staff training.
 
 - **Owner:** SwitchOps Tech (Pvt) Ltd, Sri Lanka
 - **Builder:** solo developer (Chamoda), assisted by Claude Code
 - **Launch market:** Sri Lankan tuition teachers and institutes (O/L, A/L, Grade 5)
 - **Later market:** companies running staff training (subscription-based, v1.1+)
 
-### Three kinds of user
+### Kinds of user
 
-| Console | Who | Purpose |
+| Surface | Who | Purpose |
 |---|---|---|
-| Platform admin | EduZone staff | Create/suspend organizations, see all money, record payouts, monitor Bunny usage |
-| Organization console | Owner, admin, teacher | Classes, months, lessons, videos, students, payments, cash flow |
-| Student app | Students (mostly on phones) | Browse, pay, watch, join Zoom, download tutes, see receipts |
+| Marketplace | Everyone | Browse subjects, teachers, institutes and classes; add to cart |
+| Student area (`/learn`) | Students (mostly on phones), one account across all teachers | Pay, watch, join Zoom, download tutes, receipts |
+| Teacher console (`/teach/<tenant>`) | Teachers, institute owners and admins | Classes, months, lessons, media, students, payments, cash flow, profile |
+| Platform admin | EduZone staff, private network only | Approve teachers, organizations, all money, payouts, Bunny usage |
 
 ---
 
@@ -33,9 +40,18 @@ that organization's world.
 
 | Topic | Decision |
 |---|---|
-| First customer | Tuition teachers and institutes |
+| Domain | `eduzone.switchops.tech` (marketplace on one host); companies on `<company>.eduzone.switchops.tech` (v1.1) |
+| First customer | Tuition teachers and institutes, on the marketplace |
+| Teacher pages | `/<subject>/<teacher>`, one page per subject taught; **no teacher logo or colours** |
+| Teacher onboarding | **Self-registration, then an application, then EduZone approval** before publishing or selling |
+| Student account | **One account across all teachers.** Google or email + password; **unique mobile number, verified by SMS** |
+| SMS OTP use | Only at registration (phone verification), on a **new device**, and for account recovery |
+| Student membership | A student's `tenant_members` row is created **when they join or pay for a class** of that tenant |
+| One-device rule | **Account-wide**: signing in on a new device signs out the older device |
+| Teacher slug | Belongs to a **profile per person** (unique platform-wide), so one person has one page across institutes |
+| Cart | Several teachers in **one checkout and one payment**; **one order per item** (as before), grouped under the checkout; the gateway fee is split across the orders |
 | Revenue: individuals and institutes | EduZone takes a **commission per sale**, default **20%** (configurable per tenant) |
-| Revenue: corporate (v1.1+) | Monthly subscription per organization |
+| Revenue: corporate (v1.1+) | Monthly subscription per organization; free to staff, no checkout |
 | Who collects money | **EduZone collects all payments** through its own gateway account, then pays organizations out |
 | Organization visibility | Full end-to-end cash flow: gross, gateway fees, EduZone commission, net, refunds, payouts, balance due |
 | Payment methods | **Online gateway only.** No bank deposits or slip uploads. |
@@ -44,12 +60,12 @@ that organization's world.
 | Late joiners | Students may buy **past months only if the teacher approves** the request |
 | Institutes with many teachers | EduZone pays the **institute**. The institute pays its teachers itself, using EduZone's per-teacher earnings report. |
 | Gateway fee bearer | Per-tenant setting, default `tenant`. **Pending final confirmation.** |
-| Items per order (v1) | **One** (one month or one course). Service-enforced; a cart can come later. |
 | Gateway fee timing | Book an **estimated** fee with the sale; true up with a `fee_settlement` posting from the settlement report |
 | Past month | A month the teacher has **closed** (`class_months.status = 'closed'`); buying it needs an approved late request |
 | Refunds on cash-flow page | Gross as sold, refunds as a separate line, commission and net shown after refunds |
-| Video | **Bunny.net** — Bunny Stream for video, Bunny Storage for PDFs |
+| Video | **Bunny.net**: Bunny Stream for video (played in **our own hls.js player**), Bunny Storage for PDFs |
 | Cost rule | No plan may let a tenant's Bunny cost exceed what EduZone earns from that tenant |
+| Platform admin | Separate app, **private network (VPN) only**, two-factor sign-in |
 
 Legal and regulatory review of "collecting on behalf of organizations" (CBSL rules, gateway
 merchant terms, VAT, receipts) is in progress outside the codebase. Keep the money design
@@ -60,43 +76,33 @@ auditable so it can adapt.
 ## 3. Scope
 
 ### v1 (build now)
-**Student**
-- Sign up / log in with phone OTP (email optional)
-- Browse published classes of the current organization
-- Join a class; pay for a month or a one-time course via the gateway
-- Request a past month; pay after teacher approval
-- Watch recorded videos, join Zoom links, and download tutes, **only for paid months**
-- Payment history and receipts
+**Marketplace:** home, catalogue with filters, subject pages, teacher pages (with share link,
+WhatsApp, QR), class pages, institutes, and the static pages the gateway requires.
 
-**Organization console**
-- Create classes, months, lessons (live / recorded / document)
-- Upload videos to Bunny and PDFs; attach them to lessons; add Zoom links
-- Student list per class: paid / not paid this month
-- Approve or reject late-month requests
-- Manual access grants (scholarships, free access)
-- Cash-flow page (monthly) and per-teacher earnings (institutes)
+**Student:** register (Google or email + password, phone verification), sign in (SMS only on a new
+device), recover; a cart across teachers and one payment; request a past month and pay after approval;
+Today, my classes, months, lessons (player, Zoom, tutes) **only for paid months**; schedule;
+payments and printable receipts; profile.
 
-**Platform admin (minimal)**
-- Create organizations and their owners
-- See all payments; record payouts; see each tenant's balance due
-- See Bunny usage per tenant
+**Teacher console:** application and approval status (draft mode until approved); classes, months,
+lessons; media (Bunny); students paid / not paid; late-month inbox; manual access (scholarships, free);
+payments; cash flow; per-teacher earnings (institutes); team invites (institutes); public profile
+editor with share tools; payout details.
 
-**Foundations required in v1 even though only a few tenants exist**
-- Multi-tenancy everywhere (see section 5)
-- Ledger for all money (see section 7)
-- Content protection basics (see section 8)
+**Platform admin (private):** teacher applications; organizations (suspend, list or unlist); subjects;
+checkouts and payments; balances and payouts; Bunny usage; users and devices; audit log.
+
+**Foundations:** multi-tenancy everywhere (section 5), the ledger for all money (section 7),
+content protection (section 10).
 
 ### v1.1 (later; do not build unless asked)
-- Custom domains (CNAME + TXT verification, automatic TLS)
-- Organization self-signup and onboarding
-- Full platform admin console
-- Richer organization and student consoles
-- Corporate features: departments, assigned courses, due dates, completion reports, subscriptions
-- Sinhala and Tamil UI translations (the i18n structure must exist from v1)
+- Company sites: a subdomain per company, own branding, email-domain verification (DNS TXT), staff import,
+  departments, assigned courses, due dates, completion reports, subscriptions
+- Custom domains for companies
+- Tamil UI (Sinhala at the pilot if the pilot teachers need it)
 
 ### Out of scope for now
-Own video-calling system, mobile native apps, marketplace across tenants, affiliate programs,
-SCORM/LTI, AI features, bank slip payments.
+Own video-calling system, mobile native apps, affiliate programs, SCORM/LTI, AI features, bank slip payments.
 
 ---
 
@@ -107,12 +113,14 @@ SCORM/LTI, AI features, bank slip payments.
 | Backend | Python 3.12+, **FastAPI**, Pydantic v2 |
 | ORM / migrations | SQLAlchemy 2.0 (async) + Alembic |
 | Database | **PostgreSQL 16+** with Row-Level Security |
-| Frontend | **Next.js** (App Router) + TypeScript + Tailwind; mobile-first |
+| Frontend | **Next.js** (App Router) + TypeScript + Tailwind; mobile-first. Monorepo `apps/web`, `apps/admin`, `packages/ui`, `packages/api-client` (see `FRONTEND.md`) |
 | Background jobs | Redis + a worker (ARQ or Celery). Add only when a feature needs it (webhooks retries, emails, Bunny usage sync). |
 | Video | Bunny Stream (one library per tenant) |
 | Files | Bunny Storage |
 | SMS / OTP | Sri Lankan SMS provider (TBD) behind an interface |
-| Hosting | One backend app + one frontend app + Postgres + Redis. **No microservices.** |
+| Email | Transactional email provider (TBD) behind an interface: verification and recovery links |
+| Sign-in with Google | Google OAuth / OpenID Connect client (to be created) |
+| Hosting | One backend app + the public web app + Postgres + Redis; the admin app on the private network. **No microservices.** |
 
 Architecture: **modular monolith**. One FastAPI app, split by domain modules.
 
@@ -176,35 +184,49 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
 ## 5. Multi-tenancy rules (non-negotiable)
 
 1. **Every business table has `tenant_id`.** Platform-level tables (`tenants`, `users`,
-   `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`) are the only exceptions.
-2. **Tenant resolution:** read `X-Forwarded-Host` if present (set by the frontend server or a
-   reverse proxy, which can't override `Host`), else the `Host` header → `<slug>.eduzone.lk` → call
-   `resolve_tenant(slug)` (a `SECURITY DEFINER` function, because RLS hides `tenants` until
-   `app.tenant_id` is set). Unknown or non-active tenant → 404. (v1.1 adds a custom-domain lookup first.)
-3. **Every request runs in a DB transaction that begins with**
+   `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`, `platform_admins`, and the planned
+   identity, `subjects`, `teacher_profiles`, `teacher_applications`, `checkouts`, `checkout_payments` and
+   `cart_items` tables) are the only exceptions.
+2. **How a request finds its tenant (target):**
+   - **Teacher console** `/teach/<tenant>/...`: tenant slug from the path, `resolve_tenant(slug)`, then a
+     **membership check** (active staff member of that tenant), then the tenant transaction.
+   - **Class pages and their actions** (`/<subject>/<teacher>/<class>`): the class's own tenant, found from its
+     public identifiers; any write (join, request, checkout item) runs in that tenant's transaction.
+   - **Company sites (v1.1):** host to company tenant, as built today.
+   - Unknown, non-active or (for public pages) unlisted or unapproved tenant: 404.
+
+   **Built (pre-migration):** the tenant comes from `X-Forwarded-Host` or `Host` (`<slug>.<base>`) via
+   `resolve_tenant(slug)`.
+3. **Every tenant request runs in a DB transaction that begins with**
    `SET LOCAL app.tenant_id = '<tenant uuid>'`. Without it, RLS returns zero rows.
-   In code (`app/core/tenancy.py`): tenant-facing routes take `session: TenantSession`
-   (or `tenant: CurrentTenant` if they need no DB). This is a FastAPI dependency rather than
-   middleware, so platform and webhook routes simply don't use it. It commits before the
-   response is sent and rolls back on any error. Services and jobs use `tenant_transaction(tenant_id)`.
-4. **Never accept `tenant_id` from the client.** It always comes from the resolved request context.
-5. The app connects as role **`eduzone_app`** (subject to RLS). Platform admin endpoints and
+   In code (`app/core/tenancy.py`): routes take `session: TenantSession`; services and jobs use
+   `tenant_transaction(tenant_id)`. It commits before the response is sent and rolls back on any error.
+4. **User-scoped reads (target, phase 3).** The student area, cart and payment history span many tenants.
+   They run with `SET LOCAL app.user_id` and **extra RLS policies that only allow reading the signed-in
+   user's own rows** (their member rows, enrollments, grants, requests, progress, orders, payments).
+   Writes always happen inside the class's tenant transaction. These policies get isolation tests as
+   strict as tenant isolation: user A never sees user B's rows.
+5. **Public marketplace reads** go through **one narrow read path** (a `SECURITY DEFINER` function set or
+   an admin-owned view) exposing public fields of listed, approved tenants and published classes only.
+   Never by relaxing tenant RLS.
+6. **Never accept `tenant_id` or `user_id` from the client.** They come from the resolved path or the session.
+7. The app connects as role **`eduzone_app`** (subject to RLS). Platform admin endpoints and
    background jobs use **`eduzone_admin`** (BYPASSRLS) through a separate session factory.
-   Never use `eduzone_admin` for tenant-facing endpoints.
-6. Cross-tenant links are blocked by **composite foreign keys** `(tenant_id, id)`.
+   Never use `eduzone_admin` for tenant- or student-facing endpoints.
+8. Cross-tenant links are blocked by **composite foreign keys** `(tenant_id, id)`.
    New tables referencing tenant data must follow the same pattern. Rows that carry both
    `class_id` and `class_month_id` use `(tenant_id, class_id, class_month_id)` so the month
    must belong to that class.
-   Gateway webhooks are the one request type without a tenant host: find the tenant with
-   `resolve_payment_tenant(gateway, idempotency_key)`, then run a normal tenant transaction.
+   Gateway webhooks arrive without a tenant: find it with `resolve_payment_tenant(gateway, idempotency_key)`
+   (target: the checkout, then each order's tenant), then run normal tenant transactions.
    New `eduzone_app` grants are given explicitly in each migration; money tables and
    `audit_logs` never get DELETE.
-7. A user is global; their role is per tenant (`tenant_members`). Authorization always checks
+9. A user is global; their role is per tenant (`tenant_members`). Authorization always checks
    the member row for the current tenant, never a global role.
-8. Tests must include an isolation test for every new tenant-scoped table.
-   `tests/test_isolation.py` already fails if any table with `tenant_id` lacks a forced RLS
-   policy; add behavioural read/write tests for a table when a module starts using it
-   (the `seed` fixture in `tests/conftest.py` gives two active tenants and a suspended one).
+10. Tests must include an isolation test for every new tenant-scoped table.
+    `tests/test_isolation.py` already fails if any table with `tenant_id` lacks a forced RLS
+    policy; add behavioural read/write tests for a table when a module starts using it
+    (the `seed` fixture in `tests/conftest.py` gives two active tenants and a suspended one).
 
 ---
 
@@ -234,6 +256,15 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
          ├─ tenant_usage_daily         Bunny storage / bandwidth per day
          └─ audit_logs
 ```
+
+**Planned for the marketplace** (added by the migration phases and mirrored in the schema file as they land):
+- Identity (phase 2): `user_identities` (Google), `email_verifications`, `recovery_tokens` (hashed,
+  expiring), `user_devices` (trusted devices); `user_sessions` loses `tenant_id` (sessions are per user).
+- Marketplace (phase 4): `subjects` (EduZone-managed slugs), `classes.subject_id`, `teacher_profiles`
+  (slug unique platform-wide, photo, headline, bio, highlights), `tenants.is_listed`.
+- Onboarding (phase 5): `teacher_applications` (document in private storage); new tenants start `pending`.
+- Cart (phase 6): `cart_items` (per user), `checkouts` and `checkout_payments` (platform-level: one
+  payment for many orders); `orders.checkout_id`.
 
 **Views** (RLS-aware, `security_invoker`):
 - `v_tenant_cashflow_monthly`: gross (as sold), refunds (own line), gateway fees (incl. true-ups),
@@ -346,6 +377,14 @@ so who absorbs them follows `gateway_fee_bearer`.
 
 ## 8. Payment flow
 
+**Target (phase 6): one cart and one payment across teachers.** The cart holds items from several
+teachers. Checkout creates one `checkouts` row and, for each item, a `pending` order with exactly one item
+**in that item's tenant** (the rules below apply per item), then **one** `checkout_payments` attempt for the
+total. The webhook stores and verifies as below, then fulfils **each order in its own tenant transaction**
+(grant, late request, ledger sale). The gateway fee is allocated across the orders by largest remainder so
+it sums exactly; each order is booked once; a failed tenant transaction is retried, never auto-refunded.
+The steps below describe one order and stay true for each order of a checkout.
+
 1. Student clicks **Pay** → create `orders` (`pending`) + **exactly one** `order_items` row
    (v1 rule, enforced in the service: one month or one course per order).
    - A month is buyable directly while `class_months.status = 'open'`. Once the teacher sets it
@@ -402,7 +441,8 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 - **Upload:** the browser uploads directly to Bunny (TUS) using a short-lived signature from
   our API; we create `media_assets` (`uploading`) first. Bunny's webhook updates the status to
   `processing` → `ready` / `failed` and records duration and size.
-- **Playback:** issue **token-authenticated, short-lived** embed/play URLs only after the access check.
+- **Playback:** issue **token-authenticated, short-lived** URLs only after the access check. Target (phase 7):
+  a signed **HLS playlist** URL for our own hls.js player (not Bunny's iframe); progress saved every 15 s.
 - **PDFs** go to Bunny Storage under `/<tenant_id>/...` and are served through signed URLs.
 - **Usage sync:** a daily job pulls storage and bandwidth per library into `tenant_usage_daily`.
 - **Limits:** `storage_limit_bytes` (blocks new uploads when reached) and
@@ -436,9 +476,10 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 
 ## 10. Content protection (v1)
 
-- **One active device per student** by default: on new login, revoke older `user_sessions`
-  for that tenant (setting can allow N devices later).
-- **Watermark overlay** in our player with the student's name and phone, moving position.
+- **One active device per account** (target): signing in on a new device (after its SMS code) signs out
+  the older device, which then explains why. **Built (pre-migration):** per tenant, students only.
+- **Watermark** inside our player container (visible in fullscreen): the student's name and the last
+  4 digits of their phone, repositioning about every 20 s.
 - **Short-lived signed video URLs**; never expose permanent Bunny URLs.
 - **View limit:** `classes.max_video_views`; increment `lesson_progress.view_count` when a
   play session starts. Block when the limit is reached.
@@ -448,14 +489,18 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 
 ## 11. Auth
 
-- Phone OTP is the primary login (E.164 numbers, e.g. `+94771234567`). Store only `code_hash`;
-  expire after a few minutes; limit attempts; rate-limit per number and IP.
-- Short-lived access JWT (includes `user_id`, `tenant_id`, `member_id`, `role`) +
-  refresh token stored **hashed** in `user_sessions`.
-- A JWT issued for tenant A must be rejected on tenant B's host.
+**Target (phase 2):**
+- Sign-in with **Google** (ID token verified server-side) or **email + password** (strong hash; email
+  verified by link). One account per person across all tenants.
+- **Phone:** required and **unique**, verified once by SMS OTP (E.164, local forms accepted). SMS OTP is also
+  used for a **new device** and for **recovery** (email link + SMS). OTP rules stay: only `code_hash` stored,
+  short expiry, attempt lock, rate limits per number and IP.
+- Short-lived access JWT (`user_id`, session) + refresh token stored **hashed**; sessions are per user.
+  Console requests add a **membership check** for the tenant in the path on every request.
+- People may browse and fill a cart without an account; registration and phone verification happen at checkout.
 
-Implemented in `app/modules/auth` (routes under `/api/v1/auth`, shared by students and staff on
-the tenant host):
+**Built (pre-migration)** in `app/modules/auth` (routes under `/api/v1/auth` on the tenant host; phone OTP
+on every sign-in; tokens carry `tenant_id`):
 - `POST /otp/request` → 6-digit code by SMS, HMAC-hashed with `OTP_SECRET`, valid 5 minutes.
   Limits: 60 s resend cooldown, 5 per phone per hour, 20 per IP per hour (`otp_codes.request_ip`).
 - `POST /otp/verify` → token pair. 5 wrong guesses lock the code; a wrong guess is committed in
@@ -501,8 +546,10 @@ the tenant host):
 ## 12. API conventions
 
 - REST, JSON, prefix `/api/v1`.
-- Route groups: `/api/v1/student/...`, `/api/v1/org/...`, `/api/v1/platform/...`,
-  `/api/v1/public/...` (tenant branding, published classes), `/api/v1/webhooks/...`.
+- Route groups (target): `/api/v1/public/...` (marketplace), `/api/v1/auth/...`, `/api/v1/me/...`
+  (the signed-in user across tenants: learn area, cart, checkouts, payments), `/api/v1/teach/{tenant}/...`
+  (console, membership-checked), `/api/v1/platform/...`, `/api/v1/webhooks/...`.
+  **Built (pre-migration):** `/student/...` and `/org/...` on the tenant host.
 - Money in API payloads: integer cents plus `currency`. The frontend formats for display.
 - Dates: ISO 8601 UTC in the API; display in `Asia/Colombo`.
 - Pagination: cursor-based for long lists (`limit`, `cursor`).
@@ -538,12 +585,12 @@ the tenant host):
 
 ## 13. Frontend notes
 
-- Mobile-first. Most students use phones on mobile data.
-- Tenant branding (name, logo, primary colour) is loaded by host on the server and applied as CSS variables.
-- All user-facing text goes through i18n keys from day one (`en` now; `si`, `ta` later).
-- Show money as `Rs. 2,000.00`.
+**`FRONTEND.md` is the frontend spec** (sites, routes, screens, UX principles, design tokens, player,
+performance budget, SEO). Constants that stay true: mobile-first, all text through i18n keys, money shown
+as `Rs. 2,000.00`, dates in `Asia/Colombo`, backend calls only from the Next server (BFF), tokens only in
+httpOnly cookies.
 
-### How the frontend is built (`frontend/`, Next.js 16, App Router)
+### Built (pre-migration): the frontend today (`frontend/`, Next.js 16, App Router)
 - Read `frontend/AGENTS.md` first: Next 16 differs from older versions (e.g. `proxy.ts`
   replaces middleware). Its docs ship in `frontend/node_modules/next/dist/docs/`.
 - **Backend calls happen only on the Next server** (`lib/api.ts`: Server Components and Server
@@ -574,7 +621,8 @@ the tenant host):
 - Tests: pytest with a real PostgreSQL (not SQLite). Required test categories:
   tenant isolation, access rule, ledger posting balances, webhook idempotency.
 - Secrets only from environment / secret manager. Never commit `.env`.
-- Keep it simple: no microservices, no premature caching, no features from v1.1 unless asked.
+- Keep it simple: no microservices, no premature caching (public marketplace pages are the planned
+  exception, per `FRONTEND.md`), no features from v1.1 unless asked.
 
 ---
 
@@ -589,19 +637,39 @@ the tenant host):
 | Commission tiers for large teachers | Idea: 20% normally, lower above a monthly volume |
 | SMS provider | Undecided |
 | Plan limits per tier | Needs Bunny pricing check |
+| EduZone brand (logo, colours) | Placeholder tokens until announced |
+| Sinhala at the pilot | Depends on the pilot teachers |
+| Email provider | Undecided |
+| Institute URL | `/institutes/<slug>` (assumed) |
 
 ---
 
-## 16. Build order for v1
+## 16. Build order
 
+### Done (on the pre-migration design)
 1. Repo, Docker Compose (Postgres + Redis), FastAPI skeleton, Alembic baseline from the schema
-2. Tenant resolution middleware + DB session with `SET LOCAL app.tenant_id` + isolation tests
+2. Tenant resolution + DB session with `SET LOCAL app.tenant_id` + isolation tests
 3. Auth: phone OTP, sessions, JWT, one-device rule
-4. Catalog: classes, months, lessons (org console APIs)
+4. Catalog: classes, months, lessons (console APIs)
 5. Bunny integration: upload signatures, webhooks, signed playback, PDFs
 6. Enrollment + late-month requests + access rule
-7. Checkout: orders, gateway adapter, webhook, ledger posting (with tests)
+7. Checkout: orders, gateway adapter, webhook, ledger posting
 8. Cash-flow and teacher-earnings endpoints
 9. Platform admin minimum: tenants, payouts, usage
-10. Next.js: student app, then organization console, then platform admin
-11. Pilot with one real tuition teacher
+(Each step shipped with its Next.js screens.)
+
+### Migration to the marketplace (details: `docs/frontend-migration-plan.md`)
+0. Spec: this file and `FRONTEND.md` agree (done)
+1. Frontend groundwork: monorepo, `packages/ui` tokens, generated API client, next-intl, Playwright smoke suite
+2. Identity: Google + email/password, phone verification, new-device OTP, recovery, account-wide sessions
+3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads)
+4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools
+5. Teacher self-registration and approval
+6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment)
+7. Own hls.js video player with signed HLS URLs and progress
+8. Private admin app (separate deploy) and its new screens
+9. Polish: Sinhala if needed, Playwright at 360 px and desktop, low-end phone pass, accessibility
+
+### Then
+10. Pilot with real tuition teachers
+11. v1.1: company sites
