@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@eduzone/ui/tokens.css";
+
+/* Shared components live outside this app; let Tailwind see their classes. */
+@source "../../../packages/ui/src";
+@source "../../../packages/lib/src";

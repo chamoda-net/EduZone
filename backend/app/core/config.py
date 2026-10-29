@@ -43,9 +43,11 @@ class Settings(BaseSettings):
     otp_max_per_phone_per_hour: int = 5
     otp_max_per_ip_per_hour: int = 20
 
-    # 'console' logs the message (local dev). Real providers are added behind
+    # 'console' logs the message (local dev); 'file' appends it to sms_outbox_path as JSON
+    # lines for browser tests (ENVIRONMENT=local only). Real providers are added behind
     # app.integrations.sms once one is chosen.
-    sms_provider: Literal["console"] = "console"
+    sms_provider: Literal["console", "file"] = "console"
+    sms_outbox_path: Path = Path("sms-outbox.jsonl")
 
     # --- Bunny (CLAUDE.md section 9) ---------------------------------------------
     # One Stream library per tenant (tenants.bunny_library_id). Keys per library come from

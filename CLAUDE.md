@@ -151,11 +151,13 @@ eduzone/
 │   │       └── sms/
 │   ├── migrations/                  # Alembic
 │   └── tests/
-└── frontend/
-    └── app/
-        ├── (student)/
-        ├── (org)/                   # organization console
-        └── (platform)/              # platform admin
+└── frontend/                     # npm workspaces
+    ├── apps/web/                    # public site, student area, organization console (port 3000)
+    ├── apps/admin/                  # platform admin, private network only (port 3001)
+    ├── packages/ui/                 # components + design tokens (tokens.css)
+    ├── packages/lib/                # format, i18n (next-intl), shared types
+    ├── packages/api-client/         # types generated from the API's OpenAPI document
+    └── e2e/                         # Playwright smoke suite
 ```
 Each module has `router.py`, `schemas.py` (Pydantic), `service.py` (business logic),
 `repository.py` (DB access). Routers stay thin; rules live in services.
@@ -511,7 +513,8 @@ on every sign-in; tokens carry `tenant_id`):
   use several devices. `CurrentMember` checks the session row on **every** request, so revocation
   and suspension take effect immediately, and the role comes from the member row, not the token.
 - Phone input accepts local forms (`0771234567`, `94771234567`) and is normalised to E.164.
-- SMS goes through `app.integrations.sms` (`SMS_PROVIDER=console` logs the code locally).
+- SMS goes through `app.integrations.sms` (`SMS_PROVIDER=console` logs the code locally; `file` appends
+  it to `SMS_OUTBOX_PATH` as JSON lines for browser tests, and is refused outside `ENVIRONMENT=local`).
 - `client_ip()` uses the direct peer address; behind a proxy or CDN it must read the trusted
   forwarded header instead.
 - Platform admins (`users.is_platform_admin`) use a separate login path and session
@@ -535,11 +538,10 @@ on every sign-in; tokens carry `tenant_id`):
   (`platform.*`); tenant-scoped rows set `app.tenant_id` in the admin transaction first.
 - **Usage:** tenant rows show storage (from `media_assets`) and this month's bandwidth from
   `tenant_usage_daily`. The daily Bunny usage sync job is **not built yet** (needs Bunny's account API).
-- **Frontend:** served only on `admin.<base domain>` (`proxy.ts` sends every other path there to `/platform`,
-  and tenant hosts get 404 for `/platform`), with its own cookies (`ez_padmin_*`). Pages: `/platform/login`,
-  `/platform` (organizations), `/platform/tenants/new`, `/platform/tenants/[id]` (figures, record payout,
-  history, edit), `/platform/payments`. FRONTEND.md wants this as a separate app on the private network;
-  the pages are self-contained under `app/platform/` so they can move.
+- **Frontend:** its own Next app, `frontend/apps/admin` (port 3001, private network, `noindex`), with its own
+  cookies (`ez_padmin_*`, `SameSite=Strict`) and token refresh in its `proxy.ts`. Pages: `/login`,
+  `/` (organizations), `/tenants/new`, `/tenants/[id]` (figures, record payout, history, edit), `/payments`.
+  It calls only `/api/v1/platform/...` and sends no tenant host.
 
 ---
 
@@ -591,24 +593,45 @@ as `Rs. 2,000.00`, dates in `Asia/Colombo`, backend calls only from the Next ser
 httpOnly cookies.
 
 ### Built (pre-migration): the frontend today (`frontend/`, Next.js 16, App Router)
-- Read `frontend/AGENTS.md` first: Next 16 differs from older versions (e.g. `proxy.ts`
+- **Monorepo** (npm workspaces, phase 1): `apps/web` (everything tenant-facing), `apps/admin` (platform
+  admin), `packages/ui` (components, `tokens.css`), `packages/lib` (`format`, `i18n`, `types`, `orders`),
+  `packages/api-client`. Apps import `@eduzone/ui`, `@eduzone/lib/<module>`, `@eduzone/api-client`
+  (listed in `transpilePackages`); `@/` stays app-local (`lib/api.ts`, `lib/cookies.ts`, `lib/session.ts`).
+- Read `frontend/apps/web/AGENTS.md` first: Next 16 differs from older versions (e.g. `proxy.ts`
   replaces middleware). Its docs ship in `frontend/node_modules/next/dist/docs/`.
+- **Design tokens:** colours, radii and shadows come only from `--ez-*` in `packages/ui/src/tokens.css`,
+  exposed to Tailwind as `brand`, `on-brand`, `background`, `surface`, `foreground`, `muted`, `border`
+  and `success|warning|danger|info` (+ `-bg`). No raw palette classes, no dark mode. Font: Inter, with
+  Noto Sans Sinhala. A tenant's `primary_color` sets `--ez-accent` on tenant sites until phase 3.
 - **Backend calls happen only on the Next server** (`lib/api.ts`: Server Components and Server
   Actions), sending `X-Forwarded-Host` with the user's host. The browser never calls the API.
 - **Tokens live in httpOnly cookies** (`lib/cookies.ts`); browser JavaScript never sees them.
   `proxy.ts` refreshes the access token shortly before it expires and drops dead sessions.
   A per-browser `ez_device` cookie is the `device_id` for the one-device rule.
 - **Every page renders per request** (tenant host + session); `cacheComponents` is off.
-- **i18n:** keys in `lib/i18n/en.ts`; server code uses `t`, client components `useT()`.
-  API errors go through `errorText()` (known codes get our own text).
-- **Formatting:** `lib/format.ts` (money from cents, Colombo date/time, `<input type="datetime-local">`
+- **i18n:** keys in `packages/lib/src/i18n/en.ts`; server code uses `t`, client components `useT()`.
+  Both run on next-intl (ICU messages: `{name}` variables, no `<tags>` in text). Keys stay flat and dotted
+  and are nested for next-intl, so a key can't also be the prefix of another (`lessons.type` vs
+  `lessons.type.live`: use `lessons.typeLabel`). API errors go through `errorText()`.
+- **API types:** `npm run api-client` (from `frontend/`) exports the OpenAPI document
+  (`backend/scripts/export_openapi.py`) and regenerates `packages/api-client/src/schema.ts`; use
+  `Schema<"Name">`. Commit both after any API change; `npm run check -w @eduzone/api-client` fails when
+  stale. Hand-written types in `@eduzone/lib/types` move over as screens are touched (the backend still
+  types several enums as plain `str`).
+- **Formatting:** `packages/lib/src/format.ts` (money from cents, Colombo date/time, `<input type="datetime-local">`
   read as Colombo time with a fixed +05:30 offset).
 - Routes: `/` (tenant home), `/login`, `/org/classes` (+ `/new`, `/[id]` with months, lessons and lesson
   files), `/org/media` (+ `/[id]` preview). Videos upload from the browser straight to Bunny (tus-js-client);
   PDFs go through the streaming route `/api/upload/document`, which proxy.ts skips.
   Student routes: `/classes/[slug]`, `/my`, `/lessons/[id]`, `/checkout/[id]`, `/payments[/[id]]`.
-- Local dev: `API_URL` in `frontend/.env.local`; open `http://<slug>.localhost:3000` with the API
-  on `BASE_DOMAIN=localhost`. Checks: `npx next typegen && npx tsc --noEmit`, `npx eslint .`, `npx next build`.
+- Local dev (from `frontend/`): `npm install`, then `npm run dev:web` (open `http://<slug>.localhost:3000`
+  with the API on `BASE_DOMAIN=localhost`) and `npm run dev:admin` (`http://localhost:3001`). Each app
+  has `API_URL` in its `.env.local`. Checks: `npm run typecheck`, `npm run lint`, `npm run build`.
+- **Smoke suite:** `npm run e2e` (Playwright; first time `npx playwright install chromium`). It starts
+  its own API (port 8010, `SMS_PROVIDER=file` so tests read OTP codes from `e2e/.outbox.jsonl`) and web
+  app (port 3010, build dir `.next-e2e`), so it runs beside the dev servers; it needs the migrated local
+  database and seeds the `demo` organization. Covers: student signs in, joins, pays with the fake gateway;
+  teacher opens the console. Add a test here for each flow a later phase changes.
 
 ---
 
@@ -660,7 +683,7 @@ httpOnly cookies.
 
 ### Migration to the marketplace (details: `docs/frontend-migration-plan.md`)
 0. Spec: this file and `FRONTEND.md` agree (done)
-1. Frontend groundwork: monorepo, `packages/ui` tokens, generated API client, next-intl, Playwright smoke suite
+1. Frontend groundwork: monorepo, `packages/ui` tokens, generated API client, next-intl, Playwright smoke suite (done)
 2. Identity: Google + email/password, phone verification, new-device OTP, recovery, account-wide sessions
 3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads)
 4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools

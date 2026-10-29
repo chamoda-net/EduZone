@@ -24,3 +24,6 @@ out/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local SMS outbox (SMS_PROVIDER=file)
+sms-outbox.jsonl

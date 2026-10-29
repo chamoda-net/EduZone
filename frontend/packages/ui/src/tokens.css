@@ -1,0 +1,80 @@
+/* EduZone design tokens (FRONTEND.md section 9). Components read colours only from tokens,
+   so the final brand drops in by changing the values below. No dark mode in v1. */
+
+:root {
+  /* Brand (placeholder until announced) */
+  --ez-brand-600: #2d5bff;
+  --ez-brand-700: #2148d6;
+  --ez-brand-50: #eef2ff;
+  --ez-on-brand: #ffffff;
+
+  /* Accent used by components: the brand on the main site. Pre-migration tenant sites and
+     (v1.1) company sites replace it with their own colour. */
+  --ez-accent: var(--ez-brand-600);
+  --ez-on-accent: var(--ez-on-brand);
+
+  /* Neutrals */
+  --ez-bg: #ffffff;
+  --ez-surface: #f6f7f9;
+  --ez-border: #e3e6ea;
+  --ez-text: #14171c;
+  --ez-text-muted: #5b6470;
+
+  /* Status (never themed) */
+  --ez-success: #1e8e3e;
+  --ez-success-bg: #e8f5ec;
+  --ez-warning: #b26a00;
+  --ez-warning-bg: #fff4e0;
+  --ez-danger: #c62828;
+  --ez-danger-bg: #fdecec;
+  --ez-info: #1f6fb2;
+  --ez-info-bg: #e8f1fa;
+
+  /* Shape */
+  --ez-radius-sm: 6px;
+  --ez-radius: 10px;
+  --ez-radius-lg: 16px;
+  --ez-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.06);
+}
+
+/* Tailwind names used across the apps, mapped onto the tokens.
+   `background` is the page (light grey), `surface` is cards and inputs (white). */
+@theme inline {
+  --color-brand: var(--ez-accent);
+  --color-on-brand: var(--ez-on-accent);
+  --color-background: var(--ez-surface);
+  --color-surface: var(--ez-bg);
+  --color-foreground: var(--ez-text);
+  --color-muted: var(--ez-text-muted);
+  --color-border: var(--ez-border);
+  --color-success: var(--ez-success);
+  --color-success-bg: var(--ez-success-bg);
+  --color-warning: var(--ez-warning);
+  --color-warning-bg: var(--ez-warning-bg);
+  --color-danger: var(--ez-danger);
+  --color-danger-bg: var(--ez-danger-bg);
+  --color-info: var(--ez-info);
+  --color-info-bg: var(--ez-info-bg);
+  --radius-ez: var(--ez-radius);
+  --font-sans: var(--font-inter), var(--font-sinhala), system-ui, sans-serif;
+}
+
+body {
+  background: var(--ez-surface);
+  color: var(--ez-text);
+  line-height: 1.5;
+}
+
+:lang(si) {
+  line-height: 1.6;
+}
+
+input,
+select,
+textarea {
+  background: var(--ez-bg);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

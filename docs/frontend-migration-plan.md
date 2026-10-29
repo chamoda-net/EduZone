@@ -78,7 +78,13 @@ with the backend work each frontend phase depends on.
   build order. Move "Decisions" from section 2 above into it.
 - Commit FRONTEND.md together with it so the two never disagree in the repo.
 
-### Phase 1 — Frontend groundwork (no behaviour change)
+### Phase 1 — Frontend groundwork (no behaviour change) ✅ done
+Done as below, with these differences: no `packages/config` (each app keeps its small eslint/tsconfig;
+revisit if they drift); shared code lives in `packages/lib` (format, i18n, types); hand-written types move
+to `@eduzone/api-client` screen by screen, because the backend still types several enums as `str`;
+react-hook-form + zod not added yet (they come with the first form a phase rewrites). Also fixed: a new
+student had to retype the OTP code after entering their name (found by the smoke suite).
+
 - Monorepo: move today's app to `frontend/apps/web`, `app/platform/*` to `frontend/apps/admin`;
   `packages/ui` (move `components/ui.tsx` and friends, switch to `--ez-*` tokens, Inter), `packages/config`.
 - `packages/api-client` generated from FastAPI's OpenAPI; replace hand-written types in `lib/types.ts`.

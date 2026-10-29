@@ -1,0 +1,12 @@
+{
+  "name": "@eduzone/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/ui.tsx",
+    "./action-button": "./src/action-button.tsx",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "peerDependencies": { "react": "^19" }
+}
