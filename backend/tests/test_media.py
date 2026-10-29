@@ -6,98 +6,23 @@ network and no Bunny account.
 
 import base64
 import hashlib
-import json
 import secrets
 import time
-import uuid
-from collections.abc import Iterator
-from dataclasses import dataclass, field
 from typing import Any
 
-import httpx
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import text
 
-from app.core.config import BunnyLibraryKeys, get_settings
+from app.core.config import get_settings
 from app.core.db import AdminSession
 from app.core.tenancy import tenant_transaction
-from app.integrations.bunny import bunny_http, signing
-from app.main import app
-from tests.conftest import AddMember, FakeSms, Seed
+from app.integrations.bunny import signing
+from tests.conftest import AddMember, FakeBunny, FakeSms, Seed
 from tests.helpers import auth_headers, error_code
 
 PDF = b"%PDF-1.4\n" + b"x" * 2000
 Headers = dict[str, str]
-
-
-@dataclass
-class FakeBunny:
-    videos: dict[str, dict[str, Any]] = field(default_factory=dict)
-    files: dict[str, bytes] = field(default_factory=dict)
-    calls: list[tuple[str, str]] = field(default_factory=list)
-    down: bool = False
-
-    def handler(self, request: httpx.Request) -> httpx.Response:
-        self.calls.append((request.method, request.url.path))
-        if self.down:
-            return httpx.Response(503)
-        path = request.url.path
-        if request.url.host == "video.bunnycdn.com":
-            assert request.headers["AccessKey"].startswith("stream-key-")
-            parts = path.strip("/").split("/")          # library/<id>/videos[/<guid>]
-            if request.method == "POST" and len(parts) == 3:
-                guid = str(uuid.uuid4())
-                self.videos[guid] = {"guid": guid, "title": json.loads(request.content)["title"], "status": 0}
-                return httpx.Response(200, json=self.videos[guid])
-            guid = parts[3]
-            if guid not in self.videos:
-                return httpx.Response(404)
-            if request.method == "GET":
-                return httpx.Response(200, json=self.videos[guid])
-            if request.method == "DELETE":
-                del self.videos[guid]
-                return httpx.Response(200, json={"success": True})
-        if request.url.host == "storage.bunnycdn.com":
-            assert request.headers["AccessKey"] == "storage-key"
-            key = path.split("/", 2)[2]                    # /<zone>/<path>
-            if request.method == "PUT":
-                assert request.headers["Checksum"] == hashlib.sha256(request.content).hexdigest().upper()
-                self.files[key] = request.content
-                return httpx.Response(201)
-            if request.method == "DELETE":
-                self.files.pop(key, None)
-                return httpx.Response(200)
-        return httpx.Response(404)
-
-
-@pytest.fixture
-async def bunny(seed: Seed) -> Iterator[FakeBunny]:
-    """Fake Bunny, Bunny settings for the test, and a video library for tenant A."""
-    fake = FakeBunny()
-    library_id = secrets.randbelow(10**9) + 10**9
-    settings = get_settings()
-    saved = {k: getattr(settings, k) for k in (
-        "bunny_stream_libraries", "bunny_webhook_token", "bunny_storage_zone", "bunny_storage_api_key",
-        "bunny_cdn_host", "bunny_cdn_token_key", "bunny_storage_host")}
-    settings.bunny_stream_libraries = {str(library_id): BunnyLibraryKeys(api_key=f"stream-key-{library_id}",
-                                                                          token_key="embed-token-key")}
-    settings.bunny_webhook_token = "hook-secret"
-    settings.bunny_storage_zone, settings.bunny_storage_api_key = "eduzone-files", "storage-key"
-    settings.bunny_storage_host = "storage.bunnycdn.com"
-    settings.bunny_cdn_host, settings.bunny_cdn_token_key = "files.example.b-cdn.net", "cdn-token-key"
-    async with AdminSession() as s, s.begin():
-        await s.execute(text("UPDATE tenants SET bunny_library_id = :lib WHERE id = :t"),
-                        {"lib": library_id, "t": seed.a.id})
-    fake.library_id = library_id  # type: ignore[attr-defined]
-
-    http = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
-    app.dependency_overrides[bunny_http] = lambda: http
-    yield fake
-    app.dependency_overrides.pop(bunny_http, None)
-    await http.aclose()
-    for k, v in saved.items():
-        setattr(settings, k, v)
 
 
 @pytest.fixture
@@ -146,7 +71,7 @@ def test_signatures() -> None:
 async def test_video_upload_gets_tus_signature(client: AsyncClient, seed: Seed, bunny: FakeBunny,
                                                teacher: Headers) -> None:
     out = await start_video(client, teacher)
-    lib = bunny.library_id  # type: ignore[attr-defined]
+    lib = bunny.library_id
     guid = out["upload"]["headers"]["VideoId"]
     assert guid in bunny.videos and bunny.videos[guid]["title"] == "Lesson 1.mp4"
     h = out["upload"]["headers"]
@@ -197,7 +122,7 @@ async def test_status_syncs_from_bunny(client: AsyncClient, bunny: FakeBunny, te
 async def test_webhook(client: AsyncClient, seed: Seed, bunny: FakeBunny, teacher: Headers) -> None:
     out = await start_video(client, teacher)
     guid = out["upload"]["headers"]["VideoId"]
-    lib = bunny.library_id  # type: ignore[attr-defined]
+    lib = bunny.library_id
     payload = {"VideoLibraryId": lib, "VideoGuid": guid, "Status": 3}
 
     resp = await client.post("/api/v1/webhooks/bunny/stream?token=wrong", json=payload)
@@ -256,7 +181,7 @@ async def test_preview_urls(client: AsyncClient, bunny: FakeBunny, teacher: Head
     bunny.videos[out["upload"]["headers"]["VideoId"]]["status"] = 4
     await client.get(f"/api/v1/org/media/{vid}", headers=teacher)          # sync to ready
     url = (await client.get(f"/api/v1/org/media/{vid}/preview", headers=teacher)).json()["url"]
-    assert url.startswith(f"https://iframe.mediadelivery.net/embed/{bunny.library_id}/")  # type: ignore[attr-defined]
+    assert url.startswith(f"https://iframe.mediadelivery.net/embed/{bunny.library_id}/")
     assert "token=" in url and "expires=" in url
 
     doc = (await upload_pdf(client, teacher)).json()

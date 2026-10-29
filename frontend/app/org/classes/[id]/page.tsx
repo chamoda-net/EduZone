@@ -8,7 +8,7 @@ import { classMeta, priceLabel } from "@/lib/catalog";
 import { formatDateTime, formatMoney, formatMonth } from "@/lib/format";
 import { errorText, t } from "@/lib/i18n";
 import { mediaTone } from "@/lib/media";
-import type { ClassItem, Lesson, LessonResource, MediaPage, Month } from "@/lib/types";
+import type { ClassItem, ClassStudent, Lesson, LessonResource, MediaPage, Month } from "@/lib/types";
 
 import {
   createLesson,
@@ -16,6 +16,8 @@ import {
   deleteClass,
   deleteLesson,
   deleteMonth,
+  grantAccess,
+  revokeAccess,
   setClassStatus,
   setLessonPublished,
   setMonthStatus,
@@ -27,8 +29,9 @@ import { attachFile, removeFile } from "../../media/actions";
 import { AddMonthForm, LessonForm } from "./add-forms";
 import { AttachFileForm } from "./lesson-files";
 
-export default async function ClassDetailPage({ params }: PageProps<"/org/classes/[id]">) {
+export default async function ClassDetailPage({ params, searchParams }: PageProps<"/org/classes/[id]">) {
   const { id } = await params;
+  const sp = await searchParams;
   const res = await api<ClassItem>(`/org/classes/${id}`);
   if (!res.ok) {
     if (res.status === 404 || res.status === 422) notFound();
@@ -50,6 +53,13 @@ export default async function ClassDetailPage({ params }: PageProps<"/org/classe
   const filesByLesson = new Map(
     lessons.map((l, i) => [l.id, resourceRes[i].ok ? (resourceRes[i].data as LessonResource[]) : []]),
   );
+  // Students: access is shown for one month at a time (the open month by default).
+  const rosterMonth = monthly
+    ? (months.find((m) => m.id === sp.month) ?? months.find((m) => m.status === "open") ?? months.at(-1) ?? null)
+    : null;
+  const rosterRes = monthly && !rosterMonth ? null
+    : await api<ClassStudent[]>(`/org/classes/${id}/students${rosterMonth ? `?month_id=${rosterMonth.id}` : ""}`);
+  const roster = rosterRes?.ok ? rosterRes.data : [];
   const pricingLocked = c.status !== "draft" || months.length > 0 || lessons.length > 0;
 
   return (
@@ -201,6 +211,73 @@ export default async function ClassDetailPage({ params }: PageProps<"/org/classe
           <p className="text-sm text-muted">{t("lessons.noMonthsYet")}</p>
         ) : (
           <LessonForm action={createLesson.bind(null, c.id)} months={months} monthly={monthly} />
+        )}
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">{t("students.title")}</h2>
+        {monthly && months.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted">{t("students.month")}</span>
+            {months.map((m) => (
+              <Link
+                key={m.id}
+                href={`/org/classes/${c.id}?month=${m.id}`}
+                scroll={false}
+                className={`rounded-full border px-3 py-1 ${m.id === rosterMonth?.id ? "border-brand bg-brand text-white" : "border-border"}`}
+              >
+                {formatMonth(m.month_start)}
+              </Link>
+            ))}
+          </div>
+        )}
+        {roster.length === 0 ? (
+          <p className="text-sm text-muted">{t("students.empty")}</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {roster.map((s) => (
+              <li key={s.member_id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                <div className="min-w-0">
+                  <p className="font-medium">{s.full_name}</p>
+                  <p className="text-sm text-muted">
+                    {[s.phone, s.enrollment_status === "left" ? t("students.left") : s.enrollment_status === null ? t("students.notJoined") : null]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {s.access ? (
+                    <>
+                      <Badge tone="published">{t(`students.source.${s.access.source}`)}</Badge>
+                      {s.access.source !== "purchase" && (
+                        <ActionButton
+                          action={revokeAccess.bind(null, c.id, s.access.id)}
+                          label={t("students.removeAccess")}
+                          variant="danger"
+                          small
+                          confirm={t("students.confirmRemove")}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Badge tone="archived">{t("students.noAccess")}</Badge>
+                      <ActionButton
+                        action={grantAccess.bind(null, c.id, s.member_id, rosterMonth?.id ?? null, "manual")}
+                        label={t("students.giveAccess")}
+                        small
+                      />
+                      <ActionButton
+                        action={grantAccess.bind(null, c.id, s.member_id, rosterMonth?.id ?? null, "scholarship")}
+                        label={t("students.scholarship")}
+                        small
+                      />
+                    </>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
 

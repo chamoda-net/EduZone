@@ -264,6 +264,11 @@ async def _check_lesson(session: AsyncSession, c: ClassModel, *, class_month_id:
         raise ApiError("ZOOM_NOT_ALLOWED", "Only live lessons have a Zoom link.")
 
 
+async def load_class(session: AsyncSession, actor: Actor, class_id: UUID, *, for_update: bool = False) -> ClassModel:
+    """A class the actor may manage, else 404. Shared with other modules (students, grants)."""
+    return await _load_class(session, actor, class_id, for_update=for_update)
+
+
 async def load_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID) -> tuple[Lesson, ClassModel]:
     """A lesson (locked for update) and its class, if the actor may manage it; else 404.
     Shared with the media module for lesson files."""

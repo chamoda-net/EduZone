@@ -106,3 +106,120 @@ export type LessonResource = {
   is_downloadable: boolean;
   media: Media;
 };
+
+// --- student side (step 6) ----------------------------------------------------------
+
+export type PublicClass = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  subject: string | null;
+  exam: ClassItem["exam"];
+  batch_year: number | null;
+  medium: ClassItem["medium"];
+  cover_image_url: string | null;
+  pricing_model: PricingModel;
+  monthly_fee_cents: number | null;
+  one_time_price_cents: number | null;
+  currency: string;
+  teacher_name: string;
+};
+
+export type PublicClassPage = { items: PublicClass[]; next_cursor: string | null };
+
+export type PublicMonth = { id: string; month_start: string; fee_cents: number; currency: string; status: MonthStatus };
+
+export type PublicLesson = {
+  id: string;
+  class_month_id: string | null;
+  title: string;
+  lesson_type: LessonType;
+  sort_order: number;
+  scheduled_at: string | null;
+  duration_minutes: number | null;
+  is_free_preview: boolean;
+};
+
+export type PublicClassDetail = { class: PublicClass; months: PublicMonth[]; lessons: PublicLesson[] };
+
+export type MonthAccess =
+  | "granted"
+  | "buy"
+  | "upcoming"
+  | "request"
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "unavailable";
+
+export type StudentMonth = PublicMonth & { access: MonthAccess };
+export type StudentLesson = PublicLesson & { unlocked: boolean };
+
+export type StudentClassView = {
+  class: PublicClass;
+  enrolled: boolean;
+  has_class_access: boolean;
+  months: StudentMonth[];
+  lessons: StudentLesson[];
+};
+
+export type MyClass = { class: PublicClass; enrolled_at: string; unlocked_months: number };
+
+export type StudentResource = {
+  id: string;
+  title: string;
+  kind: MediaKind;
+  duration_seconds: number | null;
+  is_downloadable: boolean;
+  ready: boolean;
+  views_used: number;
+  views_allowed: number | null;
+};
+
+export type StudentLessonDetail = StudentLesson & {
+  class_id: string;
+  class_slug: string;
+  class_title: string;
+  description: string | null;
+  zoom_join_url: string | null;
+  resources: StudentResource[];
+};
+
+export type OpenResource = {
+  kind: MediaKind;
+  url: string;
+  expires_at: string;
+  watermark: { name: string; phone: string | null };
+  views_used: number | null;
+  views_allowed: number | null;
+};
+
+// --- organization: students and requests ---------------------------------------------
+
+export type GrantInfo = { id: string; source: "purchase" | "manual" | "free" | "scholarship"; granted_at: string };
+
+export type ClassStudent = {
+  member_id: string;
+  full_name: string;
+  phone: string | null;
+  enrollment_status: "active" | "left" | "removed" | null;
+  enrolled_at: string | null;
+  access: GrantInfo | null;
+};
+
+export type LateRequest = {
+  id: string;
+  status: "pending" | "approved" | "rejected" | "fulfilled" | "expired";
+  student_member_id: string;
+  student_name: string;
+  student_phone: string | null;
+  class_id: string;
+  class_title: string;
+  class_month_id: string;
+  month_start: string;
+  student_note: string | null;
+  decision_note: string | null;
+  created_at: string;
+  decided_at: string | null;
+};

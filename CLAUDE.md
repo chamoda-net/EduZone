@@ -250,6 +250,30 @@ A student can open a lesson if **any** of these is true:
 Active means `revoked_at IS NULL AND (expires_at IS NULL OR expires_at > now())`.
 Zoom links and video playback URLs are returned **only** after this check passes.
 
+### How it's built (step 6: `app/modules/learning`)
+- **The rule lives only in `learning/access.py`** (`LESSON_UNLOCKED` SQL, `lesson_for_student`,
+  `class_lessons_for_student`, `active_grant_for`). Students also never see unpublished lessons or
+  draft classes. Archived classes stay visible to students who still hold a grant in them.
+- **Public** (`/api/v1/public/classes[/{slug}]`): published classes, months with effective fee,
+  published lesson outlines. Never Zoom links, descriptions of locked lessons, or media.
+- **Student** (`/api/v1/student/...`, any signed-in member):
+  `GET classes` (mine), `GET classes/{slug}` (per-month `access`: granted | buy | upcoming | request |
+  pending | approved | rejected | unavailable), `POST/DELETE classes/{slug}/enroll` (joining a free
+  class creates its `free` grant; leaving keeps access), `POST months/{id}/late-request` (enrolled,
+  closed month, class allows it, one request per month: a rejected one can't be repeated),
+  `GET lessons/{id}`, `POST resources/{id}/open` (access check → +1 view for videos, atomically refused
+  at `classes.max_video_views` → signed URL + watermark identity).
+- **Org** (`/api/v1/org/...`): `GET classes/{id}/students?month_id=` (joined or granted students with
+  access for that month), `POST classes/{id}/grants` (manual | scholarship; also enrols),
+  `POST grants/{id}/revoke` (never `purchase` grants: those go through refunds),
+  `GET late-requests?status=`, `POST late-requests/{id}/decision` (approve | reject; only the class's
+  teacher or an owner/admin). Approval lets the student pay (step 7 marks it `fulfilled`).
+- **Frontend:** `/` is the public catalogue, `/classes/[slug]` the class page (public or personal),
+  `/my`, `/lessons/[id]` (Zoom button, watermarked player that drifts name + phone over the video,
+  PDF opener), and in the console a Students card on each class plus `/org/requests`.
+- PDFs are protected only by short-lived signed URLs; once opened they can be saved. `is_downloadable`
+  is advisory for now.
+
 ---
 
 ## 7. Money rules (non-negotiable)

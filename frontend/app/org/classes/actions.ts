@@ -155,3 +155,31 @@ export async function deleteLesson(classId: string, lessonId: string): Promise<F
   refresh(classId);
   return { ok: true };
 }
+
+// --- students and access (step 6) -----------------------------------------------------
+
+export async function grantAccess(
+  classId: string, memberId: string, monthId: string | null, source: "manual" | "scholarship",
+): Promise<FormState> {
+  const res = await api(`/org/classes/${classId}/grants`, {
+    method: "POST",
+    body: { student_member_id: memberId, class_month_id: monthId, source },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  refresh(classId);
+  return { ok: true };
+}
+
+export async function revokeAccess(classId: string, grantId: string): Promise<FormState> {
+  const res = await api(`/org/grants/${grantId}/revoke`, { method: "POST", body: {} });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  refresh(classId);
+  return { ok: true };
+}
+
+export async function decideRequest(requestId: string, decision: "approve" | "reject"): Promise<FormState> {
+  const res = await api(`/org/late-requests/${requestId}/decision`, { method: "POST", body: { decision } });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/org/requests");
+  return { ok: true };
+}

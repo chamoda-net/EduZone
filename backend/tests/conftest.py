@@ -6,17 +6,24 @@ per-run slugs and random phone numbers so tests never collide with each other or
 with dev data.
 """
 
+import hashlib
+import json
 import secrets
+import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from dataclasses import dataclass, field
+from typing import Any
 from uuid import UUID, uuid4
+
+import httpx
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
-from app.core.config import get_settings
+from app.core.config import BunnyLibraryKeys, get_settings
 from app.core.db import AdminSession
+from app.integrations.bunny import bunny_http
 from app.integrations.sms import get_sms_sender
 from app.main import app
 
@@ -87,7 +94,9 @@ class Seed:
     suspended: SeededTenant  # status = 'suspended'
 
 
-_NON_CASCADING = ("audit_logs", "access_grants", "lesson_resources")
+_NON_CASCADING = (
+    "audit_logs", "lesson_progress", "access_grants", "late_month_requests", "class_enrollments", "lesson_resources",
+)
 
 
 @pytest.fixture
@@ -152,3 +161,77 @@ async def members(phones: Callable[[], str]) -> AddMember:
         return phone
 
     return add
+
+
+# --- fake Bunny (no network, no account) -----------------------------------------
+
+@dataclass
+class FakeBunny:
+    videos: dict[str, dict[str, Any]] = field(default_factory=dict)
+    files: dict[str, bytes] = field(default_factory=dict)
+    calls: list[tuple[str, str]] = field(default_factory=list)
+    down: bool = False
+    library_id: int = 0
+
+    def handler(self, request: httpx.Request) -> httpx.Response:
+        self.calls.append((request.method, request.url.path))
+        if self.down:
+            return httpx.Response(503)
+        path = request.url.path
+        if request.url.host == "video.bunnycdn.com":
+            assert request.headers["AccessKey"].startswith("stream-key-")
+            parts = path.strip("/").split("/")          # library/<id>/videos[/<guid>]
+            if request.method == "POST" and len(parts) == 3:
+                guid = str(uuid.uuid4())
+                self.videos[guid] = {"guid": guid, "title": json.loads(request.content)["title"], "status": 0}
+                return httpx.Response(200, json=self.videos[guid])
+            guid = parts[3]
+            if guid not in self.videos:
+                return httpx.Response(404)
+            if request.method == "GET":
+                return httpx.Response(200, json=self.videos[guid])
+            if request.method == "DELETE":
+                del self.videos[guid]
+                return httpx.Response(200, json={"success": True})
+        if request.url.host == "storage.bunnycdn.com":
+            assert request.headers["AccessKey"] == "storage-key"
+            key = path.split("/", 2)[2]                    # /<zone>/<path>
+            if request.method == "PUT":
+                assert request.headers["Checksum"] == hashlib.sha256(request.content).hexdigest().upper()
+                self.files[key] = request.content
+                return httpx.Response(201)
+            if request.method == "DELETE":
+                self.files.pop(key, None)
+                return httpx.Response(200)
+        return httpx.Response(404)
+
+
+@pytest.fixture
+async def bunny(seed: Seed) -> AsyncIterator[FakeBunny]:
+    """Fake Bunny, Bunny settings for the test, and a video library for tenant A."""
+    fake = FakeBunny()
+    library_id = secrets.randbelow(10**9) + 10**9
+    settings = get_settings()
+    saved = {k: getattr(settings, k) for k in (
+        "bunny_stream_libraries", "bunny_webhook_token", "bunny_storage_zone", "bunny_storage_api_key",
+        "bunny_cdn_host", "bunny_cdn_token_key", "bunny_storage_host")}
+    settings.bunny_stream_libraries = {str(library_id): BunnyLibraryKeys(api_key=f"stream-key-{library_id}",
+                                                                          token_key="embed-token-key")}
+    settings.bunny_webhook_token = "hook-secret"
+    settings.bunny_storage_zone, settings.bunny_storage_api_key = "eduzone-files", "storage-key"
+    settings.bunny_storage_host = "storage.bunnycdn.com"
+    settings.bunny_cdn_host, settings.bunny_cdn_token_key = "files.example.b-cdn.net", "cdn-token-key"
+    async with AdminSession() as s, s.begin():
+        await s.execute(text("UPDATE tenants SET bunny_library_id = :lib WHERE id = :t"),
+                        {"lib": library_id, "t": seed.a.id})
+    fake.library_id = library_id
+
+    http = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
+    app.dependency_overrides[bunny_http] = lambda: http
+    yield fake
+    app.dependency_overrides.pop(bunny_http, None)
+    await http.aclose()
+    for k, v in saved.items():
+        setattr(settings, k, v)
+
+

@@ -12,7 +12,7 @@ export function priceLabel(t: Translate, c: Pick<ClassItem, "pricing_model" | "m
   return t("classes.free");
 }
 
-export function classMeta(t: Translate, c: ClassItem): string {
+export function classMeta(t: Translate, c: Pick<ClassItem, "subject" | "exam" | "batch_year" | "medium">): string {
   return [c.subject, c.exam && t(`exam.${c.exam}`), c.batch_year, c.medium && t(`medium.${c.medium}`)]
     .filter(Boolean)
     .join(" · ");
