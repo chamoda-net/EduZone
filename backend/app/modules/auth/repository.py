@@ -67,13 +67,25 @@ async def get_user_by_phone(session: AsyncSession, phone: str) -> Any:
 
 
 async def upsert_user_on_login(session: AsyncSession, phone: str, full_name: str | None) -> UUID:
-    # full_name is used only when the user is new; an existing name is never overwritten.
+    """Existing user: record the login (their name is never overwritten). New user: create
+    them with full_name, which the caller has already required.
+
+    Not a single INSERT ... ON CONFLICT: Postgres checks NOT NULL on full_name before it
+    detects the conflict, so an existing user signing in without a name would fail.
+    """
+    existing = (await session.execute(text("""
+        UPDATE users SET last_login_at = now(), phone_verified_at = COALESCE(phone_verified_at, now())
+        WHERE phone = :p
+        RETURNING id
+    """), {"p": phone})).scalar_one_or_none()
+    if existing is not None:
+        return existing
+    if full_name is None:
+        raise ValueError("full_name is required to create a user")
     return (await session.execute(text("""
         INSERT INTO users (phone, full_name, phone_verified_at, last_login_at)
         VALUES (:p, :n, now(), now())
-        ON CONFLICT (phone) DO UPDATE
-           SET last_login_at = now(),
-               phone_verified_at = COALESCE(users.phone_verified_at, now())
+        ON CONFLICT (phone) DO UPDATE SET last_login_at = now()   -- lost a race with a parallel signup
         RETURNING id
     """), {"p": phone, "n": full_name})).scalar_one()
 

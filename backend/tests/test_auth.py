@@ -124,6 +124,14 @@ async def test_signup_needs_name_without_spending_the_code(client: AsyncClient, 
     assert profile["role"] == "student"
 
 
+async def test_existing_user_signs_in_without_name(client: AsyncClient, seed: Seed, sms: FakeSms) -> None:
+    # Regression: an existing user sends no full_name on later logins.
+    await request_code(client, seed.a, seed.a.teacher_phone)
+    resp = await verify(client, seed.a, seed.a.teacher_phone, sms.last_code(seed.a.teacher_phone), name=None)
+    assert resp.status_code == 200, resp.text
+    assert (await me(client, seed.a, resp.json()["access_token"])).json()["full_name"] == "Teacher a"
+
+
 async def test_existing_user_keeps_name(client: AsyncClient, seed: Seed, sms: FakeSms) -> None:
     await request_code(client, seed.a, seed.a.teacher_phone)
     resp = await verify(client, seed.a, seed.a.teacher_phone, sms.last_code(seed.a.teacher_phone),

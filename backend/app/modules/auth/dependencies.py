@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.errors import ApiError
 from app.core.tenancy import CurrentTenant, TenantSession
@@ -19,11 +20,18 @@ class AuthContext:
     session_id: UUID
 
 
-async def current_member(request: Request, tenant: CurrentTenant, session: TenantSession) -> AuthContext:
-    scheme, _, token = request.headers.get("authorization", "").partition(" ")
-    if scheme.lower() != "bearer" or not token:
+# auto_error=False: missing or malformed headers reach us as None and get our error shape.
+# Declaring the scheme also gives the API docs an "Authorize" button.
+_bearer = HTTPBearer(auto_error=False, description="Access token from /auth/otp/verify or /auth/refresh")
+
+
+async def current_member(
+    tenant: CurrentTenant, session: TenantSession,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> AuthContext:
+    if credentials is None:
         raise ApiError("UNAUTHORIZED", "Please sign in.", status_code=401)
-    claims = decode_access_token(token)
+    claims = decode_access_token(credentials.credentials)
     if claims.tenant_id != tenant.id:
         # A token issued on tenant A's host is never accepted on tenant B's host.
         raise ApiError("UNAUTHORIZED", "Please sign in.", status_code=401)
