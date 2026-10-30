@@ -692,8 +692,8 @@ httpOnly cookies.
   registers, confirms the phone, joins and pays with the fake gateway; a second browser signs the first out;
   the teacher signs in (with the new-device code) and opens the console. Add a test for each flow a later
   phase changes.
-- **Demo sign-in (local):** `scripts/seed_demo.py` gives the demo owner and teacher an email and a local
-  test password (constants at the top of that file). The first sign-in in a browser asks for the SMS code,
+- **Demo sign-in (local):** `scripts/seed_demo.py` gives the demo owner, teacher and a demo student (in the
+  physics class, November unlocked) an email and a local test password (constants at the top of that file). The first sign-in in a browser asks for the SMS code,
   which `SMS_PROVIDER=console` writes to the API log.
 
 ---

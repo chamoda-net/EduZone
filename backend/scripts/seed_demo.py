@@ -7,8 +7,9 @@ a teacher and two classes. Safe to run again: an existing `demo` is left as it i
 accounts always get the sign-in details below. Runs as eduzone_admin, like other platform jobs.
 Never run it against production.
 
-Sign in with the email below and DEMO_PASSWORD (a local test value). Their phones count as
-verified, so the first sign-in on a browser asks for the SMS code (SMS_PROVIDER=console logs it).
+Sign in with the emails below (owner, teacher, and a demo student enrolled in the physics class) and
+DEMO_PASSWORD (a local test value). Their phones count as verified, so the first sign-in on a browser
+asks for the SMS code (SMS_PROVIDER=console logs it).
 """
 
 import asyncio
@@ -25,17 +26,53 @@ OWNER_PHONE = "+94770000001"
 TEACHER_PHONE = "+94770000002"
 OWNER_EMAIL = "owner.demo@example.com"
 TEACHER_EMAIL = "teacher.demo@example.com"
+STUDENT_PHONE = "+94770000003"
+STUDENT_EMAIL = "student.demo@example.com"
 DEMO_PASSWORD = "Demo-pass-2026"  # local test value only
 
 
 async def demo_accounts(s: AsyncSession) -> None:
-    """Email + password sign-in for the demo staff (idempotent)."""
+    """Email + password sign-in for the demo staff, and a demo student (idempotent)."""
     for phone, email in ((OWNER_PHONE, OWNER_EMAIL), (TEACHER_PHONE, TEACHER_EMAIL)):
         await s.execute(text("""
             UPDATE users SET email = :e, password_hash = :h, email_verified_at = COALESCE(email_verified_at, now()),
                              phone_verified_at = COALESCE(phone_verified_at, now())
             WHERE phone = :p
         """), {"p": phone, "e": email, "h": hash_password(DEMO_PASSWORD)})
+    await demo_student(s)
+
+
+async def demo_student(s: AsyncSession) -> None:
+    """A student in the physics class with November unlocked (a manual grant), so the student
+    area has something in it: later months are left to pay."""
+    user = (await s.execute(text("""
+        INSERT INTO users (phone, email, full_name, password_hash, phone_verified_at, email_verified_at)
+        VALUES (:p, :e, 'Nimali Perera', :h, now(), now())
+        ON CONFLICT (phone) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash
+        RETURNING id
+    """), {"p": STUDENT_PHONE, "e": STUDENT_EMAIL, "h": hash_password(DEMO_PASSWORD)})).scalar_one()
+    tenant = (await s.execute(text("SELECT id FROM tenants WHERE slug = 'demo'"))).scalar_one()
+    member = (await s.execute(text("""
+        INSERT INTO tenant_members (tenant_id, user_id, role) VALUES (:t, :u, 'student')
+        ON CONFLICT (tenant_id, user_id) DO UPDATE SET status = 'active'
+        RETURNING id
+    """), {"t": tenant, "u": user})).scalar_one()
+    physics = (await s.execute(text(
+        "SELECT id FROM classes WHERE tenant_id = :t AND slug = '2027-al-physics-theory'"), {"t": tenant})).scalar_one()
+    await s.execute(text("""
+        INSERT INTO class_enrollments (tenant_id, class_id, student_member_id) VALUES (:t, :c, :m)
+        ON CONFLICT (class_id, student_member_id) DO UPDATE SET status = 'active'
+    """), {"t": tenant, "c": physics, "m": member})
+    november = (await s.execute(text("""
+        SELECT id FROM class_months WHERE tenant_id = :t AND class_id = :c AND month_start = '2026-11-01'
+    """), {"t": tenant, "c": physics})).scalar_one_or_none()
+    if november is not None:
+        await s.execute(text("""
+            INSERT INTO access_grants (tenant_id, student_member_id, class_id, class_month_id, source)
+            SELECT :t, :m, :c, :mo, 'manual'
+            WHERE NOT EXISTS (SELECT 1 FROM access_grants WHERE student_member_id = :m AND class_month_id = :mo
+                              AND revoked_at IS NULL)
+        """), {"t": tenant, "m": member, "c": physics, "mo": november})
 
 
 async def seed() -> None:
@@ -45,7 +82,7 @@ async def seed() -> None:
     async with AdminSession() as s, s.begin():
         if (await s.execute(text("SELECT 1 FROM tenants WHERE slug = 'demo'"))).first():
             await demo_accounts(s)
-            print(f"demo tenant already exists; sign-in details refreshed for {OWNER_EMAIL}, {TEACHER_EMAIL}")
+            print(f"demo tenant already exists; sign-in refreshed for {OWNER_EMAIL}, {TEACHER_EMAIL}, {STUDENT_EMAIL}")
             return
 
         async def one(sql: str, **params: object) -> object:

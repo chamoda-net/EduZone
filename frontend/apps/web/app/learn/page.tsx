@@ -38,7 +38,7 @@ export default async function TodayPage() {
       )}
       {res.ok && res.data.classes > 0 && (
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-          <section className="flex flex-col gap-4">
+          <section className="flex min-w-0 flex-col gap-4">
             <CardTitle
               action={<Link href="/learn/schedule" className="text-sm font-semibold text-brand hover:underline">{t("nav.schedule")}</Link>}
             >
@@ -56,7 +56,7 @@ export default async function TodayPage() {
             )}
           </section>
 
-          <section className="flex flex-col gap-4">
+          <section className="flex min-w-0 flex-col gap-4">
             <CardTitle>{t("learn.today.toPay")}</CardTitle>
             {res.data.pending_requests > 0 && (
               <Link href="/learn/requests" className="flex items-center gap-3 rounded-ez border border-warning/25 bg-warning-bg px-4 py-3 text-sm font-medium text-warning hover:underline">

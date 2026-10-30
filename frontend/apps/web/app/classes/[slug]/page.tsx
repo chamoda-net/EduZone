@@ -58,7 +58,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[slug]">
   return (
     <SiteShell bare>
       <div className="bg-[linear-gradient(to_bottom,var(--ez-sunken),transparent_520px)]">
-        <Container className="grid gap-x-14 gap-y-10 py-8 sm:py-12 lg:grid-cols-[1fr_360px]">
+        <Container className="grid gap-x-14 gap-y-10 py-8 sm:py-12 lg:grid-cols-[1fr_360px] [&>*]:min-w-0">
           <div className="flex flex-col gap-5 lg:col-start-1">
             <Link href="/#classes" className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-muted hover:text-foreground">
               <ArrowLeft className="size-4" />
