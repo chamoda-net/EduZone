@@ -13,7 +13,9 @@ export async function AuthFrame({ title, subtitle, children, footer }: {
   children: ReactNode;
   footer?: ReactNode;
 }) {
-  const name = (await getBranding())?.name ?? "EduZone";
+  const branding = await getBranding();
+  const name = branding?.name ?? "EduZone";
+  const sub = branding ? t("shell.onEduZone") : undefined;
   return (
     <div className="grid min-h-dvh flex-1 lg:grid-cols-[1fr_1.05fr]">
       <aside className="ez-grain relative hidden flex-col justify-between overflow-hidden bg-brand-900 p-12 text-on-brand lg:flex">
@@ -24,7 +26,7 @@ export async function AuthFrame({ title, subtitle, children, footer }: {
           <circle cx="300" cy="300" r="60" fill="var(--ez-gold-500)" opacity="0.25" />
         </svg>
         <Link href="/" className="relative">
-          <Logo name={name} sub={t("shell.onEduZone")} />
+          <Logo name={name} sub={sub} />
         </Link>
         <div className="relative flex max-w-md flex-col gap-8">
           <h2 className="font-display text-5xl leading-[1.05] font-semibold">
@@ -48,7 +50,7 @@ export async function AuthFrame({ title, subtitle, children, footer }: {
 
       <main className="flex flex-col px-5 py-8 sm:px-10">
         <Link href="/" className="lg:hidden">
-          <Logo name={name} sub={t("shell.onEduZone")} />
+          <Logo name={name} sub={sub} />
         </Link>
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-8 py-10">
           <div className="ez-rise flex flex-col gap-2">

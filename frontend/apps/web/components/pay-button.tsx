@@ -4,7 +4,7 @@ import { CreditCard } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { startCheckout } from "@/app/classes/actions";
+import { startCheckout } from "@/app/learn/actions";
 import { useT } from "@eduzone/lib/i18n/client";
 import type { GatewayRedirect } from "@eduzone/lib/types";
 import { Button, ErrorText, cx } from "@eduzone/ui";

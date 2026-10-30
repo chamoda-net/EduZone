@@ -22,7 +22,7 @@ from app.modules.catalog.schemas import (
 )
 
 # Organization console (owners, admins, teachers).
-org_router = APIRouter(prefix="/org", tags=["org: catalog"])
+org_router = APIRouter(tags=["org: catalog"])
 
 
 # --- classes --------------------------------------------------------------------------

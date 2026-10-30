@@ -7,7 +7,7 @@ from app.modules.auth.dependencies import StaffActor
 from app.modules.ledger import service
 from app.modules.ledger.schemas import Cashflow, Earnings
 
-org_router = APIRouter(prefix="/org", tags=["org: money"])
+org_router = APIRouter(tags=["org: money"])
 
 Month = Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}$", examples=["2026-10"])]
 

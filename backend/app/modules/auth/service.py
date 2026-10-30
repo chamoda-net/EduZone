@@ -19,7 +19,8 @@ from app.integrations.email import EmailSender
 from app.integrations.sms import SmsSender
 from app.modules.auth import otp
 from app.modules.auth import repository as repo
-from app.modules.auth.dependencies import SIGNED_IN_ELSEWHERE, AuthContext, session_ended
+from app.core.tenancy import TenantContext, tenant_transaction, user_transaction
+from app.modules.auth.dependencies import SIGNED_IN_ELSEWHERE, AuthContext, UserContext, current_member, session_ended
 from app.modules.auth.google import GoogleVerifier
 from app.modules.auth.passwords import hash_password, needs_rehash, verify_password
 from app.modules.auth.schemas import (
@@ -31,6 +32,7 @@ from app.modules.auth.schemas import (
     Me,
     OtpRequested,
     PhoneVerify,
+    Workspace,
     ProfileUpdate,
     RecoveryComplete,
     RecoveryStarted,
@@ -240,6 +242,19 @@ async def logout(session_id: UUID) -> None:
 # --- Profile ----------------------------------------------------------------------------
 
 
+async def member_context(user: UserContext, tenant: TenantContext | None) -> AuthContext:
+    """Membership in the tenant of the request; none on the main host."""
+    if tenant is None:
+        return AuthContext(user.user_id, None, None, user.session_id)
+    async with tenant_transaction(tenant.id) as session:
+        return await current_member(user, session)
+
+
+async def workspaces(user_id: UUID) -> list[Workspace]:
+    async with user_transaction(user_id) as session:
+        return [Workspace(slug=r.slug, name=r.name, role=r.role) for r in await repo.workspaces(session)]
+
+
 async def get_me(auth: AuthContext) -> Me:
     async with AppSession() as session:
         u = await repo.get_user(session, auth.user_id)
@@ -247,7 +262,7 @@ async def get_me(auth: AuthContext) -> Me:
         user_id=u.id, full_name=u.full_name, email=u.email, email_verified=u.email_verified,
         phone=u.phone, phone_verified=u.phone_verified, has_password=u.password_hash is not None,
         preferred_language=u.preferred_language, exam=u.exam, exam_year=u.exam_year, school=u.school,
-        member_id=auth.member_id, role=auth.role,
+        member_id=auth.member_id, role=auth.role, workspaces=await workspaces(auth.user_id),
     )
 
 

@@ -145,6 +145,14 @@ class ProfileUpdate(BaseModel):
     school: str | None = Field(default=None, max_length=120)
 
 
+class Workspace(BaseModel):
+    """A tenant where the user is staff (owner, admin or teacher): a console they can open."""
+
+    slug: str
+    name: str
+    role: str
+
+
 class Me(BaseModel):
     user_id: UUID
     full_name: str
@@ -161,3 +169,4 @@ class Me(BaseModel):
     # user hasn't joined or paid for anything here yet.
     member_id: UUID | None
     role: str | None
+    workspaces: list[Workspace]

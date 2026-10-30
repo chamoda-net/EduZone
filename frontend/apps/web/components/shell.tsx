@@ -1,4 +1,4 @@
-import { BookOpen, CircleUserRound, Compass, LayoutDashboard, LockKeyhole, Receipt, Smartphone } from "lucide-react";
+import { BookOpen, CalendarDays, Compass, House, LayoutDashboard, LockKeyhole, Receipt, Smartphone } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -7,7 +7,8 @@ import { getBranding, getSession, isStaff } from "@/lib/session";
 import { t } from "@eduzone/lib/i18n";
 import { Alert, Avatar, Container, HeaderNav, Logo, TabBar, buttonStyles, cx, type NavItem } from "@eduzone/ui";
 
-/** The student side of a tenant's site: sticky header, page, footer, and bottom tabs on phones. */
+/** The student side: sticky header, page, footer, and bottom tabs on phones. Signed in, the nav is the
+ * student area (/learn, across every teacher); on a tenant's own site it also links that site's classes. */
 export async function SiteShell({ children, width = "lg", bare = false }: {
   children: ReactNode;
   width?: "sm" | "md" | "lg";
@@ -15,28 +16,32 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
   bare?: boolean;
 }) {
   const [branding, { me, endedElsewhere }] = await Promise.all([getBranding(), getSession()]);
-  const items: NavItem[] = [{ href: "/", label: t("nav.browse"), icon: <Compass />, exact: true }];
+  const items: NavItem[] = [];
+  if (branding) items.push({ href: "/", label: t("nav.browse"), icon: <Compass />, exact: true });
   if (me) {
     items.push(
-      { href: "/my", label: t("nav.myClasses"), icon: <BookOpen /> },
-      { href: "/payments", label: t("nav.payments"), icon: <Receipt /> },
+      { href: "/learn", label: t("nav.today"), icon: <House />, exact: true },
+      { href: "/learn/classes", label: t("nav.myClasses"), icon: <BookOpen /> },
+      { href: "/learn/schedule", label: t("nav.schedule"), icon: <CalendarDays /> },
+      { href: "/learn/payments", label: t("nav.payments"), icon: <Receipt /> },
     );
-    if (isStaff(me)) items.push({ href: "/org/classes", label: t("nav.console"), icon: <LayoutDashboard /> });
-    else items.push({ href: "/account", label: t("nav.account"), icon: <CircleUserRound /> });
+    if (isStaff(me)) items.push({ href: "/teach", label: t("nav.console"), icon: <LayoutDashboard /> });
   }
+  // Phones show at most five tabs: the tenant site link gives way first.
+  const tabs = items.length > 5 ? items.filter((i) => i.href !== "/") : items;
 
   return (
     <>
       <header className="ez-no-print sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">
         <Container className="flex h-16 items-center justify-between gap-4">
           <Link href="/" className="min-w-0">
-            <Logo name={branding?.name ?? "EduZone"} sub={t("shell.onEduZone")} />
+            <Logo name={branding?.name ?? "EduZone"} sub={branding ? t("shell.onEduZone") : undefined} />
           </Link>
           <HeaderNav items={items} />
           <div className="flex shrink-0 items-center gap-2">
             {me ? (
               <>
-                <Link href="/account" className="hidden items-center gap-2.5 rounded-full py-1 pr-3 pl-1 hover:bg-sunken lg:flex">
+                <Link href="/learn/profile" className="hidden items-center gap-2.5 rounded-full py-1 pr-3 pl-1 hover:bg-sunken lg:flex">
                   <Avatar name={me.full_name} size="sm" />
                   <span className="max-w-36 truncate text-sm font-semibold">{me.full_name}</span>
                 </Link>
@@ -78,19 +83,19 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
         )}
       </main>
 
-      <SiteFooter name={branding?.name ?? "EduZone"} />
-      {me && <TabBar items={items} />}
+      <SiteFooter name={branding?.name ?? "EduZone"} tenantSite={Boolean(branding)} />
+      {me && <TabBar items={tabs} />}
     </>
   );
 }
 
-function SiteFooter({ name }: { name: string }) {
+function SiteFooter({ name, tenantSite }: { name: string; tenantSite: boolean }) {
   return (
     <footer className="ez-no-print ez-grain mt-16 bg-brand-950 text-brand-100">
       <Container className="grid gap-10 py-12 sm:grid-cols-[1.4fr_1fr] md:pb-14">
         <div className="flex flex-col gap-4">
           <span className="text-on-brand">
-            <Logo name={name} sub={t("shell.onEduZone")} />
+            <Logo name={name} sub={tenantSite ? t("shell.onEduZone") : undefined} />
           </span>
           <p className="max-w-sm text-sm leading-relaxed text-brand-100/75">{t("footer.tagline")}</p>
         </div>

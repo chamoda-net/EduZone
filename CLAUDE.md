@@ -198,17 +198,25 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
    - **Company sites (v1.1):** host to company tenant, as built today.
    - Unknown, non-active or (for public pages) unlisted or unapproved tenant: 404.
 
-   **Built (pre-migration):** the tenant comes from `X-Forwarded-Host` or `Host` (`<slug>.<base>`) via
-   `resolve_tenant(slug)`.
+   **Built (phase 3):** `current_tenant()` takes the `{tenant_slug}` path parameter when the route has one
+   (the console at `/api/v1/teach/{tenant_slug}/...`), else the host (`X-Forwarded-Host` or `Host`,
+   `<slug>.<base>`, still used by the pre-migration tenant sites and the same staff routes under `/org`).
+   The membership check is `StaffActor` (owner/admin/teacher of that tenant). Student routes under
+   `/api/v1/learn/...` name a class/month/lesson/resource/order by id; `resolve_entity_tenant(kind, id)`
+   (SECURITY DEFINER, active tenants only) finds its tenant and the request runs in that tenant's
+   transaction with the user's member row there (`learn/service.py: in_tenant_of`). The main host
+   (`BASE_DOMAIN` itself) serves `/learn`, `/teach` and sign-in; `site_url()` accepts it for email links.
 3. **Every tenant request runs in a DB transaction that begins with**
    `SET LOCAL app.tenant_id = '<tenant uuid>'`. Without it, RLS returns zero rows.
    In code (`app/core/tenancy.py`): routes take `session: TenantSession`; services and jobs use
    `tenant_transaction(tenant_id)`. It commits before the response is sent and rolls back on any error.
-4. **User-scoped reads (target, phase 3).** The student area, cart and payment history span many tenants.
-   They run with `SET LOCAL app.user_id` and **extra RLS policies that only allow reading the signed-in
-   user's own rows** (their member rows, enrollments, grants, requests, progress, orders, payments).
-   Writes always happen inside the class's tenant transaction. These policies get isolation tests as
-   strict as tenant isolation: user A never sees user B's rows.
+4. **User-scoped reads (built, phase 3, migration 0006).** The student area, cart and payment history span
+   many tenants. They run in `user_transaction(user_id)` (`SET LOCAL app.user_id`, no tenant) where extra
+   **SELECT-only** RLS policies show only the signed-in user's own rows: their `tenant_members` rows and those
+   tenants, enrollments, grants, late requests, progress, orders, order items and payments. Catalogue tables
+   (classes, months, lessons) have no user policy: anything about a class runs in that class's tenant
+   transaction. Writes always happen inside the tenant transaction. Never set `app.user_id` and
+   `app.tenant_id` in the same transaction. `tests/test_learn.py` holds the user isolation tests.
 5. **Public marketplace reads** go through **one narrow read path** (a `SECURITY DEFINER` function set or
    an admin-owned view) exposing public fields of listed, approved tenants and published classes only.
    Never by relaxing tenant RLS.
@@ -291,7 +299,7 @@ Zoom links and video playback URLs are returned **only** after this check passes
   draft classes. Archived classes stay visible to students who still hold a grant in them.
 - **Public** (`/api/v1/public/classes[/{slug}]`): published classes, months with effective fee,
   published lesson outlines. Never Zoom links, descriptions of locked lessons, or media.
-- **Student** (`/api/v1/student/...`, any signed-in member):
+- **Student** (`/api/v1/student/...` on a tenant host; the same actions by id under `/api/v1/learn/...` since phase 3):
   `GET classes` (mine), `GET classes/{slug}` (per-month `access`: granted | buy | upcoming | request |
   pending | approved | rejected | unavailable), `POST/DELETE classes/{slug}/enroll` (joining a free
   class creates its `free` grant; leaving keeps access), `POST months/{id}/late-request` (enrolled,
@@ -575,7 +583,8 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 - Route groups (target): `/api/v1/public/...` (marketplace), `/api/v1/auth/...`, `/api/v1/me/...`
   (the signed-in user across tenants: learn area, cart, checkouts, payments), `/api/v1/teach/{tenant}/...`
   (console, membership-checked), `/api/v1/platform/...`, `/api/v1/webhooks/...`.
-  **Built (pre-migration):** `/student/...` and `/org/...` on the tenant host.
+  **Built (phase 3):** `/learn/...` (student area, any host), `/teach/{tenant_slug}/...` (console); the
+  pre-migration `/student/...`, `/org/...` and `/public/...` still work on tenant hosts until phase 4.
 - Money in API payloads: integer cents plus `currency`. The frontend formats for display.
 - Dates: ISO 8601 UTC in the API; display in `Asia/Colombo`.
 - Pagination: cursor-based for long lists (`limit`, `cursor`).
@@ -652,12 +661,22 @@ httpOnly cookies.
   types several enums as plain `str`).
 - **Formatting:** `packages/lib/src/format.ts` (money from cents, Colombo date/time, `<input type="datetime-local">`
   read as Colombo time with a fixed +05:30 offset).
-- Routes: `/` (tenant home), `/login`, `/org/classes` (+ `/new`, `/[id]` with months, lessons and lesson
-  files), `/org/media` (+ `/[id]` preview). Videos upload from the browser straight to Bunny (tus-js-client);
-  PDFs go through the streaming route `/api/upload/document`, which proxy.ts skips.
-  Student routes: `/classes/[slug]`, `/my`, `/lessons/[id]`, `/checkout/[id]`, `/payments[/[id]]`.
+- Routes: `/` (tenant home, or the main host's welcome), `/login`, the console `/teach/<slug>/classes`
+  (+ `/new`, `/[id]` with months, lessons and lesson files), `/teach/<slug>/media` (+ `/[id]` preview), requests,
+  payments, earnings, money. Videos upload from the browser straight to Bunny (tus-js-client); PDFs go through
+  the streaming route `/teach/<slug>/upload/document`, which proxy.ts skips. Student routes: `/learn/...` (below),
+  the tenant site's public `/classes/[slug]`, and the gateway return page `/checkout/[id]`.
+  **Phase 3:** the student area is `/learn` (Today, `/learn/classes[/<id>]`, `/learn/lessons/<id>`,
+  `/learn/schedule`, `/learn/requests`, `/learn/payments[/<id>]`, `/learn/profile`) and calls only
+  `/api/v1/learn/...` (by id, any host). The console is `/teach/<slug>/...` (`/teach` picks a workspace; a
+  switcher shows when the account is staff of several); `proxy.ts` puts the slug in the `x-ez-workspace`
+  request header, `api("~/classes")` means `/teach/<slug>/classes`, and links use `teachHref()` or the layout's
+  `base`. PDF uploads stream through `/teach/<slug>/upload/document`. The main host (`BASE_DOMAIN` in
+  `.env.local`) serves `/learn`, `/teach` and sign-in; its `/` sends signed-in people to `/learn`. On a tenant
+  host the public class page sends signed-in students to `/learn/classes/<id>`. Old URLs (`/my`, `/account`,
+  `/payments`, `/lessons/<id>`, `/org/...`) redirect (next.config.ts). Staff = `me.workspaces` is not empty.
   Identity (phase 2): `/login` (password or Google, then the SMS code on a new device), `/register`,
-  `/verify-phone` (`?next=`, `?change=1`), `/recover`, `/recover/[token]`, `/verify-email`, `/account`.
+  `/verify-phone` (`?next=`, `?change=1`), `/recover`, `/recover/[token]`, `/verify-email`, `/learn/profile`.
   All identity server actions live in `app/login/actions.ts`; `next` is always checked to be a same-site
   path. Pages opened from email links act only on a button press (mail scanners open links). Pay sends an
   unverified student to `/verify-phone?next=<class>`. When the one-device rule ends a session, `proxy.ts`
@@ -729,7 +748,7 @@ httpOnly cookies.
 0. Spec: this file and `FRONTEND.md` agree (done)
 1. Frontend groundwork: monorepo, `packages/ui` tokens, generated API client, next-intl, Playwright smoke suite (done)
 2. Identity: Google + email/password, phone verification, new-device OTP, recovery, account-wide sessions (done)
-3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads)
+3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads) (done)
 4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools
 5. Teacher self-registration and approval
 6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment)

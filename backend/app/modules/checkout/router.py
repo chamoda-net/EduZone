@@ -41,7 +41,7 @@ async def get_order(order_id: UUID, session: TenantSession, auth: CurrentMember)
     return await service.get_order(session, auth, order_id)
 
 
-org_router = APIRouter(prefix="/org", tags=["org: payments"])
+org_router = APIRouter(tags=["org: payments"])
 
 
 @org_router.get("/orders", response_model=OrgOrderPage)

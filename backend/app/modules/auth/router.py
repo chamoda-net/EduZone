@@ -2,12 +2,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from app.core.config import get_settings
-from app.core.tenancy import CurrentTenant, request_host
+from app.core.tenancy import OptionalTenant, SiteUrl
 from app.integrations.email import EmailSender, get_email_sender
 from app.integrations.sms import SmsSender, get_sms_sender
 from app.modules.auth import service
-from app.modules.auth.dependencies import CurrentMember, CurrentUser, client_ip, user_agent
+from app.modules.auth.dependencies import CurrentUser, client_ip, user_agent
 from app.modules.auth.google import GoogleVerifier, get_google_verifier
 from app.modules.auth.schemas import (
     DeviceResend,
@@ -30,21 +29,17 @@ from app.modules.auth.schemas import (
     TokenPair,
 )
 
-# One account across all tenants. Routes that email a link take the tenant host (CurrentTenant)
-# so links only ever point at a site we serve, never at a forged Host header.
+# One account across all tenants. Routes that email a link take `SiteUrl` (the main host or an
+# active tenant's host) so links only ever point at a site we serve, never at a forged Host header.
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 Sms = Annotated[SmsSender, Depends(get_sms_sender)]
 Emails = Annotated[EmailSender, Depends(get_email_sender)]
 
 
-def _site_url(request: Request) -> str:
-    return f"{get_settings().site_scheme}://{request_host(request)}"
-
-
 @router.post("/register", response_model=TokenPair, status_code=201)
-async def register(body: Register, request: Request, tenant: CurrentTenant, emails: Emails) -> TokenPair:
-    return await service.register(body, client_ip(request), user_agent(request), emails, _site_url(request))
+async def register(body: Register, request: Request, site: SiteUrl, emails: Emails) -> TokenPair:
+    return await service.register(body, client_ip(request), user_agent(request), emails, site)
 
 
 @router.post("/login", response_model=LoginResult)
@@ -81,14 +76,15 @@ async def logout(user: CurrentUser) -> Response:
 
 
 @router.get("/me", response_model=Me)
-async def me(auth: CurrentMember) -> Me:
-    return await service.get_me(auth)
+async def me(user: CurrentUser, tenant: OptionalTenant) -> Me:
+    """The account, its staff workspaces, and its membership in the tenant of this request (if any)."""
+    return await service.get_me(await service.member_context(user, tenant))
 
 
 @router.patch("/me", response_model=Me)
-async def update_me(body: ProfileUpdate, auth: CurrentMember) -> Me:
-    await service.update_profile(auth.user_id, body)
-    return await service.get_me(auth)
+async def update_me(body: ProfileUpdate, user: CurrentUser, tenant: OptionalTenant) -> Me:
+    await service.update_profile(user.user_id, body)
+    return await service.get_me(await service.member_context(user, tenant))
 
 
 @router.post("/phone/request", response_model=OtpRequested, status_code=202)
@@ -103,8 +99,8 @@ async def verify_phone(body: PhoneVerify, request: Request, user: CurrentUser) -
 
 
 @router.post("/email/resend", status_code=204)
-async def resend_email(request: Request, user: CurrentUser, tenant: CurrentTenant, emails: Emails) -> Response:
-    await service.resend_email_verification(user.user_id, emails, _site_url(request))
+async def resend_email(user: CurrentUser, site: SiteUrl, emails: Emails) -> Response:
+    await service.resend_email_verification(user.user_id, emails, site)
     return Response(status_code=204)
 
 
@@ -115,8 +111,8 @@ async def verify_email(body: EmailVerify) -> Response:
 
 
 @router.post("/recovery/request", status_code=202)
-async def request_recovery(body: RecoveryRequest, request: Request, tenant: CurrentTenant, emails: Emails) -> Response:
-    await service.request_recovery(body.email, client_ip(request), emails, _site_url(request))
+async def request_recovery(body: RecoveryRequest, request: Request, site: SiteUrl, emails: Emails) -> Response:
+    await service.request_recovery(body.email, client_ip(request), emails, site)
     return Response(status_code=202)
 
 

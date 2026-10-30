@@ -36,7 +36,7 @@ def _not_found(what: str = "Class") -> ApiError:
 
 
 def _public_class(row: Any) -> PublicClass:
-    return PublicClass.model_validate({k: getattr(row, k) for k in PublicClass.model_fields})
+    return PublicClass.model_validate({k: getattr(row, k) for k in PublicClass.model_fields if k != "org"})
 
 
 def _month(row: Any, currency: str) -> PublicMonth:

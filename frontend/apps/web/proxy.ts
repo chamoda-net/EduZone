@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { WORKSPACE_HEADER } from "./lib/workspace-header";
+
 import {
   ACCESS_COOKIE,
   NOTICE_COOKIE,
@@ -16,11 +18,19 @@ const API_URL = process.env.API_URL ?? "http://localhost:8000";
 /** Keeps the session alive: when the access token is missing or about to expire and a
  * refresh token exists, rotate them before the page or Server Action runs. The new
  * cookies are set on the response and also on this request, so server code sees them.
- * (The staff console is a separate app: `apps/admin`.) */
+ * It also tells server code which console workspace a request is for: `/teach/<slug>/...` sets
+ * the x-ez-workspace request header (lib/workspace.ts). Any copy sent by the browser is dropped;
+ * the API checks membership of that workspace on every call anyway.
+ * (The platform admin is a separate app: `apps/admin`.) */
 export async function proxy(request: NextRequest) {
+  request.headers.delete(WORKSPACE_HEADER);
+  const workspace = request.nextUrl.pathname.match(/^\/teach\/([a-z0-9-]+)(?:\/|$)/)?.[1];
+  if (workspace) request.headers.set(WORKSPACE_HEADER, workspace);
+  const pass = () => NextResponse.next({ request: { headers: request.headers } });
+
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
   const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
-  if (!refresh || (access && !expiresSoon(access))) return NextResponse.next();
+  if (!refresh || (access && !expiresSoon(access))) return pass();
 
   let res: Response;
   try {
@@ -31,7 +41,7 @@ export async function proxy(request: NextRequest) {
       cache: "no-store",
     });
   } catch {
-    return NextResponse.next(); // API down: leave cookies alone and let the page report it
+    return pass(); // API down: leave cookies alone and let the page report it
   }
 
   if (res.ok) {
@@ -57,10 +67,10 @@ export async function proxy(request: NextRequest) {
     if (code === "SIGNED_IN_ELSEWHERE") response.cookies.set(NOTICE_COOKIE, "elsewhere", noticeCookie());
     return response;
   }
-  return NextResponse.next();
+  return pass();
 }
 
 export const config = {
-  // Pages and Server Actions only; skip static assets and the streamed upload route.
-  matcher: ["/((?!_next/static|_next/image|api/upload|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)"],
+  // Pages and Server Actions only; skip static assets and the streamed upload route (/teach/<slug>/upload/...).
+  matcher: ["/((?!_next/static|_next/image|teach/[^/]+/upload/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)"],
 };

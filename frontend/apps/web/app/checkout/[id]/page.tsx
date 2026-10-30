@@ -17,13 +17,13 @@ import { OrderPoller } from "./poller";
 export default async function CheckoutReturnPage({ params }: PageProps<"/checkout/[id]">) {
   const { id } = await params;
   if (!(await getMe())) redirect(`/login?next=/checkout/${id}`);
-  const res = await api<Order>(`/student/orders/${id}`);
+  const res = await api<Order>(`/learn/orders/${id}`);
   if (!res.ok) {
     if (res.status === 404 || res.status === 422) notFound();
     return <SiteShell width="sm"><ErrorText>{errorText(t, res.error)}</ErrorText></SiteShell>;
   }
   const o = res.data;
-  const classUrl = `/classes/${o.item.class_slug}`;
+  const classUrl = `/learn/classes/${o.item.class_id}`;
   const failed = o.status === "failed" || o.status === "cancelled";
 
   return (
@@ -78,7 +78,7 @@ export default async function CheckoutReturnPage({ params }: PageProps<"/checkou
               {t("checkout.toClass")}
               <ArrowRight className="size-4.5" />
             </Link>
-            <Link href={`/payments/${o.id}`} className={buttonStyles("secondary", "lg", "flex-1")}>
+            <Link href={`/learn/payments/${o.id}`} className={buttonStyles("secondary", "lg", "flex-1")}>
               <Receipt className="size-4.5" />
               {t("checkout.receipt")}
             </Link>

@@ -3,6 +3,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 
 import { ACCESS_COOKIE } from "./cookies";
+import { WORKSPACE_HEADER } from "./workspace-header";
 
 export const API_URL = process.env.API_URL ?? "http://localhost:8000";
 
@@ -22,8 +23,14 @@ export async function userHost(): Promise<string> {
   return h.get("x-forwarded-host") ?? h.get("host") ?? "";
 }
 
-/** Calls the EduZone API from the server. Never throws for HTTP or network errors. */
+/** Calls the EduZone API from the server. Never throws for HTTP or network errors.
+ * A path starting with "~/" is in the current console workspace: "~/classes" → "/teach/<slug>/classes". */
 export async function api<T>(path: string, { method = "GET", body, token }: Options = {}): Promise<ApiResult<T>> {
+  if (path.startsWith("~/")) {
+    const slug = (await headers()).get(WORKSPACE_HEADER);
+    if (!slug) return { ok: false, status: 404, error: { code: "NOT_FOUND", message: "Not found." } };
+    path = `/teach/${slug}${path.slice(1)}`;
+  }
   const host = await userHost();
   const accessToken = token === undefined ? (await cookies()).get(ACCESS_COOKIE)?.value : token;
   const requestHeaders: Record<string, string> = {

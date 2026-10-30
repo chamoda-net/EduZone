@@ -121,7 +121,15 @@ Frontend: `/register`, `/login`, `/verify-phone`, `/recover`, `/learn/profile`; 
 `__Host-ez_session` (Secure; needs https locally or a dev exception).
 Tests: replace phone-OTP-login tests; keep isolation tests.
 
-### Phase 3 — Path tenancy and the cross-tenant student area **[M]**
+### Phase 3 — Path tenancy and the cross-tenant student area **[M]** ✅ done
+Built as below, with these choices: the console routes are mounted twice (`/teach/{tenant_slug}` takes the
+tenant from the path; `/org` keeps the host for the tenant sites until phase 4). The student area uses the
+user-scoped policies for lists of the user's own rows (memberships, payments) and, for anything about a
+class, finds the class's tenant by id (`resolve_entity_tenant`) and runs there, so the access rule is
+untouched and the catalogue tables need no user policy. Today and Schedule loop over the user's tenants.
+`user_is_staff_anywhere()` now belongs to `eduzone_admin` (it saw no rows under forced RLS as the migration
+role unless that role is a superuser, as it is locally). Middleware routing by subject slug comes with
+phase 4 (no subjects yet); the main host's `/` is a sign-in welcome until then.
 Backend:
 - `tenant_from_path(slug)` for `/teach/<tenant>` routes: resolve + **membership check** (staff role) →
   same `tenant_transaction()` as today. Host resolution stays for company sites (v1.1).

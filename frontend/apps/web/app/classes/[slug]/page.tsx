@@ -1,8 +1,7 @@
 import { ArrowLeft, ChevronRight, FileText, Lock, MonitorPlay, ShieldCheck, Video } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-import { PayButton } from "@/components/pay-button";
 import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
 import { classMeta, priceParts } from "@/lib/catalog";
@@ -13,15 +12,11 @@ import type {
   LessonType,
   MonthAccess,
   PublicClassDetail,
-  StudentClassView,
   StudentLesson,
   StudentMonth,
 } from "@eduzone/lib/types";
-import { ActionButton } from "@eduzone/ui/action-button";
 import { Avatar, Badge, ClassCover, Container, ErrorText, StatusPill, buttonStyles, cx, type PillState } from "@eduzone/ui";
 
-import { joinClass, leaveClass, requestLateMonth } from "../actions";
-import { RequestLateForm } from "./request-form";
 
 const pillOf: Record<MonthAccess, PillState> = {
   granted: "paid",
@@ -44,35 +39,21 @@ const shortMonth = new Intl.DateTimeFormat("en", { month: "short", timeZone: "UT
 
 export default async function ClassPage({ params }: PageProps<"/classes/[slug]">) {
   const { slug } = await params;
-  const me = await getMe();
-
-  // Signed in: the personal view (which months are unlocked). Otherwise: the public page.
-  let view: StudentClassView | null = null;
-  if (me) {
-    const res = await api<StudentClassView>(`/student/classes/${encodeURIComponent(slug)}`);
-    if (!res.ok) {
-      if (res.status === 404) notFound();
-      return <SiteShell><ErrorText>{errorText(t, res.error)}</ErrorText></SiteShell>;
-    }
-    view = res.data;
-  } else {
-    const res = await api<PublicClassDetail>(`/public/classes/${encodeURIComponent(slug)}`, { token: null });
-    if (!res.ok) {
-      if (res.status === 404) notFound();
-      return <SiteShell><ErrorText>{errorText(t, res.error)}</ErrorText></SiteShell>;
-    }
-    view = {
-      ...res.data,
-      enrolled: false,
-      has_class_access: false,
-      months: res.data.months.map((m) => ({ ...m, access: m.status === "open" ? "buy" : m.status === "upcoming" ? "upcoming" : "request" })),
-      lessons: res.data.lessons.map((l) => ({ ...l, unlocked: false })),
-    };
+  const res = await api<PublicClassDetail>(`/public/classes/${encodeURIComponent(slug)}`, { token: null });
+  if (!res.ok) {
+    if (res.status === 404) notFound();
+    return <SiteShell><ErrorText>{errorText(t, res.error)}</ErrorText></SiteShell>;
   }
+  // Signed in: the same class, with joining and paying, lives in the student area.
+  if (await getMe()) redirect(`/learn/classes/${res.data.class.id}`);
+  const view = {
+    ...res.data,
+    months: res.data.months.map((m) => ({ ...m, access: (m.status === "open" ? "buy" : m.status === "upcoming" ? "upcoming" : "request") as MonthAccess })),
+    lessons: res.data.lessons.map((l) => ({ ...l, unlocked: false })),
+  };
   const c = view.class;
   const monthly = c.pricing_model === "monthly";
   const price = priceParts(t, c);
-  const nextToPay = me ? view.months.find((m) => m.access === "buy" || m.access === "approved") : undefined;
 
   return (
     <SiteShell bare>
@@ -111,34 +92,9 @@ export default async function ClassPage({ params }: PageProps<"/classes/[slug]">
                   {price.unit && <span className="text-muted">{price.unit}</span>}
                 </p>
 
-                {!me && (
-                  <Link href={`/login?next=/classes/${encodeURIComponent(slug)}`} className={buttonStyles("primary", "lg", "w-full")}>
-                    {t("class.signInToJoin")}
-                  </Link>
-                )}
-                {me && !view.enrolled && (
-                  <div className="[&_button]:w-full [&_form]:flex [&_form]:w-full">
-                    <ActionButton action={joinClass.bind(null, slug)} label={t("class.join")} variant="primary" />
-                  </div>
-                )}
-                {me && view.enrolled && (
-                  <p className="flex items-center gap-2 rounded-ez bg-success-bg px-3 py-2.5 text-sm font-semibold text-success">
-                    <span className="size-2 rounded-full bg-success" />
-                    {t("class.joined")}
-                  </p>
-                )}
-                {view.has_class_access && <Badge tone="success" dot>{t("class.classAccess")}</Badge>}
-                {me && c.pricing_model === "one_time" && !view.has_class_access && c.one_time_price_cents !== null && (
-                  <PayButton
-                    block
-                    classId={c.id}
-                    monthId={null}
-                    label={t("pay.button", { amount: formatMoney(c.one_time_price_cents, c.currency) })}
-                  />
-                )}
-                {nextToPay && view.enrolled && (
-                  <PayButton block classId={c.id} monthId={nextToPay.id} label={t("class.payFor", { month: formatMonth(nextToPay.month_start) })} />
-                )}
+                <Link href={`/login?next=/classes/${encodeURIComponent(slug)}`} className={buttonStyles("primary", "lg", "w-full")}>
+                  {t("class.signInToJoin")}
+                </Link>
 
                 <ul className="flex flex-col gap-2 border-t border-border pt-4 text-sm text-muted">
                   <li className="flex gap-2">
@@ -162,7 +118,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[slug]">
               <SectionTitle title={t("class.months")} hint={t("class.monthsHint")} />
               <ul className="flex flex-col gap-3">
                 {view.months.map((m, i) => (
-                  <MonthRow key={m.id} m={m} i={i} slug={slug} classId={c.id} signedIn={Boolean(me)} enrolled={view.enrolled} />
+                  <MonthRow key={m.id} m={m} i={i} />
                 ))}
               </ul>
             </section>
@@ -189,11 +145,6 @@ export default async function ClassPage({ params }: PageProps<"/classes/[slug]">
             ))}
           </section>
 
-          {me && view.enrolled && (
-            <div className="self-start">
-              <ActionButton action={leaveClass.bind(null, slug)} label={t("class.leave")} variant="ghost" small confirm={t("class.confirmLeave")} />
-            </div>
-          )}
         </div>
         </Container>
       </div>
@@ -210,30 +161,14 @@ function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-function MonthRow({ m, i, slug, classId, signedIn, enrolled }: {
-  m: StudentMonth;
-  i: number;
-  slug: string;
-  classId: string;
-  signedIn: boolean;
-  enrolled: boolean;
-}) {
+function MonthRow({ m, i }: { m: StudentMonth; i: number }) {
   const date = new Date(m.month_start);
-  const paid = m.access === "granted";
   return (
     <li
-      className={cx(
-        "ez-rise flex flex-wrap items-center gap-4 rounded-ez-lg border bg-surface p-4 shadow-ez-sm sm:flex-nowrap",
-        paid ? "border-success/30" : "border-border",
-      )}
+      className="ez-rise flex flex-wrap items-center gap-4 rounded-ez-lg border border-border bg-surface p-4 shadow-ez-sm sm:flex-nowrap"
       style={{ "--i": i } as React.CSSProperties}
     >
-      <div
-        className={cx(
-          "grid size-14 shrink-0 place-items-center rounded-ez text-center leading-none",
-          paid ? "bg-success-bg text-success" : "bg-brand-900 text-on-brand",
-        )}
-      >
+      <div className="grid size-14 shrink-0 place-items-center rounded-ez bg-brand-900 text-center leading-none text-on-brand">
         <span>
           <span className="block text-[0.7rem] font-bold tracking-widest uppercase opacity-80">{shortMonth.format(date)}</span>
           <span className="block font-display text-lg font-semibold">{date.getUTCFullYear()}</span>
@@ -243,19 +178,7 @@ function MonthRow({ m, i, slug, classId, signedIn, enrolled }: {
         <p className="font-semibold">{formatMonth(m.month_start)}</p>
         <p className="text-sm text-muted tabular-nums">{formatMoney(m.fee_cents, m.currency)}</p>
       </div>
-      <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:flex-col sm:items-end">
-        {signedIn && <StatusPill state={pillOf[m.access]}>{t(`class.access.${m.access}`)}</StatusPill>}
-        {signedIn && (m.access === "buy" || m.access === "approved") && (
-          <PayButton classId={classId} monthId={m.id} small label={t("pay.button", { amount: formatMoney(m.fee_cents, m.currency) })} />
-        )}
-        {signedIn &&
-          m.access === "request" &&
-          (enrolled ? (
-            <RequestLateForm action={requestLateMonth.bind(null, slug, m.id)} />
-          ) : (
-            <span className="text-xs text-muted">{t("class.joinFirst")}</span>
-          ))}
-      </div>
+      <StatusPill state={pillOf[m.access]}>{t(`class.access.${m.access}`)}</StatusPill>
     </li>
   );
 }
@@ -290,7 +213,7 @@ function LessonRow({ l }: { l: StudentLesson }) {
   return (
     <li>
       {l.unlocked ? (
-        <Link href={`/lessons/${l.id}`} className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-50/50">
+        <Link href={`/learn/lessons/${l.id}`} className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-50/50">
           {body}
         </Link>
       ) : (

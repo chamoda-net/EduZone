@@ -89,7 +89,7 @@ async def open_resource(resource_id: UUID, session: TenantSession, auth: Current
 
 # --- organization console --------------------------------------------------------------------
 
-org_router = APIRouter(prefix="/org", tags=["org: students"])
+org_router = APIRouter(tags=["org: students"])
 
 
 @org_router.get("/classes/{class_id}/students", response_model=list[ClassStudent])

@@ -11,7 +11,7 @@ import { LoginForm } from "./login-form";
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next } = await searchParams;
   const { me, endedElsewhere } = await getSession();
-  if (me) redirect(isStaff(me) ? "/org/classes" : "/");
+  if (me) redirect(isStaff(me) ? "/teach" : "/learn");
   const nextPath = typeof next === "string" ? next : undefined;
 
   return (

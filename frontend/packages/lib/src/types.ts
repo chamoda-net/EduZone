@@ -25,6 +25,8 @@ export type Me = {
   school: string | null;
   member_id: string | null;
   role: Role | null;
+  /** Organizations where this account is staff: consoles it can open (/teach/<slug>). */
+  workspaces: Workspace[];
 };
 
 export type DeviceCheck = { challenge: string; phone_hint: string; expires_in: number; resend_after: number };
@@ -140,7 +142,11 @@ export type PublicClass = {
   one_time_price_cents: number | null;
   currency: string;
   teacher_name: string;
+  /** The organization, on pages that span them (/learn). */
+  org?: OrgRef | null;
 };
+
+export type OrgRef = { slug: string; name: string };
 
 export type PublicClassPage = { items: PublicClass[]; next_cursor: string | null };
 
@@ -200,6 +206,7 @@ export type StudentLessonDetail = StudentLesson & {
   description: string | null;
   zoom_join_url: string | null;
   resources: StudentResource[];
+  org?: OrgRef | null;
 };
 
 export type OpenResource = {
@@ -257,12 +264,57 @@ export type Order = {
   item: {
     id: string;
     class_id: string;
-    class_slug: string;
+    class_slug: string | null;
     class_month_id: string | null;
     description: string;
     amount_cents: number;
   };
+  org?: OrgRef | null;
 };
+
+// --- Student area (/learn) ------------------------------------------------------------------
+
+export type UpcomingLesson = {
+  lesson_id: string;
+  title: string;
+  lesson_type: LessonType;
+  scheduled_at: string;
+  duration_minutes: number | null;
+  class_id: string;
+  class_title: string;
+  unlocked: boolean;
+  /** From 15 minutes before the start until it ends (server time). */
+  live_now: boolean;
+  org: OrgRef;
+};
+
+export type MonthToPay = {
+  class_id: string;
+  class_title: string;
+  month_id: string;
+  month_start: string;
+  fee_cents: number;
+  currency: string;
+  approved_late: boolean;
+  org: OrgRef;
+};
+
+export type Today = { next_live: UpcomingLesson[]; to_pay: MonthToPay[]; pending_requests: number; classes: number };
+
+export type MyRequest = {
+  id: string;
+  status: "pending" | "approved" | "rejected" | "fulfilled" | "cancelled";
+  student_note: string | null;
+  decision_note: string | null;
+  created_at: string;
+  month_id: string;
+  month_start: string;
+  class_id: string;
+  class_title: string;
+  org: OrgRef;
+};
+
+export type Workspace = { slug: string; name: string; role: Role };
 
 export type GatewayRedirect = { method: "GET" | "POST"; url: string; fields: Record<string, string> };
 export type CheckoutResult = { order: Order; redirect: GatewayRedirect };

@@ -27,11 +27,11 @@ function field(form: FormData, name: string): string {
 async function finish(tokens: TokenPair, next: string | null): Promise<never> {
   await saveSession(tokens);
   const me = await api<Me>("/auth/me", { token: tokens.access_token });
-  const staff = me.ok && me.data.role !== null && me.data.role !== "student";
+  const staff = me.ok && me.data.workspaces.length > 0;
   if (me.ok && !me.data.phone_verified && !staff) {
     redirect(`/verify-phone?next=${encodeURIComponent(next ?? "/")}`);
   }
-  redirect(next ?? (staff ? "/org/classes" : "/"));
+  redirect(next ?? (staff ? "/teach" : "/learn"));
 }
 
 // --- Sign in ------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ export async function confirmPhone(_: CodeState, form: FormData): Promise<CodeSt
   });
   if (!res.ok) return { error: errorText(t, res.error), code };
   const next = safeNext(form.get("next"));
-  redirect(next && next !== "/" ? next : "/account?welcome=1");
+  redirect(next && next !== "/" && next !== "/learn" ? next : "/learn/profile?welcome=1");
 }
 
 // --- Email --------------------------------------------------------------------------------

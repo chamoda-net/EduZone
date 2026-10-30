@@ -38,10 +38,9 @@ export const getSession = cache(async (): Promise<SessionState> => {
 
 export const getMe = cache(async (): Promise<Me | null> => (await getSession()).me);
 
-const STAFF = new Set(["owner", "admin", "teacher"]);
-
+/** Staff of at least one organization (has a console under /teach). */
 export function isStaff(me: Me | null): boolean {
-  return me !== null && me.role !== null && STAFF.has(me.role);
+  return me !== null && me.workspaces.length > 0;
 }
 
 // Writing cookies is only allowed in Server Actions and Route Handlers.

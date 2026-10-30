@@ -1,10 +1,12 @@
 import { ArrowRight, CalendarCheck, LibraryBig, MonitorPlay, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { ClassCard } from "@/components/class-card";
 import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
 import { getBranding, getMe } from "@/lib/session";
+import { isMainHost } from "@/lib/site";
 import { errorText, t } from "@eduzone/lib/i18n";
 import type { ClassItem, PublicClass, PublicClassPage } from "@eduzone/lib/types";
 import { ClassCover, Container, EmptyState, ErrorText, FilterChips, buttonStyles } from "@eduzone/ui";
@@ -14,6 +16,11 @@ const EXAMS: Exam[] = ["al", "ol", "grade_5", "other"];
 
 /** The tenant's public home: its published classes, open to anyone. */
 export default async function Home({ searchParams }: PageProps<"/">) {
+  // The main site has no catalogue until the marketplace (phase 4): the student area or sign-in.
+  if (await isMainHost()) {
+    if (await getMe()) redirect("/learn");
+    return <MainWelcome />;
+  }
   const sp = await searchParams;
   const exam = EXAMS.includes(sp.exam as Exam) ? (sp.exam as Exam) : null;
   const cursor = typeof sp.cursor === "string" ? sp.cursor : null;
@@ -163,5 +170,34 @@ function Hero({ org, signedIn, covers }: { org: string; signedIn: boolean; cover
         </div>
       </Container>
     </section>
+  );
+}
+
+function MainWelcome() {
+  return (
+    <SiteShell bare>
+      <section className="ez-grain relative flex flex-1 items-center overflow-hidden bg-brand-900 text-on-brand">
+        <svg aria-hidden viewBox="0 0 800 600" className="absolute -top-40 -right-40 w-[720px] opacity-50">
+          {[120, 190, 260, 330].map((r) => (
+            <circle key={r} cx="400" cy="300" r={r} fill="none" stroke="var(--ez-brand-600)" strokeWidth="1" />
+          ))}
+          <circle cx="400" cy="300" r="70" fill="var(--ez-gold-500)" opacity="0.18" />
+        </svg>
+        <Container className="relative flex flex-col items-start gap-6 py-24 sm:py-32">
+          <h1 className="ez-rise max-w-2xl font-display text-5xl leading-[1.02] font-semibold sm:text-6xl">
+            {t("learn.mainHome.title")}
+          </h1>
+          <p className="ez-rise max-w-xl text-lg text-brand-100/85" style={{ "--i": 1 } as React.CSSProperties}>
+            {t("learn.mainHome.body")}
+          </p>
+          <div className="ez-rise flex flex-wrap gap-3" style={{ "--i": 2 } as React.CSSProperties}>
+            <Link href="/login" className={buttonStyles("gold", "lg")}>{t("home.signIn")}</Link>
+            <Link href="/register" className={buttonStyles("ghost", "lg", "text-on-brand hover:bg-brand-800")}>
+              {t("auth.createAccount")}
+            </Link>
+          </div>
+        </Container>
+      </section>
+    </SiteShell>
   );
 }

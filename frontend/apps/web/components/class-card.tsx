@@ -7,11 +7,17 @@ import { t } from "@eduzone/lib/i18n";
 import type { PublicClass } from "@eduzone/lib/types";
 import { Avatar, ClassCover } from "@eduzone/ui";
 
-export function ClassCard({ c, footer, index = 0 }: { c: PublicClass; footer?: ReactNode; index?: number }) {
+export function ClassCard({ c, footer, index = 0, href }: {
+  c: PublicClass;
+  footer?: ReactNode;
+  index?: number;
+  /** Defaults to the tenant site's class page; the student area passes /learn/classes/<id>. */
+  href?: string;
+}) {
   const price = priceParts(t, c);
   return (
     <Link
-      href={`/classes/${c.slug}`}
+      href={href ?? `/classes/${c.slug}`}
       style={{ "--i": index } as React.CSSProperties}
       className="ez-rise group flex flex-col overflow-hidden rounded-ez-lg border border-border bg-surface shadow-ez-sm transition duration-300 ease-ez hover:-translate-y-1 hover:border-border-strong hover:shadow-ez-lg"
     >
@@ -32,7 +38,10 @@ export function ClassCard({ c, footer, index = 0 }: { c: PublicClass; footer?: R
         <h3 className="font-display text-xl leading-snug font-semibold text-foreground">{c.title}</h3>
         <div className="flex items-center gap-2 text-sm text-muted">
           <Avatar name={c.teacher_name} size="sm" />
-          <span className="truncate">{c.teacher_name}</span>
+          <span className="truncate">
+            {c.teacher_name}
+            {c.org && c.org.name !== c.teacher_name && <span className="text-subtle"> · {c.org.name}</span>}
+          </span>
         </div>
         <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-4">
           <p className="flex items-baseline gap-1">

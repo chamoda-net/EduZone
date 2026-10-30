@@ -36,6 +36,12 @@ LANGUAGE sql STABLE AS $$
     SELECT NULLIF(current_setting('app.tenant_id', true), '')::uuid
 $$;
 
+-- The student area (migration 0006): app.user_id set, no tenant -> only the user's own rows.
+CREATE OR REPLACE FUNCTION current_user_id() RETURNS uuid
+LANGUAGE sql STABLE AS $$
+    SELECT NULLIF(current_setting('app.user_id', true), '')::uuid
+$$;
+
 -- =============================================================================
 -- 1. PLATFORM LEVEL (not tenant-scoped)
 -- =============================================================================
@@ -900,3 +906,44 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
 $$;
 REVOKE ALL ON FUNCTION user_is_staff_anywhere(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION user_is_staff_anywhere(uuid) TO eduzone_app;
+
+-- User-scoped reads (migration 0006): SELECT-only policies, OR-ed with tenant_isolation. With app.user_id
+-- set and no tenant, a session sees only the user's own rows. Never set both in one transaction.
+CREATE POLICY user_own_rows ON tenant_members FOR SELECT USING (user_id = current_user_id());
+CREATE POLICY user_member_of ON tenants FOR SELECT
+    USING (id IN (SELECT tenant_id FROM tenant_members WHERE user_id = current_user_id()));
+CREATE POLICY user_own_rows ON class_enrollments FOR SELECT
+    USING (student_member_id IN (SELECT id FROM tenant_members WHERE user_id = current_user_id()));
+CREATE POLICY user_own_rows ON access_grants FOR SELECT
+    USING (student_member_id IN (SELECT id FROM tenant_members WHERE user_id = current_user_id()));
+CREATE POLICY user_own_rows ON late_month_requests FOR SELECT
+    USING (student_member_id IN (SELECT id FROM tenant_members WHERE user_id = current_user_id()));
+CREATE POLICY user_own_rows ON lesson_progress FOR SELECT
+    USING (student_member_id IN (SELECT id FROM tenant_members WHERE user_id = current_user_id()));
+CREATE POLICY user_own_rows ON orders FOR SELECT
+    USING (student_member_id IN (SELECT id FROM tenant_members WHERE user_id = current_user_id()));
+CREATE POLICY user_own_rows ON order_items FOR SELECT
+    USING (order_id IN (SELECT id FROM orders WHERE student_member_id IN
+                        (SELECT id FROM tenant_members WHERE user_id = current_user_id())));
+CREATE POLICY user_own_rows ON payments FOR SELECT
+    USING (order_id IN (SELECT id FROM orders WHERE student_member_id IN
+                        (SELECT id FROM tenant_members WHERE user_id = current_user_id())));
+
+-- Which tenant a class / month / lesson / resource / order belongs to (active tenants only), so the
+-- student area can open that tenant's transaction (migration 0006).
+CREATE OR REPLACE FUNCTION resolve_entity_tenant(p_kind text, p_id uuid) RETURNS uuid
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
+    SELECT t.id FROM tenants t
+    WHERE t.status = 'active' AND t.id = (
+        CASE p_kind
+            WHEN 'class'    THEN (SELECT tenant_id FROM classes WHERE id = p_id)
+            WHEN 'month'    THEN (SELECT tenant_id FROM class_months WHERE id = p_id)
+            WHEN 'lesson'   THEN (SELECT tenant_id FROM lessons WHERE id = p_id)
+            WHEN 'resource' THEN (SELECT tenant_id FROM lesson_resources WHERE id = p_id)
+            WHEN 'order'    THEN (SELECT tenant_id FROM orders WHERE id = p_id)
+        END)
+$$;
+ALTER FUNCTION resolve_entity_tenant(text, uuid) OWNER TO eduzone_admin;
+REVOKE ALL ON FUNCTION resolve_entity_tenant(text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION resolve_entity_tenant(text, uuid) TO eduzone_app;
+ALTER FUNCTION user_is_staff_anywhere(uuid) OWNER TO eduzone_admin;

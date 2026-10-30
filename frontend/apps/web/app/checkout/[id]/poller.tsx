@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useT } from "@eduzone/lib/i18n/client";
 
-import { getOrderStatus } from "../../classes/actions";
+import { getOrderStatus } from "@/app/learn/actions";
 
 const EVERY_MS = 2000;
 const GIVE_UP_MS = 90_000;

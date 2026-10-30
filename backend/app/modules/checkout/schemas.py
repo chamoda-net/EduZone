@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from app.modules.learning.schemas import OrgRef
+
 
 class CheckoutCreate(BaseModel):
     """One item per order in v1: a month of a monthly class, or a one-time class."""
@@ -17,7 +19,7 @@ class CheckoutCreate(BaseModel):
 class OrderItemOut(BaseModel):
     id: UUID
     class_id: UUID
-    class_slug: str
+    class_slug: str | None             # None in cross-tenant lists (/learn/payments)
     class_month_id: UUID | None
     description: str
     amount_cents: int
@@ -34,6 +36,7 @@ class OrderOut(BaseModel):
     method: str | None                 # from the successful payment
     card_last4: str | None
     item: OrderItemOut
+    org: OrgRef | None = None          # set by /learn routes
 
 
 class Redirect(BaseModel):

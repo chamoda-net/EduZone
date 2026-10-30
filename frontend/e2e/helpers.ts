@@ -34,7 +34,7 @@ export async function latestCode(phone: string, since = 0): Promise<string> {
   return code!;
 }
 
-/** Registers a student and confirms their phone. Ends on the account page. */
+/** Registers a student and confirms their phone. Ends on their profile (/learn/profile). */
 export async function registerStudent(page: Page, email: string, phone: string) {
   await page.goto("/register");
   await page.getByLabel("Your name").fill("E2E Student");
@@ -48,12 +48,12 @@ export async function registerStudent(page: Page, email: string, phone: string) 
   await page.getByRole("button", { name: "Send code" }).click();
   await page.getByLabel("Code").fill(await latestCode(phone, since));
   await page.getByRole("button", { name: "Confirm number" }).click();
-  await expect(page).toHaveURL(/\/account/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/learn\/profile/, { timeout: 30_000 });
 }
 
 /** Email + password sign-in; enters the SMS code if this browser is a new device. */
-export async function signIn(page: Page, email: string, password: string, phone: string) {
-  await page.goto("/login");
+export async function signIn(page: Page, email: string, password: string, phone: string, origin = "") {
+  await page.goto(`${origin}/login`);
   const since = Date.now() - 1000;
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);

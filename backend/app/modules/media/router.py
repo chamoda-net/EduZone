@@ -26,7 +26,7 @@ from app.modules.media.schemas import (
 
 Bunny = Annotated[httpx.AsyncClient, Depends(bunny_http)]
 
-org_router = APIRouter(prefix="/org", tags=["org: media"])
+org_router = APIRouter(tags=["org: media"])
 
 
 @org_router.get("/media", response_model=MediaPage)

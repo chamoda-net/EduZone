@@ -273,3 +273,26 @@ async def recent_email_verifications(session: AsyncSession, user_id: UUID) -> in
     return int((await session.execute(text("""
         SELECT count(*) FROM email_verifications WHERE user_id = :u AND created_at > now() - interval '1 hour'
     """), {"u": user_id})).scalar_one())
+
+
+# --- Across tenants (user transaction: RLS shows only this user's rows) ------------------
+
+
+async def workspaces(session: AsyncSession) -> list[Any]:
+    return list((await session.execute(text("""
+        SELECT t.slug, t.name, m.role
+        FROM tenant_members m JOIN tenants t ON t.id = m.tenant_id
+        WHERE m.user_id = current_user_id() AND m.status = 'active' AND t.status = 'active'
+          AND m.role IN ('owner', 'admin', 'teacher')
+        ORDER BY t.name
+    """))).all())
+
+
+async def memberships(session: AsyncSession) -> list[Any]:
+    """Every active membership of this user, with its tenant (for the student area)."""
+    return list((await session.execute(text("""
+        SELECT m.id AS member_id, m.role, t.id AS tenant_id, t.slug, t.name
+        FROM tenant_members m JOIN tenants t ON t.id = m.tenant_id
+        WHERE m.user_id = current_user_id() AND m.status = 'active' AND t.status = 'active'
+        ORDER BY t.name
+    """))).all())

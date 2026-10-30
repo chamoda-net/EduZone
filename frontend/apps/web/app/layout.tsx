@@ -5,6 +5,7 @@ import { t, getMessages } from "@eduzone/lib/i18n";
 import { I18nProvider } from "@eduzone/lib/i18n/client";
 import { Toaster } from "@eduzone/ui";
 import { getBranding } from "@/lib/session";
+import { isMainHost } from "@/lib/site";
 
 import "./globals.css";
 
@@ -19,13 +20,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const branding = await getBranding();
+  // A tenant's own site, or the main site (student area, consoles, sign-in); any other host is unknown.
+  const [branding, main] = await Promise.all([getBranding(), isMainHost()]);
 
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${sinhala.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <I18nProvider messages={getMessages("en")}>
-          {branding ? children : <TenantNotFound />}
+          {branding || main ? children : <TenantNotFound />}
           <Toaster />
         </I18nProvider>
       </body>

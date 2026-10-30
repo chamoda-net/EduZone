@@ -8,6 +8,13 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class OrgRef(BaseModel):
+    """The organization (tenant) something belongs to, for pages that span tenants (/learn)."""
+
+    slug: str
+    name: str
+
+
 class PublicClass(BaseModel):
     id: UUID
     slug: str
@@ -23,6 +30,7 @@ class PublicClass(BaseModel):
     one_time_price_cents: int | None
     currency: str
     teacher_name: str
+    org: OrgRef | None = None            # set by /learn routes
 
 
 class PublicClassPage(BaseModel):
@@ -123,6 +131,7 @@ class StudentLessonDetail(StudentLesson):
     description: str | None
     zoom_join_url: str | None            # only after the access check
     resources: list[StudentResource]
+    org: OrgRef | None = None            # set by /learn routes
 
 
 class Watermark(BaseModel):
