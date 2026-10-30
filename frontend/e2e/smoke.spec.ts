@@ -100,3 +100,27 @@ test("a new user applies to teach and gets a console in draft mode", async ({ pa
   await expect(page.getByText("Draft mode")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Classes" })).toBeVisible();
 });
+
+test("a guest fills a cart from two teachers, signs up and pays once", async ({ page }) => {
+  // Before an account exists the cart lives in the browser.
+  await page.goto(CLASS);
+  await page.getByRole("button", { name: /Add .* to cart/ }).click();
+  await expect(page.getByRole("link", { name: "View cart" })).toBeVisible();
+  await page.goto("/mathematics/dilini-fernando/2027-ol-maths");
+  await page.getByRole("button", { name: /Add .* to cart/ }).click();
+  await expect(page.getByRole("link", { name: "Cart (2)" })).toBeVisible();
+
+  // Signing up brings the cart along.
+  await registerStudent(page, newStudentEmail(), newStudentPhone());
+  await page.goto("/cart");
+  await expect(page.getByText("2 items")).toBeVisible();
+  await expect(page.getByText("2 teachers")).toBeVisible();
+  await page.getByRole("button", { name: "Pay Rs. 3,500.00" }).click();
+  await page.getByRole("button", { name: "Pay", exact: true }).click();
+
+  await expect(page.getByText("Payment received")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/Paid to Dilini Fernando Maths/)).toBeVisible();
+  await expect(page.getByText(/Paid to Demo Tuition Institute/)).toBeVisible();
+  await page.goto("/cart");
+  await expect(page.getByText("Your cart is empty")).toBeVisible();
+});

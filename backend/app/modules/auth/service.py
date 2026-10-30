@@ -9,6 +9,7 @@ import asyncio
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -255,6 +256,11 @@ async def workspaces(user_id: UUID) -> list[Workspace]:
         return [Workspace(slug=r.slug, name=r.name, role=r.role, status=r.status) for r in await repo.workspaces(session)]
 
 
+async def cart_count(user_id: UUID) -> int:
+    async with user_transaction(user_id) as session:
+        return int((await session.execute(text("SELECT count(*) FROM cart_items"))).scalar_one())
+
+
 async def get_me(auth: AuthContext) -> Me:
     async with AppSession() as session:
         u = await repo.get_user(session, auth.user_id)
@@ -263,6 +269,7 @@ async def get_me(auth: AuthContext) -> Me:
         phone=u.phone, phone_verified=u.phone_verified, has_password=u.password_hash is not None,
         preferred_language=u.preferred_language, exam=u.exam, exam_year=u.exam_year, school=u.school,
         member_id=auth.member_id, role=auth.role, workspaces=await workspaces(auth.user_id),
+        cart_count=await cart_count(auth.user_id),
     )
 
 

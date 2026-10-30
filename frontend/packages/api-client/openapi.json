@@ -607,6 +607,213 @@
         "title": "Body_upload_document_api_v1_teach__tenant_slug__media_documents_post",
         "type": "object"
       },
+      "Cart": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CartItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "total_cents": {
+            "title": "Total Cents",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total_cents",
+          "currency",
+          "ready"
+        ],
+        "title": "Cart",
+        "type": "object"
+      },
+      "CartItemIn": {
+        "additionalProperties": false,
+        "description": "A month of a monthly class, or a one-time class.",
+        "properties": {
+          "class_id": {
+            "format": "uuid",
+            "title": "Class Id",
+            "type": "string"
+          },
+          "class_month_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Month Id"
+          }
+        },
+        "required": [
+          "class_id"
+        ],
+        "title": "CartItemIn",
+        "type": "object"
+      },
+      "CartItemOut": {
+        "properties": {
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "class_id": {
+            "format": "uuid",
+            "title": "Class Id",
+            "type": "string"
+          },
+          "class_month_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Month Id"
+          },
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "month_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month Start"
+          },
+          "org": {
+            "$ref": "#/components/schemas/OrgRef"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "teacher_name": {
+            "title": "Teacher Name",
+            "type": "string"
+          },
+          "teacher_photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Photo Url"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "class_id",
+          "class_month_id",
+          "title",
+          "path",
+          "subject_name",
+          "teacher_name",
+          "teacher_photo_url",
+          "org",
+          "cover_image_url",
+          "month_start",
+          "amount_cents",
+          "currency",
+          "problem"
+        ],
+        "title": "CartItemOut",
+        "type": "object"
+      },
+      "CartMerge": {
+        "description": "The browser's cart (kept in a cookie before sign-in), added to the account's cart after sign-in.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CartItemIn"
+            },
+            "maxItems": 20,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CartMerge",
+        "type": "object"
+      },
       "Cashflow": {
         "properties": {
           "balance_due_cents": {
@@ -758,6 +965,96 @@
         "title": "CheckoutCreate",
         "type": "object"
       },
+      "CheckoutDetail": {
+        "properties": {
+          "card_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Last4"
+          },
+          "checkout_no": {
+            "title": "Checkout No",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/OrderOut"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "payment_status": {
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total_cents": {
+            "title": "Total Cents",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "checkout_no",
+          "status",
+          "payment_status",
+          "currency",
+          "total_cents",
+          "created_at",
+          "paid_at",
+          "method",
+          "card_last4",
+          "orders"
+        ],
+        "title": "CheckoutDetail",
+        "type": "object"
+      },
       "CheckoutOut": {
         "properties": {
           "order": {
@@ -772,6 +1069,22 @@
           "redirect"
         ],
         "title": "CheckoutOut",
+        "type": "object"
+      },
+      "CheckoutStarted": {
+        "properties": {
+          "checkout": {
+            "$ref": "#/components/schemas/CheckoutDetail"
+          },
+          "redirect": {
+            "$ref": "#/components/schemas/Redirect"
+          }
+        },
+        "required": [
+          "checkout",
+          "redirect"
+        ],
+        "title": "CheckoutStarted",
         "type": "object"
       },
       "ClassCreate": {
@@ -2880,6 +3193,11 @@
       },
       "Me": {
         "properties": {
+          "cart_count": {
+            "default": 0,
+            "title": "Cart Count",
+            "type": "integer"
+          },
           "email": {
             "anyOf": [
               {
@@ -3503,6 +3821,18 @@
             ],
             "title": "Card Last4"
           },
+          "checkout_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkout Id"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -3621,6 +3951,18 @@
               }
             ],
             "title": "Card Last4"
+          },
+          "checkout_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkout Id"
           },
           "created_at": {
             "format": "date-time",
@@ -7716,6 +8058,47 @@
         ]
       }
     },
+    "/api/v1/market/cart/preview": {
+      "post": {
+        "operationId": "preview_api_v1_market_cart_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartMerge"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
     "/api/v1/market/classes": {
       "get": {
         "operationId": "classes_api_v1_market_classes_get",
@@ -8314,6 +8697,275 @@
         "summary": "Teacher Page",
         "tags": [
           "market"
+        ]
+      }
+    },
+    "/api/v1/me/cart": {
+      "get": {
+        "operationId": "get_cart_api_v1_me_cart_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Cart",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/me/cart/items": {
+      "post": {
+        "operationId": "add_item_api_v1_me_cart_items_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartItemIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add Item",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/me/cart/items/{item_id}": {
+      "delete": {
+        "operationId": "remove_item_api_v1_me_cart_items__item_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Item",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/me/cart/merge": {
+      "post": {
+        "operationId": "merge_api_v1_me_cart_merge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartMerge"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Merge",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/me/checkouts": {
+      "post": {
+        "description": "Pay for the whole cart: one payment, one order per item in its teacher's organization.",
+        "operationId": "start_checkout_api_v1_me_checkouts_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutStarted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Checkout",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/me/checkouts/{checkout_id}": {
+      "get": {
+        "operationId": "get_checkout_api_v1_me_checkouts__checkout_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "checkout_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Checkout Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Checkout",
+        "tags": [
+          "cart"
         ]
       }
     },

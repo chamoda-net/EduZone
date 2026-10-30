@@ -35,6 +35,19 @@ def estimate_fee_cents(amount_cents: int, fee_bps: int) -> int:
     return (amount_cents * fee_bps + 5000) // 10000
 
 
+def allocate(total_cents: int, weights: list[int]) -> list[int]:
+    """Split `total_cents` in proportion to `weights` by largest remainder: every share is a whole cent and
+    the shares always add up to the total exactly. Ties go to the earlier weight (deterministic)."""
+    if total_cents < 0 or not weights or any(w < 0 for w in weights) or sum(weights) == 0:
+        raise ValueError("allocate needs a non-negative total and positive weights")
+    whole = sum(weights)
+    shares = [total_cents * w // whole for w in weights]
+    order = sorted(range(len(weights)), key=lambda i: (-(total_cents * weights[i] % whole), i))
+    for i in order[: total_cents - sum(shares)]:
+        shares[i] += 1
+    return shares
+
+
 def sale_entries(*, gross: int, fee: int, commission_bps: int, fee_bearer: FeeBearer,
                  order_item_id: UUID, teacher_member_id: UUID) -> list[Entry]:
     """G = gross, F = gateway fee, C = commission on G.

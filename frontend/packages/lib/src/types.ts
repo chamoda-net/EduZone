@@ -27,6 +27,7 @@ export type Me = {
   role: Role | null;
   /** Organizations where this account is staff: consoles it can open (/teach/<slug>). */
   workspaces: Workspace[];
+  cart_count: number;
 };
 
 export type DeviceCheck = { challenge: string; phone_hint: string; expires_in: number; resend_after: number };
@@ -145,6 +146,7 @@ export type PublicClass = {
   teacher_name: string;
   /** The organization, on pages that span them (/learn). */
   org?: OrgRef | null;
+  checkout_id?: string | null;
 };
 
 export type OrgRef = { slug: string; name: string };
@@ -359,6 +361,39 @@ export type ApplicationDetail = TeacherApplication & {
 };
 
 export type GatewayRedirect = { method: "GET" | "POST"; url: string; fields: Record<string, string> };
+
+/** A cart line: a month of a monthly class, or a one-time class. `problem` says why it can't be paid now. */
+export type CartItem = {
+  id: string | null;
+  class_id: string;
+  class_month_id: string | null;
+  title: string;
+  path: string;
+  subject_name: string;
+  teacher_name: string;
+  teacher_photo_url: string | null;
+  org: OrgRef;
+  cover_image_url: string | null;
+  month_start: string | null;
+  amount_cents: number | null;
+  currency: string;
+  problem: string | null;
+};
+export type Cart = { items: CartItem[]; total_cents: number; currency: string; ready: boolean };
+export type CheckoutDetail = {
+  id: string;
+  checkout_no: string;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  payment_status: "initiated" | "succeeded" | "failed" | "cancelled";
+  currency: string;
+  total_cents: number;
+  created_at: string;
+  paid_at: string | null;
+  method: string | null;
+  card_last4: string | null;
+  orders: Order[];
+};
+export type CheckoutStarted = { checkout: CheckoutDetail; redirect: GatewayRedirect };
 export type CheckoutResult = { order: Order; redirect: GatewayRedirect };
 
 export type OrgOrder = Order & { student_name: string; student_phone: string | null };

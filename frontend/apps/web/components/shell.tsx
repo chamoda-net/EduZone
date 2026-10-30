@@ -1,8 +1,9 @@
-import { BookOpen, Building2, CalendarDays, Compass, House, LayoutDashboard, LockKeyhole, Receipt, Smartphone, Users } from "lucide-react";
+import { BookOpen, Building2, CalendarDays, Compass, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { SignOutButton } from "@/components/sign-out-button";
+import { cartCount } from "@/lib/cart";
 import { getBranding, getSession, isStaff } from "@/lib/session";
 import { t } from "@eduzone/lib/i18n";
 import { Alert, Avatar, Container, HeaderNav, Logo, TabBar, buttonStyles, cx, type NavItem } from "@eduzone/ui";
@@ -15,7 +16,7 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
   /** Full-bleed pages (home hero, class header) manage their own containers. */
   bare?: boolean;
 }) {
-  const [branding, { me, endedElsewhere }] = await Promise.all([getBranding(), getSession()]);
+  const [branding, { me, endedElsewhere }, count] = await Promise.all([getBranding(), getSession(), cartCount()]);
   // Header (desktop): the marketplace, then the student area and console.
   const items: NavItem[] = [
     { href: "/classes", label: t("nav.browse"), icon: <Compass /> },
@@ -47,6 +48,18 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
           </Link>
           <HeaderNav items={items} />
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/cart"
+              aria-label={`${t("nav.cart")} (${count})`}
+              className="relative grid size-10 place-items-center rounded-full text-foreground hover:bg-sunken"
+            >
+              <ShoppingCart className="size-5" />
+              {count > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-gold px-1 text-[0.7rem] font-bold text-brand-900 tabular-nums">
+                  {count}
+                </span>
+              )}
+            </Link>
             {me ? (
               <>
                 <Link href="/learn/profile" className="hidden items-center gap-2.5 rounded-full py-1 pr-3 pl-1 hover:bg-sunken lg:flex">

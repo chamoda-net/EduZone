@@ -171,3 +171,4 @@ class Me(BaseModel):
     member_id: UUID | None
     role: str | None
     workspaces: list[Workspace]
+    cart_count: int = 0          # items in the signed-in user's cart (header badge)

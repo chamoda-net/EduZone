@@ -11,7 +11,7 @@ from app.core.config import get_settings
 from app.core.db import AppSession
 from app.core.errors import ApiError
 from app.core.pagination import DEFAULT_LIMIT, MAX_LIMIT
-from app.core.tenancy import TenantSession, request_host, tenant_transaction
+from app.core.tenancy import TenantSession, request_host, tenant_transaction, user_transaction
 from app.integrations.gateways import Gateway, get_gateway
 from app.integrations.gateways.base import format_amount
 from app.integrations.gateways.fake import FakeGateway
@@ -105,6 +105,16 @@ def _local_url(url: str) -> str:
 
 
 async def _payment(key: str) -> tuple[int, str]:
+    async with AppSession() as s:
+        cp = (await s.execute(text("SELECT id, user_id FROM resolve_checkout_payment('fake', :k)"),
+                              {"k": key})).one_or_none()
+    if cp is not None:
+        async with user_transaction(cp.user_id) as session:
+            r = (await session.execute(text("""
+                SELECT cp.amount_cents, c.currency FROM checkout_payments cp JOIN checkouts c ON c.id = cp.checkout_id
+                WHERE cp.id = :id
+            """), {"id": cp.id})).one()
+        return r.amount_cents, r.currency
     async with AppSession() as s:
         tenant_id = (await s.execute(text("SELECT resolve_payment_tenant('fake', :k)"), {"k": key})).scalar_one()
     if tenant_id is None:

@@ -2,9 +2,11 @@ import { ArrowRight, ChevronRight, FileText, Lock, MonitorPlay, ShieldCheck, Vid
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AddToCartButton } from "@/components/add-to-cart";
 import { ShareTools } from "@/components/share-tools";
 import { SiteShell } from "@/components/shell";
 import { TeacherAvatar } from "@/components/teacher-avatar";
+import { getCart, inCart } from "@/lib/cart";
 import { classMeta, priceParts } from "@/lib/catalog";
 import { jsonLd, market } from "@/lib/market";
 import { getMe } from "@/lib/session";
@@ -42,6 +44,10 @@ export default async function MarketClassPage({ params }: PageProps<"/[subject]/
   const price = priceParts(t, { pricing_model: c.pricing_model, monthly_fee_cents: c.open_month_fee_cents ?? c.monthly_fee_cents,
                                 one_time_price_cents: c.one_time_price_cents, currency: c.currency });
   const byMonth = groupLessons(d.lessons, d.months);
+  // What "Add to cart" adds: the open month of a monthly class, or a one-time class (free classes are joined).
+  const openMonth = d.months.find((m) => m.status === "open");
+  const cartMonth = c.pricing_model === "monthly" ? openMonth?.id : c.pricing_model === "one_time" ? null : undefined;
+  const cart = cartMonth !== undefined ? await getCart() : null;
 
   return (
     <SiteShell bare>
@@ -101,6 +107,15 @@ export default async function MarketClassPage({ params }: PageProps<"/[subject]/
                   {me ? t("market.class.joinOrPay") : t("class.signInToJoin")}
                   <ArrowRight className="size-4.5" />
                 </Link>
+                {cart && cartMonth !== undefined && (
+                  <AddToCartButton
+                    block
+                    classId={c.id}
+                    monthId={cartMonth}
+                    inCart={inCart(cart, c.id, cartMonth)}
+                    label={openMonth && cartMonth ? t("cart.addMonth", { month: formatMonth(openMonth.month_start) }) : undefined}
+                  />
+                )}
                 {!me && (
                   <Link href={`/register?next=${encodeURIComponent(learnHref)}`} className="text-center text-sm font-semibold text-brand hover:underline">
                     {t("auth.createAccount")}

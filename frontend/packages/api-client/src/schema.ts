@@ -488,6 +488,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/market/cart/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["preview_api_v1_market_cart_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/market/classes": {
         parameters: {
             query?: never;
@@ -670,6 +687,111 @@ export interface paths {
         };
         /** Teacher Page */
         get: operations["teacher_page_api_v1_market_teachers__teacher_slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Cart */
+        get: operations["get_cart_api_v1_me_cart_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cart/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Item */
+        post: operations["add_item_api_v1_me_cart_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cart/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Item */
+        delete: operations["remove_item_api_v1_me_cart_items__item_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cart/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Merge */
+        post: operations["merge_api_v1_me_cart_merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/checkouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Checkout
+         * @description Pay for the whole cart: one payment, one order per item in its teacher's organization.
+         */
+        post: operations["start_checkout_api_v1_me_checkouts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/checkouts/{checkout_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Checkout */
+        get: operations["get_checkout_api_v1_me_checkouts__checkout_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2178,6 +2300,71 @@ export interface components {
             /** File */
             file: string;
         };
+        /** Cart */
+        Cart: {
+            /** Currency */
+            currency: string;
+            /** Items */
+            items: components["schemas"]["CartItemOut"][];
+            /** Ready */
+            ready: boolean;
+            /** Total Cents */
+            total_cents: number;
+        };
+        /**
+         * CartItemIn
+         * @description A month of a monthly class, or a one-time class.
+         */
+        CartItemIn: {
+            /**
+             * Class Id
+             * Format: uuid
+             */
+            class_id: string;
+            /** Class Month Id */
+            class_month_id?: string | null;
+        };
+        /** CartItemOut */
+        CartItemOut: {
+            /** Amount Cents */
+            amount_cents: number | null;
+            /**
+             * Class Id
+             * Format: uuid
+             */
+            class_id: string;
+            /** Class Month Id */
+            class_month_id: string | null;
+            /** Cover Image Url */
+            cover_image_url: string | null;
+            /** Currency */
+            currency: string;
+            /** Id */
+            id: string | null;
+            /** Month Start */
+            month_start: string | null;
+            org: components["schemas"]["OrgRef"];
+            /** Path */
+            path: string;
+            /** Problem */
+            problem: string | null;
+            /** Subject Name */
+            subject_name: string;
+            /** Teacher Name */
+            teacher_name: string;
+            /** Teacher Photo Url */
+            teacher_photo_url: string | null;
+            /** Title */
+            title: string;
+        };
+        /**
+         * CartMerge
+         * @description The browser's cart (kept in a cookie before sign-in), added to the account's cart after sign-in.
+         */
+        CartMerge: {
+            /** Items */
+            items: components["schemas"]["CartItemIn"][];
+        };
         /** Cashflow */
         Cashflow: {
             /** Balance Due Cents */
@@ -2244,9 +2431,45 @@ export interface components {
             /** Class Month Id */
             class_month_id?: string | null;
         };
+        /** CheckoutDetail */
+        CheckoutDetail: {
+            /** Card Last4 */
+            card_last4: string | null;
+            /** Checkout No */
+            checkout_no: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Method */
+            method: string | null;
+            /** Orders */
+            orders: components["schemas"]["OrderOut"][];
+            /** Paid At */
+            paid_at: string | null;
+            /** Payment Status */
+            payment_status: string;
+            /** Status */
+            status: string;
+            /** Total Cents */
+            total_cents: number;
+        };
         /** CheckoutOut */
         CheckoutOut: {
             order: components["schemas"]["OrderOut"];
+            redirect: components["schemas"]["Redirect"];
+        };
+        /** CheckoutStarted */
+        CheckoutStarted: {
+            checkout: components["schemas"]["CheckoutDetail"];
             redirect: components["schemas"]["Redirect"];
         };
         /** ClassCreate */
@@ -2882,6 +3105,11 @@ export interface components {
         };
         /** Me */
         Me: {
+            /**
+             * Cart Count
+             * @default 0
+             */
+            cart_count: number;
             /** Email */
             email: string | null;
             /** Email Verified */
@@ -3120,6 +3348,8 @@ export interface components {
         OrderOut: {
             /** Card Last4 */
             card_last4: string | null;
+            /** Checkout Id */
+            checkout_id?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -3156,6 +3386,8 @@ export interface components {
         OrgOrderRow: {
             /** Card Last4 */
             card_last4: string | null;
+            /** Checkout Id */
+            checkout_id?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -5007,6 +5239,39 @@ export interface operations {
             };
         };
     };
+    preview_api_v1_market_cart_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartMerge"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     classes_api_v1_market_classes_get: {
         parameters: {
             query?: {
@@ -5304,6 +5569,185 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cart_api_v1_me_cart_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+        };
+    };
+    add_item_api_v1_me_cart_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartItemIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_item_api_v1_me_cart_items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    merge_api_v1_me_cart_merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartMerge"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_checkout_api_v1_me_checkouts_post: {
+        parameters: {
+            query?: {
+                name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutStarted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_checkout_api_v1_me_checkouts__checkout_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutDetail"];
                 };
             };
             /** @description Validation Error */

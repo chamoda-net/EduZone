@@ -37,6 +37,7 @@ class OrderOut(BaseModel):
     card_last4: str | None
     item: OrderItemOut
     org: OrgRef | None = None          # set by /learn routes
+    checkout_id: UUID | None = None    # set when the order was paid together with others in one checkout
 
 
 class Redirect(BaseModel):

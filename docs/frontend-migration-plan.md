@@ -176,7 +176,12 @@ request changes / reject) with audit rows.
 Frontend: `/teach/apply` and status; console draft-mode banners; profile editor with live preview; admin
 "Teacher applications" screen.
 
-### Phase 6 — Cart and multi-teacher checkout **[L]**
+### Phase 6 — Cart and multi-teacher checkout **[L]** ✅ done
+Built as below (CLAUDE.md section 8, "How it's built (phase 6)"), with these choices: the guest cart is an
+httpOnly cookie (not localStorage, so the server renders it and `proxy.ts` merges it at sign-in); the single
+Pay button stays beside "Add to cart"; a failed tenant transaction is retried by the next delivery of the
+gateway's notification. Not done yet: a retry job / admin action for stuck checkouts, fee true-up across a
+checkout, admin checkout screens (phase 8).
 Backend (per decision 1):
 - `checkouts` (platform-level: user, number, total, status) and `checkout_payments` (gateway attempt,
   idempotency key, fee). Each order gets `checkout_id`; still one item per order.

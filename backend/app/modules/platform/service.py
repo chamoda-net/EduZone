@@ -143,7 +143,10 @@ async def list_payments(session: AsyncSession, *, tenant_id: UUID | None, status
         JOIN order_items i ON i.order_id = o.id
         JOIN tenant_members tm ON tm.id = o.student_member_id
         JOIN users u ON u.id = tm.user_id
-        LEFT JOIN LATERAL (SELECT gateway, gateway_payment_ref FROM payments p WHERE p.order_id = o.id
+        LEFT JOIN LATERAL (SELECT p.gateway, COALESCE(p.gateway_payment_ref, cp.gateway_payment_ref)
+                                      AS gateway_payment_ref
+                           FROM payments p LEFT JOIN checkout_payments cp ON cp.id = p.checkout_payment_id
+                           WHERE p.order_id = o.id
                            ORDER BY (p.status = 'succeeded') DESC, p.created_at DESC LIMIT 1) p ON true
         WHERE (CAST(:tid AS uuid) IS NULL OR o.tenant_id = :tid)
           AND (CAST(:st AS text) IS NULL OR o.status = :st)

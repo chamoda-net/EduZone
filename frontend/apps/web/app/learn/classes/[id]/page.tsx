@@ -2,9 +2,11 @@ import { ArrowLeft, ChevronRight, FileText, Lock, MonitorPlay, ShieldCheck, Vide
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { AddToCartButton } from "@/components/add-to-cart";
 import { PayButton } from "@/components/pay-button";
 import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
+import { getCart, inCart } from "@/lib/cart";
 import { classMeta, priceParts } from "@/lib/catalog";
 import { getMe } from "@/lib/session";
 import { formatDateTime, formatMoney, formatMonth } from "@eduzone/lib/format";
@@ -55,6 +57,7 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
   const monthly = c.pricing_model === "monthly";
   const price = priceParts(t, c);
   const nextToPay = view.months.find((m) => m.access === "buy" || m.access === "approved");
+  const cart = await getCart();
 
   return (
     <SiteShell bare>
@@ -109,12 +112,15 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
                 )}
                 {view.has_class_access && <Badge tone="success" dot>{t("class.classAccess")}</Badge>}
                 {c.pricing_model === "one_time" && !view.has_class_access && c.one_time_price_cents !== null && (
-                  <PayButton
-                    block
-                    classId={c.id}
-                    monthId={null}
-                    label={t("pay.button", { amount: formatMoney(c.one_time_price_cents, c.currency) })}
-                  />
+                  <>
+                    <PayButton
+                      block
+                      classId={c.id}
+                      monthId={null}
+                      label={t("pay.button", { amount: formatMoney(c.one_time_price_cents, c.currency) })}
+                    />
+                    <AddToCartButton block classId={c.id} monthId={null} inCart={inCart(cart, c.id, null)} />
+                  </>
                 )}
                 {nextToPay && view.enrolled && (
                   <PayButton block classId={c.id} monthId={nextToPay.id} label={t("class.payFor", { month: formatMonth(nextToPay.month_start) })} />
@@ -142,7 +148,7 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
               <SectionTitle title={t("class.months")} hint={t("class.monthsHint")} />
               <ul className="flex flex-col gap-3">
                 {view.months.map((m, i) => (
-                  <MonthRow key={m.id} m={m} i={i} classId={c.id} enrolled={view.enrolled} />
+                  <MonthRow key={m.id} m={m} i={i} classId={c.id} enrolled={view.enrolled} carted={inCart(cart, c.id, m.id)} />
                 ))}
               </ul>
             </section>
@@ -190,11 +196,12 @@ function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-function MonthRow({ m, i, classId, enrolled }: {
+function MonthRow({ m, i, classId, enrolled, carted }: {
   m: StudentMonth;
   i: number;
   classId: string;
   enrolled: boolean;
+  carted: boolean;
 }) {
   const date = new Date(m.month_start);
   const paid = m.access === "granted";
@@ -224,7 +231,10 @@ function MonthRow({ m, i, classId, enrolled }: {
       <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:flex-col sm:items-end">
         {<StatusPill state={pillOf[m.access]}>{t(`class.access.${m.access}`)}</StatusPill>}
         {(m.access === "buy" || m.access === "approved") && (
-          <PayButton classId={classId} monthId={m.id} small label={t("pay.button", { amount: formatMoney(m.fee_cents, m.currency) })} />
+          <div className="flex flex-wrap items-start gap-2">
+            <AddToCartButton classId={classId} monthId={m.id} small inCart={carted} />
+            <PayButton classId={classId} monthId={m.id} small label={t("pay.button", { amount: formatMoney(m.fee_cents, m.currency) })} />
+          </div>
         )}
         {m.access === "request" &&
           (enrolled ? (

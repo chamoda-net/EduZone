@@ -10,7 +10,7 @@ import type { GatewayRedirect } from "@eduzone/lib/types";
 import { Button, ErrorText, cx } from "@eduzone/ui";
 
 /** Sends the browser to the gateway the way it expects: a form POST (PayHere) or a GET. */
-function goToGateway(r: GatewayRedirect) {
+export function goToGateway(r: GatewayRedirect) {
   const form = document.createElement("form");
   form.method = r.method;
   form.action = r.url;

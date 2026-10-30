@@ -188,9 +188,9 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
 1. **Every business table has `tenant_id`.** Platform-level tables (`tenants`, `users`,
    `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`, `platform_admins`, the identity tables
    `user_sessions`, `user_devices`, `user_identities`, `email_verifications`, `recovery_tokens`,
-   `login_attempts`, `subjects`, `teacher_profiles`, `teacher_applications`, and the planned `checkouts`,
-   `checkout_payments` and `cart_items`) are the only exceptions. `teacher_applications` carries the
-   `tenant_id` it opened but is guarded by a user policy (`applicant_own`: the app role sees only the rows of
+   `login_attempts`, `subjects`, `teacher_profiles`, `teacher_applications`, `cart_items`, `checkouts` and
+   `checkout_payments`) are the only exceptions. `teacher_applications` carries the `tenant_id` it opened;
+   it and the three cart tables are guarded by user policies (the app role sees only the rows of
    `app.user_id`).
 2. **How a request finds its tenant (target):**
    - **Teacher console** `/teach/<tenant>/...`: tenant slug from the path, `resolve_tenant(slug)`, then a
@@ -282,8 +282,8 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   `tenants.is_listed`, and the `public_*` views.
 - Onboarding (phase 5, **built**, migration 0008): `teacher_applications` (document in private storage,
   account number encrypted); applicants' tenants start `pending` through `open_pending_tenant()`.
-- Cart (phase 6): `cart_items` (per user), `checkouts` and `checkout_payments` (platform-level: one
-  payment for many orders); `orders.checkout_id`.
+- Cart (phase 6, **built**, migration 0009): `cart_items` (per user), `checkouts` and `checkout_payments`
+  (platform-level: one payment for many orders), `orders.checkout_id`, `payments.checkout_payment_id`.
 
 **Views** (RLS-aware, `security_invoker`):
 - `v_tenant_cashflow_monthly`: gross (as sold), refunds (own line), gateway fees (incl. true-ups),
@@ -450,6 +450,41 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   triggers paused (the ledger is append-only even for `eduzone_admin`). Test databases only.
 - Open: refunds (gateway API + refund flow), PayHere needs an email (phone-only students have none),
   receipts wording pending the legal review of collecting on behalf of organizations.
+
+### How it's built (phase 6: `app/modules/cart`, migration 0009)
+- **One rule set:** `checkout.service.price_item()` holds every rule above (published, open or approved-late
+  month, not free, no active grant) and is used by the Pay button, the cart's item states and checkout.
+  `create_order()` makes the pending order, its one item and its `payments` row.
+- **Cart** (`/api/v1/me/cart`, user transaction): `GET` (each item priced in its own tenant; `problem` is the
+  error code when it can't be paid now, e.g. `ALREADY_HAS_ACCESS`, `LATE_APPROVAL_REQUIRED`; `ready` when none),
+  `POST /items` (refused with the same error paying would give), `DELETE /items/{id}`, `POST /merge` (the
+  browser's cart after sign-in; impossible items skipped). Up to 20 items. Guests: `POST /market/cart/preview`
+  prices a list from the public views. `/auth/me` has `cart_count`.
+- **Checkout** (`POST /api/v1/me/checkouts`): verified phone; every item priced first (any problem: 409
+  `CART_HAS_PROBLEMS`, nothing created; one currency only); then the `checkouts` row and one
+  `checkout_payments` attempt (its random key is the gateway's order id) in a user transaction; then one
+  pending order per item in its own tenant transaction (re-priced; a change abandons the checkout as `failed`,
+  `CART_CHANGED`), each with a `payments` row carrying `checkout_payment_id`. `GET /me/checkouts/{id}` is polled
+  by the return page.
+- **Webhook:** `process_notification` first looks the key up with `resolve_checkout_payment()` (SECURITY
+  DEFINER, gives the checkout's user); a legacy single-order key falls back to `resolve_payment_tenant()`.
+  `cart.service.apply_checkout_event` records the result on the checkout payment (user transaction; amount and
+  currency must match the checkout total), then fulfils **each order in its own tenant transaction** with
+  `fulfil_order()` and its share of the estimated fee (`posting.allocate()`, largest remainder, sums exactly;
+  orders in creation order). Per-order `payments` rows carry no gateway reference (it's on the checkout
+  payment). If an order fails, the others still commit and the call raises, so the event stays unprocessed and
+  the next delivery of the same notification finishes it (already-paid orders are skipped). When all are paid:
+  checkout `paid` and those items leave the cart. Failed/cancelled: every pending order and the checkout get
+  that status; a late failure after success is ignored.
+- **Not built yet:** a retry job or admin button for a checkout left `pending` (today only a repeated
+  notification retries it; check whether PayHere re-sends on a 5xx), fee true-up across a checkout's orders
+  (`settle_fee` works per order payment), checkout views in the admin app (phase 8).
+- **Frontend:** guest cart in the `ez_cart` cookie (`lib/cart-cookie.ts`); `proxy.ts` merges it into the
+  account once signed in and drops it. `lib/cart.ts` (`getCart`, `cartCount`, `inCart`), header cart badge,
+  `components/add-to-cart.tsx` on the public class page (open month or one-time class) and the student class
+  page (each payable month), `/cart` (grouped by organization, problems shown, sign in / verify phone / pay),
+  `/checkouts/[id]` (return page polling the checkout, then the receipt for every order). The single-item Pay
+  button still works as before (`/checkout/[id]`).
 
 ---
 
@@ -802,7 +837,7 @@ httpOnly cookies.
 3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads) (done)
 4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools (done)
 5. Teacher self-registration and approval (done)
-6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment)
+6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment) (done)
 7. Own hls.js video player with signed HLS URLs and progress
 8. Private admin app (separate deploy) and its new screens
 9. Polish: Sinhala if needed, Playwright at 360 px and desktop, low-end phone pass, accessibility

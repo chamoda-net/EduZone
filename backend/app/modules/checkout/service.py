@@ -12,6 +12,7 @@ Webhooks may repeat or arrive out of order: every step is idempotent.
 import json
 import logging
 import secrets
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -45,6 +46,7 @@ log = logging.getLogger("eduzone.checkout")
 
 _ORDER_SELECT = """
     SELECT o.id, o.order_no, o.status, o.currency, o.total_cents, o.created_at, o.paid_at, o.student_member_id,
+           o.checkout_id,
            i.id AS item_id, i.class_id, c.slug AS class_slug, i.class_month_id, i.description, i.amount_cents,
            i.teacher_member_id,
            (SELECT p.method FROM payments p WHERE p.order_id = o.id AND p.status = 'succeeded' LIMIT 1) AS method,
@@ -59,6 +61,7 @@ def _order_out(r: Any) -> OrderOut:
     return OrderOut(
         id=r.id, order_no=r.order_no, status=r.status, currency=r.currency, total_cents=r.total_cents,
         created_at=r.created_at, paid_at=r.paid_at, method=r.method, card_last4=r.card_last4,
+        checkout_id=r.checkout_id,
         item=OrderItemOut(id=r.item_id, class_id=r.class_id, class_slug=r.class_slug,
                           class_month_id=r.class_month_id, description=r.description, amount_cents=r.amount_cents),
     )
@@ -79,20 +82,36 @@ async def _new_order_no(session: AsyncSession) -> str:
 
 # --- 1. checkout ---------------------------------------------------------------------
 
-async def create_checkout(session: AsyncSession, auth: AuthContext, site_host: str, body: CheckoutCreate,
-                          gateway: Gateway) -> CheckoutOut:
-    s = get_settings()
+@dataclass(frozen=True, slots=True)
+class PricedItem:
+    """What one month or one-time class costs this student now, after every rule in CLAUDE.md section 8."""
+
+    class_id: UUID
+    class_month_id: UUID | None
+    teacher_member_id: UUID
+    late_request_id: UUID | None
+    description: str
+    amount_cents: int
+    currency: str
+    commission_bps: int
+
+
+async def require_verified_phone(session: AsyncSession, user_id: UUID) -> None:
     # A verified phone is required to pay (receipts, recovery, the new-device check).
     verified = (await session.execute(text("SELECT phone_verified_at IS NOT NULL FROM users WHERE id = :u"),
-                                      {"u": auth.user_id})).scalar_one()
+                                      {"u": user_id})).scalar_one()
     if not verified:
         raise ApiError("PHONE_NOT_VERIFIED", "Confirm your mobile number before paying.", status_code=403)
-    # Paying makes the student a member of this organization (if they aren't yet).
-    auth = await ensure_student_member(session, auth)
+
+
+async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
+                     class_month_id: UUID | None) -> PricedItem:
+    """In the class's tenant transaction. Raises ApiError when it can't be bought now. Read-only, so the
+    cart can also use it to show each item's state."""
     c = (await session.execute(text("""
         SELECT id, slug, title, status, pricing_model, monthly_fee_cents, one_time_price_cents, teacher_member_id
         FROM classes WHERE id = :id
-    """), {"id": body.class_id})).one_or_none()
+    """), {"id": class_id})).one_or_none()
     if c is None or c.status != "published":
         raise ApiError("NOT_FOUND", "Class not found.", status_code=404)
     tenant = (await session.execute(text(
@@ -102,56 +121,82 @@ async def create_checkout(session: AsyncSession, auth: AuthContext, site_host: s
     if c.pricing_model == "free":
         raise ApiError("FREE_CLASS", "This class is free; join it instead.", status_code=409)
     if c.pricing_model == "monthly":
-        if body.class_month_id is None:
+        if class_month_id is None:
             raise ApiError("MONTH_REQUIRED", "Choose the month to pay for.")
         m = (await session.execute(text("""
             SELECT id, month_start, status, fee_cents FROM class_months WHERE id = :id AND class_id = :c
-        """), {"id": body.class_month_id, "c": c.id})).one_or_none()
+        """), {"id": class_month_id, "c": c.id})).one_or_none()
         if m is None:
             raise ApiError("MONTH_INVALID", "That month does not belong to this class.")
         if m.status == "upcoming":
             raise ApiError("MONTH_NOT_OPEN", "This month is not open for payment yet.", status_code=409)
         if m.status == "closed":
-            req = await learning_repo.late_request(session, auth.member_id, m.id)
+            req = await learning_repo.late_request(session, auth.member_id, m.id) if auth.member_id else None
             if req is None or req.status != "approved":
                 raise ApiError("LATE_APPROVAL_REQUIRED", "Ask the teacher before paying for a past month.", 409)
             late_request_id = req.id
         amount = m.fee_cents if m.fee_cents is not None else c.monthly_fee_cents
         description = f"{c.title} - {_month_label(m.month_start)}"
     else:
-        if body.class_month_id is not None:
+        if class_month_id is not None:
             raise ApiError("MONTH_INVALID", "This class is paid once, not per month.")
         amount = c.one_time_price_cents
         description = c.title
     if not amount:
         raise ApiError("NOTHING_TO_PAY", "There is nothing to pay for this.", status_code=409)
-    if await access.active_grant_for(session, auth.member_id, c.id, body.class_month_id) is not None:
+    if auth.member_id and await access.active_grant_for(session, auth.member_id, c.id, class_month_id) is not None:
         raise ApiError("ALREADY_HAS_ACCESS", "You already have access.", status_code=409)
+    return PricedItem(class_id=c.id, class_month_id=class_month_id, teacher_member_id=c.teacher_member_id,
+                      late_request_id=late_request_id, description=description, amount_cents=amount,
+                      currency=tenant.currency, commission_bps=tenant.commission_bps)
 
-    await learning_repo.upsert_enrollment(session, auth.member_id, c.id)
-    order_id = (await session.execute(text("""
-        INSERT INTO orders (tenant_id, student_member_id, order_no, currency, subtotal_cents, total_cents)
-        VALUES (current_tenant_id(), :m, :no, :cur, :amt, :amt) RETURNING id
-    """), {"m": auth.member_id, "no": await _new_order_no(session), "cur": tenant.currency, "amt": amount})).scalar_one()
+
+async def create_order(session: AsyncSession, auth: AuthContext, item: PricedItem, *, gateway: str,
+                       payment_key: str, checkout_id: UUID | None = None,
+                       checkout_payment_id: UUID | None = None) -> UUID:
+    """Pending order + its one item (commission and teacher snapshotted) + an initiated payment."""
+    await learning_repo.upsert_enrollment(session, auth.member_id, item.class_id)
+    order_id: UUID = (await session.execute(text("""
+        INSERT INTO orders (tenant_id, student_member_id, order_no, currency, subtotal_cents, total_cents, checkout_id)
+        VALUES (current_tenant_id(), :m, :no, :cur, :amt, :amt, :co) RETURNING id
+    """), {"m": auth.member_id, "no": await _new_order_no(session), "cur": item.currency, "amt": item.amount_cents,
+           "co": checkout_id})).scalar_one()
     await session.execute(text("""
         INSERT INTO order_items (tenant_id, order_id, class_id, class_month_id, teacher_member_id, late_request_id,
                                  description, amount_cents, commission_bps)
         VALUES (current_tenant_id(), :o, :c, :mo, :t, :lr, :d, :amt, :bps)
-    """), {"o": order_id, "c": c.id, "mo": body.class_month_id, "t": c.teacher_member_id, "lr": late_request_id,
-           "d": description, "amt": amount, "bps": tenant.commission_bps})
-    key = secrets.token_hex(16)
+    """), {"o": order_id, "c": item.class_id, "mo": item.class_month_id, "t": item.teacher_member_id,
+           "lr": item.late_request_id, "d": item.description, "amt": item.amount_cents, "bps": item.commission_bps})
     await session.execute(text("""
-        INSERT INTO payments (tenant_id, order_id, gateway, idempotency_key, amount_cents)
-        VALUES (current_tenant_id(), :o, :g, :k, :amt)
-    """), {"o": order_id, "g": gateway.name, "k": key, "amt": amount})
+        INSERT INTO payments (tenant_id, order_id, gateway, idempotency_key, amount_cents, checkout_payment_id)
+        VALUES (current_tenant_id(), :o, :g, :k, :amt, :cp)
+    """), {"o": order_id, "g": gateway, "k": payment_key, "amt": item.amount_cents, "cp": checkout_payment_id})
+    return order_id
 
-    who = await learning_repo.member_identity(session, auth.member_id)
-    email = (await session.execute(text("SELECT email FROM users WHERE id = :u"), {"u": auth.user_id})).scalar_one()
-    first, _, last = who.full_name.partition(" ")
+
+async def payer(session: AsyncSession, user_id: UUID) -> tuple[str, str, str, str]:
+    """(first name, last name, email, phone) for the gateway's form."""
+    u = (await session.execute(text("SELECT full_name, email, phone FROM users WHERE id = :u"), {"u": user_id})).one()
+    first, _, last = u.full_name.partition(" ")
+    return first, last or first, u.email or "", u.phone or ""
+
+
+async def create_checkout(session: AsyncSession, auth: AuthContext, site_host: str, body: CheckoutCreate,
+                          gateway: Gateway) -> CheckoutOut:
+    """Pay for one item now (the class page's Pay button). A cart of several goes through app.modules.cart."""
+    s = get_settings()
+    await require_verified_phone(session, auth.user_id)
+    # Paying makes the student a member of this organization (if they aren't yet).
+    auth = await ensure_student_member(session, auth)
+    item = await price_item(session, auth, body.class_id, body.class_month_id)
+    key = secrets.token_hex(16)
+    order_id = await create_order(session, auth, item, gateway=gateway.name, payment_key=key)
+
+    first, last, email, phone = await payer(session, auth.user_id)
     back = f"{s.site_scheme}://{site_host}/checkout/{order_id}"
     redirect = gateway.create_checkout(CheckoutRequest(
-        payment_key=key, amount_cents=amount, currency=tenant.currency, description=description,
-        first_name=first, last_name=last or first, email=email or "", phone=who.phone or "",
+        payment_key=key, amount_cents=item.amount_cents, currency=item.currency, description=item.description,
+        first_name=first, last_name=last, email=email, phone=phone,
         return_url=back, cancel_url=back, notify_url=f"{s.api_public_url}/api/v1/webhooks/{gateway.name}",
     ))
     order = await get_order(session, auth, order_id)
@@ -229,6 +274,21 @@ async def process_notification(gateway_name: str, form: dict[str, str]) -> str:
         await _mark(event_row_id, "invalid signature")
         raise WebhookRejected("invalid signature")
 
+    # A cart checkout (one payment, several orders in several tenants)?
+    async with AppSession() as s:
+        cp = (await s.execute(text("SELECT id, checkout_id, user_id FROM resolve_checkout_payment(:g, :k)"),
+                              {"g": event.gateway, "k": event.payment_key})).one_or_none()
+    if cp is not None:
+        from app.modules.cart.service import apply_checkout_event  # the cart builds on this module
+
+        try:
+            outcome = await apply_checkout_event(event, cp.id, cp.checkout_id, cp.user_id)
+        except Exception as exc:
+            await _mark(event_row_id, f"error: {exc}"[:500], processed=False)
+            raise
+        await _mark(event_row_id, None if outcome in ("paid", "failed", "cancelled", "pending") else outcome)
+        return outcome
+
     async with AppSession() as s:
         tenant_id = (await s.execute(text("SELECT resolve_payment_tenant(:g, :k)"),
                                      {"g": event.gateway, "k": event.payment_key})).scalar_one()
@@ -277,7 +337,8 @@ async def _apply(session: AsyncSession, event: GatewayEvent) -> str:
                                   {"id": p.id})
             log.warning("payment %s: amount/currency mismatch (%s %s)", p.id, event.amount_cents, event.currency)
             return "amount mismatch"
-        await _fulfil(session, p, event)
+        fee = posting.estimate_fee_cents(p.total_cents, get_settings().gateway_fee_estimate_bps)
+        await fulfil_order(session, p, event, fee=fee, gateway_payment_ref=event.gateway_payment_ref)
         return "paid"
 
     if event.status in ("failed", "cancelled"):
@@ -294,17 +355,18 @@ async def _apply(session: AsyncSession, event: GatewayEvent) -> str:
     return f"unhandled: {event.status}"
 
 
-async def _fulfil(session: AsyncSession, p: Any, event: GatewayEvent) -> None:
-    """One transaction: payment -> order -> access -> late request -> ledger."""
-    s = get_settings()
+async def fulfil_order(session: AsyncSession, p: Any, event: GatewayEvent, *, fee: int,
+                       gateway_payment_ref: str | None) -> None:
+    """One tenant transaction: payment -> order -> access -> late request -> ledger. `p` is the order's payment
+    row (locked); `fee` is its share of the gateway fee. Orders paid in a checkout carry no gateway reference of
+    their own (it is on the checkout payment)."""
     tenant = (await session.execute(text(
         "SELECT gateway_fee_bearer FROM tenants WHERE id = current_tenant_id()"))).one()
-    fee = posting.estimate_fee_cents(p.total_cents, s.gateway_fee_estimate_bps)
     await session.execute(text("""
         UPDATE payments SET status = 'succeeded', gateway_payment_ref = :ref, method = :method,
                             card_last4 = :last4, gateway_fee_cents = :fee, failure_reason = NULL
         WHERE id = :id
-    """), {"ref": event.gateway_payment_ref, "method": event.method, "last4": event.card_last4, "fee": fee,
+    """), {"ref": gateway_payment_ref, "method": event.method, "last4": event.card_last4, "fee": fee,
            "id": p.id})
     await session.execute(text("UPDATE orders SET status = 'paid', paid_at = now() WHERE id = :id"),
                           {"id": p.order_id})
@@ -314,7 +376,7 @@ async def _fulfil(session: AsyncSession, p: Any, event: GatewayEvent) -> None:
         FROM order_items WHERE order_id = :o
     """), {"o": p.order_id})).all()
     entries: list[posting.Entry] = []
-    for item in items:  # exactly one in v1, so the whole fee belongs to it
+    for item in items:  # exactly one per order in v1, so the order's fee share belongs to it
         if await access.active_grant_for(session, p.student_member_id, item.class_id, item.class_month_id) is None:
             await learning_repo.insert_grant(session, member_id=p.student_member_id, class_id=item.class_id,
                                              month_id=item.class_month_id, source="purchase", granted_by=None,

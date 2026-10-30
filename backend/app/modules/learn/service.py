@@ -156,7 +156,7 @@ async def my_payments(user: UserContext) -> list[OrderOut]:
     """Every order across tenants, from the user's own rows only (user-scoped RLS)."""
     async with user_transaction(user.user_id) as session:
         rows = (await session.execute(text("""
-            SELECT o.id, o.order_no, o.status, o.currency, o.total_cents, o.created_at, o.paid_at,
+            SELECT o.id, o.order_no, o.status, o.currency, o.total_cents, o.created_at, o.paid_at, o.checkout_id,
                    i.id AS item_id, i.class_id, i.class_month_id, i.description, i.amount_cents,
                    t.slug AS org_slug, t.name AS org_name,
                    (SELECT p.method FROM payments p WHERE p.order_id = o.id AND p.status = 'succeeded' LIMIT 1) AS method,
@@ -173,6 +173,7 @@ async def my_payments(user: UserContext) -> list[OrderOut]:
         OrderOut(
             id=r.id, order_no=r.order_no, status=r.status, currency=r.currency, total_cents=r.total_cents,
             created_at=r.created_at, paid_at=r.paid_at, method=r.method, card_last4=r.card_last4,
+            checkout_id=r.checkout_id,
             item=OrderItemOut(id=r.item_id, class_id=r.class_id, class_slug=None, class_month_id=r.class_month_id,
                               description=r.description, amount_cents=r.amount_cents),
             org=OrgRef(slug=r.org_slug, name=r.org_name),
