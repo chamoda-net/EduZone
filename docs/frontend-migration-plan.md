@@ -99,7 +99,14 @@ brand (forest green, gold, ivory), Fraunces + Instrument Sans, the component kit
 `packages/ui`, generated class covers, every existing student, console and admin screen restyled, and a
 dev-only style guide at `/design`. Tenant colours are no longer applied (marketplace decision).
 
-### Phase 2 — Identity (backend + frontend) **[L]**
+### Phase 2 — Identity (backend + frontend) **[L]** ✅ done
+Built as below, with these choices: the new-device check is a signed 10-minute challenge plus an SMS code
+(no extra table); accounts without a verified phone sign in without a code (nothing to check yet, and they
+can't pay); staff of any organization are exempt from the one-device rule; membership is created on join,
+pay or opening a file, and looked up per request on the tenant host until phase 3 moves it to the path;
+organization owners are created by email and set their password through recovery; pages opened from email
+links act only on a button press. Cookie names get the `__Host-` prefix in production only (local http
+can't set Secure cookies). Google sign-in is built and tested with a fake verifier; it needs a real client id.
 Backend:
 - Schema: `user_identities` (provider, subject, e.g. Google), `email_verifications` and `recovery_tokens`
   (hashed, expiring), `users.phone_verified_at` becomes required for checkout; `user_devices` (trusted

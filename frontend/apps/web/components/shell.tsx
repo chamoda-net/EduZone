@@ -1,11 +1,11 @@
-import { BookOpen, Compass, LayoutDashboard, LockKeyhole, Receipt } from "lucide-react";
+import { BookOpen, CircleUserRound, Compass, LayoutDashboard, LockKeyhole, Receipt, Smartphone } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { SignOutButton } from "@/components/sign-out-button";
-import { getBranding, getMe, isStaff } from "@/lib/session";
+import { getBranding, getSession, isStaff } from "@/lib/session";
 import { t } from "@eduzone/lib/i18n";
-import { Avatar, Container, HeaderNav, Logo, TabBar, buttonStyles, cx, type NavItem } from "@eduzone/ui";
+import { Alert, Avatar, Container, HeaderNav, Logo, TabBar, buttonStyles, cx, type NavItem } from "@eduzone/ui";
 
 /** The student side of a tenant's site: sticky header, page, footer, and bottom tabs on phones. */
 export async function SiteShell({ children, width = "lg", bare = false }: {
@@ -14,7 +14,7 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
   /** Full-bleed pages (home hero, class header) manage their own containers. */
   bare?: boolean;
 }) {
-  const [branding, me] = await Promise.all([getBranding(), getMe()]);
+  const [branding, { me, endedElsewhere }] = await Promise.all([getBranding(), getSession()]);
   const items: NavItem[] = [{ href: "/", label: t("nav.browse"), icon: <Compass />, exact: true }];
   if (me) {
     items.push(
@@ -22,6 +22,7 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
       { href: "/payments", label: t("nav.payments"), icon: <Receipt /> },
     );
     if (isStaff(me)) items.push({ href: "/org/classes", label: t("nav.console"), icon: <LayoutDashboard /> });
+    else items.push({ href: "/account", label: t("nav.account"), icon: <CircleUserRound /> });
   }
 
   return (
@@ -35,20 +36,39 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
           <div className="flex shrink-0 items-center gap-2">
             {me ? (
               <>
-                <span className="hidden items-center gap-2.5 lg:flex">
+                <Link href="/account" className="hidden items-center gap-2.5 rounded-full py-1 pr-3 pl-1 hover:bg-sunken lg:flex">
                   <Avatar name={me.full_name} size="sm" />
                   <span className="max-w-36 truncate text-sm font-semibold">{me.full_name}</span>
-                </span>
+                </Link>
                 <SignOutButton />
               </>
             ) : (
-              <Link href="/login" className={buttonStyles("primary", "sm")}>
-                {t("home.signIn")}
-              </Link>
+              <>
+                <Link href="/login" className={buttonStyles("ghost", "sm", "hidden sm:inline-flex")}>
+                  {t("home.signIn")}
+                </Link>
+                <Link href="/register" className={buttonStyles("primary", "sm")}>
+                  {t("nav.join")}
+                </Link>
+              </>
             )}
           </div>
         </Container>
       </header>
+
+      {(endedElsewhere || (me && !me.phone_verified && !isStaff(me))) && (
+        <Container className="ez-no-print pt-4">
+          {endedElsewhere ? (
+            <Alert tone="warning" title={t("auth.elsewhere.title")}>{t("auth.elsewhere.body")}</Alert>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3 rounded-ez border border-gold/30 bg-gold-100 px-4 py-3 text-sm">
+              <Smartphone className="size-4.5 text-gold-strong" />
+              <p className="flex-1 font-medium text-foreground">{t("phone.banner")}</p>
+              <Link href="/verify-phone" className={buttonStyles("primary", "sm")}>{t("phone.bannerAction")}</Link>
+            </div>
+          )}
+        </Container>
+      )}
 
       <main className={cx("flex flex-1 flex-col", me && "pb-20 md:pb-0")}>
         {bare ? children : (

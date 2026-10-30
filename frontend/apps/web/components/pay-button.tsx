@@ -1,6 +1,7 @@
 "use client";
 
 import { CreditCard } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { startCheckout } from "@/app/classes/actions";
@@ -36,6 +37,8 @@ export function PayButton({ classId, monthId, label, small = false, block = fals
   block?: boolean;
 }) {
   const t = useT();
+  const router = useRouter();
+  const path = usePathname();
   const [pending, start] = useTransition();
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +48,8 @@ export function PayButton({ classId, monthId, label, small = false, block = fals
     start(async () => {
       const res = await startCheckout(classId, monthId);
       if (!res.ok) {
+        // Paying needs a verified phone: confirm it, then come back here.
+        if (res.code === "PHONE_NOT_VERIFIED") return router.push(`/verify-phone?next=${encodeURIComponent(path)}`);
         setError(res.error);
         return;
       }

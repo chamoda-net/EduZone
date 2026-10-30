@@ -8,6 +8,9 @@ export const inputClass =
   "placeholder:text-subtle hover:border-foreground/30 focus:border-brand focus:ring-4 focus:ring-brand/12 " +
   "aria-invalid:border-danger disabled:bg-sunken disabled:text-muted";
 
+/** A labelled control. The label holds only the label text (hints and errors sit below it), so
+ * screen readers announce a clean name. Controls with their own buttons inside (PasswordInput)
+ * pass `htmlFor` with the input's id instead of being wrapped. */
 export function Field({
   label,
   hint,
@@ -15,6 +18,7 @@ export function Field({
   optional,
   children,
   className,
+  htmlFor,
 }: {
   label: string;
   hint?: string;
@@ -22,14 +26,28 @@ export function Field({
   optional?: string;
   children: ReactNode;
   className?: string;
+  htmlFor?: string;
 }) {
+  const text = (
+    <>
+      {label}
+      {optional && <span className="text-xs font-normal text-subtle">{optional}</span>}
+    </>
+  );
+  const labelClass = "flex items-baseline justify-between gap-2 text-sm font-semibold text-foreground";
   return (
-    <label className={cx("flex flex-col gap-1.5", className)}>
-      <span className="flex items-baseline justify-between gap-2 text-sm font-semibold text-foreground">
-        {label}
-        {optional && <span className="text-xs font-normal text-subtle">{optional}</span>}
-      </span>
-      {children}
+    <div className={cx("flex flex-col gap-1.5", className)}>
+      {htmlFor ? (
+        <>
+          <label htmlFor={htmlFor} className={labelClass}>{text}</label>
+          {children}
+        </>
+      ) : (
+        <label className="flex flex-col gap-1.5">
+          <span className={labelClass}>{text}</span>
+          {children}
+        </label>
+      )}
       {error ? (
         <span role="alert" className="text-xs font-medium text-danger">
           {error}
@@ -37,7 +55,7 @@ export function Field({
       ) : (
         hint && <span className="text-xs leading-relaxed text-muted">{hint}</span>
       )}
-    </label>
+    </div>
   );
 }
 

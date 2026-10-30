@@ -3,10 +3,11 @@ import path from "node:path";
 
 // Smoke suite against a real API and web app on their own ports (8010 / 3010), so it can run
 // beside the usual dev servers. Needs the local Postgres from docker compose, migrated.
-// The API runs with SMS_PROVIDER=file so tests read OTP codes from the outbox.
+// The API runs with SMS_PROVIDER=file and EMAIL_PROVIDER=file so tests read codes and links.
 export const API_PORT = 8010;
 export const WEB_PORT = 3010;
 export const OUTBOX = path.resolve(__dirname, ".outbox.jsonl");
+export const EMAIL_OUTBOX = path.resolve(__dirname, ".email-outbox.jsonl");
 
 const backend = path.resolve(__dirname, "../../backend");
 const venvBin = process.platform === "win32" ? ".venv/Scripts" : ".venv/bin";
@@ -33,6 +34,9 @@ export default defineConfig({
       env: {
         SMS_PROVIDER: "file",
         SMS_OUTBOX_PATH: OUTBOX,
+        EMAIL_PROVIDER: "file",
+        EMAIL_OUTBOX_PATH: EMAIL_OUTBOX,
+        SITE_SCHEME: "http",
         API_PUBLIC_URL: `http://localhost:${API_PORT}`,
         PAYMENT_GATEWAY: "fake",
         OTP_RESEND_COOLDOWN_SECONDS: "0",

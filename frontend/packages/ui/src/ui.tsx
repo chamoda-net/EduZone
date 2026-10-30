@@ -27,3 +27,4 @@ export { Dialog, DialogClose } from "./dialog";
 export { Toaster, toast } from "./toast";
 export { HeaderNav, NavDrawer, SideNav, TabBar, type NavItem } from "./nav";
 export { ConsoleFrame } from "./console";
+export { CodeInput, PasswordInput } from "./inputs";

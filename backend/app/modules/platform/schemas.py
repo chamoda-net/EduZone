@@ -2,9 +2,8 @@ from datetime import date, datetime
 from typing import Annotated, ClassVar, Literal
 from uuid import UUID
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
-from app.modules.auth.phone import normalize_phone
 from app.modules.catalog.schemas import _Patch
 
 OrgType = Literal["individual", "institute", "corporate"]
@@ -40,13 +39,15 @@ class TenantCreate(BaseModel):
     bunny_library_id: int | None = Field(default=None, gt=0)
     storage_limit_bytes: int | None = Field(default=None, ge=0)
     bandwidth_limit_bytes: int | None = Field(default=None, ge=0)
-    owner_phone: str = Field(max_length=32)
+    # The owner signs in with this email. A new account has no password yet: the owner sets one
+    # with "Forgot password", which also proves the address. They verify their phone on first sign-in.
+    owner_email: EmailStr = Field(max_length=254)
     owner_name: str = Field(min_length=1, max_length=120)
 
-    @field_validator("owner_phone")
+    @field_validator("owner_email")
     @classmethod
-    def _phone(cls, v: str) -> str:
-        return normalize_phone(v)
+    def _email(cls, v: str) -> str:
+        return v.strip().lower()
 
 
 class TenantUpdate(_Patch):

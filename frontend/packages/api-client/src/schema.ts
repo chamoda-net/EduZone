@@ -4,6 +4,108 @@
  */
 
 export interface paths {
+    "/api/v1/auth/device/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend Device Code */
+        post: operations["resend_device_code_api_v1_auth_device_resend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/device/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Device */
+        post: operations["verify_device_api_v1_auth_device_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend Email */
+        post: operations["resend_email_api_v1_auth_email_resend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Email */
+        post: operations["verify_email_api_v1_auth_email_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Google */
+        post: operations["google_api_v1_auth_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -35,10 +137,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update Me */
+        patch: operations["update_me_api_v1_auth_me_patch"];
         trace?: never;
     };
-    "/api/v1/auth/otp/request": {
+    "/api/v1/auth/phone/request": {
         parameters: {
             query?: never;
             header?: never;
@@ -47,15 +150,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request Otp */
-        post: operations["request_otp_api_v1_auth_otp_request_post"];
+        /** Request Phone Code */
+        post: operations["request_phone_code_api_v1_auth_phone_request_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/otp/verify": {
+    "/api/v1/auth/phone/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -64,8 +167,59 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Verify Otp */
-        post: operations["verify_otp_api_v1_auth_otp_verify_post"];
+        /** Verify Phone */
+        post: operations["verify_phone_api_v1_auth_phone_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/recovery/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Recovery */
+        post: operations["complete_recovery_api_v1_auth_recovery_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/recovery/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Recovery */
+        post: operations["request_recovery_api_v1_auth_recovery_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/recovery/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Recovery */
+        post: operations["start_recovery_api_v1_auth_recovery_start_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -83,6 +237,23 @@ export interface paths {
         put?: never;
         /** Refresh */
         post: operations["refresh_api_v1_auth_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register */
+        post: operations["register_api_v1_auth_register_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1120,6 +1291,34 @@ export interface components {
             /** Title */
             title?: string | null;
         };
+        /**
+         * DeviceCheck
+         * @description Sign-in from an unknown device: an SMS code went to the account's verified phone.
+         */
+        DeviceCheck: {
+            /** Challenge */
+            challenge: string;
+            /** Expires In */
+            expires_in: number;
+            /** Phone Hint */
+            phone_hint: string;
+            /** Resend After */
+            resend_after: number;
+        };
+        /** DeviceResend */
+        DeviceResend: {
+            /** Challenge */
+            challenge: string;
+        };
+        /** DeviceVerify */
+        DeviceVerify: {
+            /** Challenge */
+            challenge: string;
+            /** Code */
+            code: string;
+            /** Device Id */
+            device_id: string;
+        };
         /** Earnings */
         Earnings: {
             /** Currency */
@@ -1133,6 +1332,18 @@ export interface components {
             teachers: components["schemas"]["TeacherEarning"][];
             /** Total Net Cents */
             total_net_cents: number;
+        };
+        /** EmailVerify */
+        EmailVerify: {
+            /** Token */
+            token: string;
+        };
+        /** GoogleLogin */
+        GoogleLogin: {
+            /** Device Id */
+            device_id: string;
+            /** Id Token */
+            id_token: string;
         };
         /** GrantCreate */
         GrantCreate: {
@@ -1369,21 +1580,57 @@ export interface components {
             /** Zoom Join Url */
             zoom_join_url?: string | null;
         };
+        /** Login */
+        Login: {
+            /** Device Id */
+            device_id: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /**
+         * LoginResult
+         * @description Exactly one of `tokens` (signed in) or `device_check` (enter the SMS code first).
+         */
+        LoginResult: {
+            device_check?: components["schemas"]["DeviceCheck"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "signed_in" | "device_check";
+            tokens?: components["schemas"]["TokenPair"] | null;
+        };
         /** Me */
         Me: {
+            /** Email */
+            email: string | null;
+            /** Email Verified */
+            email_verified: boolean;
+            /** Exam */
+            exam: string | null;
+            /** Exam Year */
+            exam_year: number | null;
             /** Full Name */
             full_name: string;
-            /**
-             * Member Id
-             * Format: uuid
-             */
-            member_id: string;
+            /** Has Password */
+            has_password: boolean;
+            /** Member Id */
+            member_id: string | null;
             /** Phone */
             phone: string | null;
+            /** Phone Verified */
+            phone_verified: boolean;
             /** Preferred Language */
             preferred_language: string;
             /** Role */
-            role: string;
+            role: string | null;
+            /** School */
+            school: string | null;
             /**
              * User Id
              * Format: uuid
@@ -1607,20 +1854,6 @@ export interface components {
             /** Resend After */
             resend_after: number;
         };
-        /** OtpVerify */
-        OtpVerify: {
-            /** Code */
-            code: string;
-            /** Device Id */
-            device_id: string;
-            /** Full Name */
-            full_name?: string | null;
-            /**
-             * Phone
-             * @example 0771234567
-             */
-            phone: string;
-        };
         /** PayoutCreate */
         PayoutCreate: {
             /** Amount Cents */
@@ -1675,6 +1908,18 @@ export interface components {
              * Format: uuid
              */
             tenant_id: string;
+        };
+        /** PhoneVerify */
+        PhoneVerify: {
+            /** Code */
+            code: string;
+            /** Device Id */
+            device_id: string;
+            /**
+             * Phone
+             * @example 0771234567
+             */
+            phone: string;
         };
         /** PlatformLogin */
         PlatformLogin: {
@@ -1776,6 +2021,22 @@ export interface components {
             /** Url */
             url: string;
         };
+        /**
+         * ProfileUpdate
+         * @description PATCH: only fields sent are applied.
+         */
+        ProfileUpdate: {
+            /** Exam */
+            exam?: ("grade_5" | "ol" | "al" | "other") | null;
+            /** Exam Year */
+            exam_year?: number | null;
+            /** Full Name */
+            full_name?: string | null;
+            /** Preferred Language */
+            preferred_language?: ("en" | "si" | "ta") | null;
+            /** School */
+            school?: string | null;
+        };
         /** PublicClass */
         PublicClass: {
             /** Batch Year */
@@ -1866,6 +2127,39 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** RecoveryComplete */
+        RecoveryComplete: {
+            /** Code */
+            code?: string | null;
+            /** Device Id */
+            device_id: string;
+            /** Password */
+            password: string;
+            /** Token */
+            token: string;
+        };
+        /** RecoveryRequest */
+        RecoveryRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
+        /** RecoveryStart */
+        RecoveryStart: {
+            /** Token */
+            token: string;
+        };
+        /** RecoveryStarted */
+        RecoveryStarted: {
+            /** Needs Code */
+            needs_code: boolean;
+            /** Phone Hint */
+            phone_hint?: string | null;
+            /** Resend After */
+            resend_after?: number | null;
+        };
         /** Redirect */
         Redirect: {
             /** Fields */
@@ -1884,6 +2178,20 @@ export interface components {
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** Register */
+        Register: {
+            /** Device Id */
+            device_id: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /** Password */
+            password: string;
         };
         /** ResourceCreate */
         ResourceCreate: {
@@ -2107,10 +2415,13 @@ export interface components {
              * @enum {string}
              */
             org_type: "individual" | "institute" | "corporate";
+            /**
+             * Owner Email
+             * Format: email
+             */
+            owner_email: string;
             /** Owner Name */
             owner_name: string;
-            /** Owner Phone */
-            owner_phone: string;
             /** Primary Color */
             primary_color?: string | null;
             /** Slug */
@@ -2286,6 +2597,187 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    resend_device_code_api_v1_auth_device_resend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceResend"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OtpRequested"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_device_api_v1_auth_device_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceVerify"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_email_api_v1_auth_email_resend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verify_email_api_v1_auth_email_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailVerify"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_api_v1_auth_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleLogin"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Login"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     logout_api_v1_auth_logout_post: {
         parameters: {
             query?: never;
@@ -2324,7 +2816,40 @@ export interface operations {
             };
         };
     };
-    request_otp_api_v1_auth_otp_request_post: {
+    update_me_api_v1_auth_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_phone_code_api_v1_auth_phone_request_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2357,7 +2882,7 @@ export interface operations {
             };
         };
     };
-    verify_otp_api_v1_auth_otp_verify_post: {
+    verify_phone_api_v1_auth_phone_verify_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2366,7 +2891,38 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OtpVerify"];
+                "application/json": components["schemas"]["PhoneVerify"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_recovery_api_v1_auth_recovery_complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryComplete"];
             };
         };
         responses: {
@@ -2377,6 +2933,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_recovery_api_v1_auth_recovery_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_recovery_api_v1_auth_recovery_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryStarted"];
                 };
             };
             /** @description Validation Error */
@@ -2405,6 +3027,39 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Register"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

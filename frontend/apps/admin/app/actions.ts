@@ -89,7 +89,7 @@ export async function createTenant(_: FormState, fd: FormData): Promise<FormStat
       primary_color: text(fd, "primary_color") || null,
       bunny_library_id: library ? Number(library) : null,
       ...lim,
-      owner_phone: text(fd, "owner_phone"),
+      owner_email: text(fd, "owner_email"),
       owner_name: text(fd, "owner_name"),
     },
   });

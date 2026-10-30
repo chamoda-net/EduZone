@@ -11,6 +11,8 @@ EXPECTED_TABLES = {
     "lesson_resources", "class_enrollments", "late_month_requests", "access_grants",
     "lesson_progress", "orders", "order_items", "payments", "refunds", "payouts",
     "ledger_transactions", "ledger_entries", "tenant_usage_daily", "audit_logs",
+    # identity (migration 0005)
+    "user_devices", "user_identities", "email_verifications", "recovery_tokens", "login_attempts",
 }
 
 

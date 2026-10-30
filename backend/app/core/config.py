@@ -49,6 +49,24 @@ class Settings(BaseSettings):
     sms_provider: Literal["console", "file"] = "console"
     sms_outbox_path: Path = Path("sms-outbox.jsonl")
 
+    # --- Identity (CLAUDE.md section 11) ---------------------------------------------
+    password_min_length: int = 8
+    # Password sign-in throttling, counted over login_window_minutes.
+    login_window_minutes: int = 15
+    login_max_failures_per_email: int = 8
+    login_max_failures_per_ip: int = 30
+    # A sign-in from an unknown device must be confirmed by SMS within this time.
+    device_challenge_ttl_seconds: int = 10 * 60
+    email_verification_ttl_hours: int = 48
+    recovery_ttl_minutes: int = 30
+    # Google sign-in (OpenID Connect). Unset = Google sign-in is off (503 GOOGLE_NOT_CONFIGURED).
+    google_client_id: str | None = None
+    # Email: 'console' logs it, 'file' appends JSON lines to email_outbox_path (ENVIRONMENT=local
+    # only). A real provider is added behind app.integrations.email once one is chosen.
+    email_provider: Literal["console", "file"] = "console"
+    email_outbox_path: Path = Path("email-outbox.jsonl")
+    email_from: str = "EduZone <no-reply@eduzone.switchops.tech>"
+
     # --- Bunny (CLAUDE.md section 9) ---------------------------------------------
     # One Stream library per tenant (tenants.bunny_library_id). Keys per library come from
     # the environment as JSON: {"<library_id>": {"api_key": "...", "token_key": "..."}}.

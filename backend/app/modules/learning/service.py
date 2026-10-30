@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ApiError
 from app.core.pagination import decode_cursor, encode_cursor
-from app.modules.auth.dependencies import AuthContext
+from app.modules.auth.dependencies import AuthContext, ensure_student_member
 from app.modules.learning import access
 from app.modules.learning import repository as repo
 from app.modules.learning.schemas import (
@@ -114,6 +114,7 @@ async def enroll(session: AsyncSession, auth: AuthContext, slug: str) -> Student
     c = await repo.class_by_slug(session, slug, published_only=True)
     if c is None:
         raise _not_found()
+    auth = await ensure_student_member(session, auth)  # joining makes them a member here
     await repo.upsert_enrollment(session, auth.member_id, c.id)
     # Free classes: joining is all it takes.
     if c.pricing_model == "free" and await access.active_grant_for(session, auth.member_id, c.id, None) is None:
@@ -195,6 +196,7 @@ async def open_resource(session: AsyncSession, auth: AuthContext, resource_id: U
         raise _not_found("File")
     if asset.kind == "video" and asset.status != "ready":
         raise ApiError("MEDIA_NOT_READY", "This video is still processing.", 409)
+    auth = await ensure_student_member(session, auth)  # free previews: views are counted per member
 
     views = None
     if asset.kind == "video":

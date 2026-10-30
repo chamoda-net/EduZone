@@ -833,6 +833,78 @@
         "title": "ClassUpdate",
         "type": "object"
       },
+      "DeviceCheck": {
+        "description": "Sign-in from an unknown device: an SMS code went to the account's verified phone.",
+        "properties": {
+          "challenge": {
+            "title": "Challenge",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "phone_hint": {
+            "title": "Phone Hint",
+            "type": "string"
+          },
+          "resend_after": {
+            "title": "Resend After",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "challenge",
+          "phone_hint",
+          "expires_in",
+          "resend_after"
+        ],
+        "title": "DeviceCheck",
+        "type": "object"
+      },
+      "DeviceResend": {
+        "properties": {
+          "challenge": {
+            "maxLength": 2048,
+            "minLength": 20,
+            "title": "Challenge",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge"
+        ],
+        "title": "DeviceResend",
+        "type": "object"
+      },
+      "DeviceVerify": {
+        "properties": {
+          "challenge": {
+            "maxLength": 2048,
+            "minLength": 20,
+            "title": "Challenge",
+            "type": "string"
+          },
+          "code": {
+            "pattern": "^\\d{6}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "device_id": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Device Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge",
+          "code",
+          "device_id"
+        ],
+        "title": "DeviceVerify",
+        "type": "object"
+      },
       "Earnings": {
         "properties": {
           "currency": {
@@ -863,6 +935,43 @@
           "total_net_cents"
         ],
         "title": "Earnings",
+        "type": "object"
+      },
+      "EmailVerify": {
+        "properties": {
+          "token": {
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "EmailVerify",
+        "type": "object"
+      },
+      "GoogleLogin": {
+        "properties": {
+          "device_id": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Device Id",
+            "type": "string"
+          },
+          "id_token": {
+            "maxLength": 4096,
+            "minLength": 20,
+            "title": "Id Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id_token",
+          "device_id"
+        ],
+        "title": "GoogleLogin",
         "type": "object"
       },
       "GrantCreate": {
@@ -1543,16 +1652,131 @@
         "title": "LessonUpdate",
         "type": "object"
       },
+      "Login": {
+        "properties": {
+          "device_id": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Device Id",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "device_id"
+        ],
+        "title": "Login",
+        "type": "object"
+      },
+      "LoginResult": {
+        "description": "Exactly one of `tokens` (signed in) or `device_check` (enter the SMS code first).",
+        "properties": {
+          "device_check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeviceCheck"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "signed_in",
+              "device_check"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tokens": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenPair"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "LoginResult",
+        "type": "object"
+      },
       "Me": {
         "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "email_verified": {
+            "title": "Email Verified",
+            "type": "boolean"
+          },
+          "exam": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam"
+          },
+          "exam_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Year"
+          },
           "full_name": {
             "title": "Full Name",
             "type": "string"
           },
+          "has_password": {
+            "title": "Has Password",
+            "type": "boolean"
+          },
           "member_id": {
-            "format": "uuid",
-            "title": "Member Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
           },
           "phone": {
             "anyOf": [
@@ -1565,13 +1789,35 @@
             ],
             "title": "Phone"
           },
+          "phone_verified": {
+            "title": "Phone Verified",
+            "type": "boolean"
+          },
           "preferred_language": {
             "title": "Preferred Language",
             "type": "string"
           },
           "role": {
-            "title": "Role",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "school": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School"
           },
           "user_id": {
             "format": "uuid",
@@ -1581,11 +1827,18 @@
         },
         "required": [
           "user_id",
-          "member_id",
           "full_name",
+          "email",
+          "email_verified",
           "phone",
-          "role",
-          "preferred_language"
+          "phone_verified",
+          "has_password",
+          "preferred_language",
+          "exam",
+          "exam_year",
+          "school",
+          "member_id",
+          "role"
         ],
         "title": "Me",
         "type": "object"
@@ -2178,49 +2431,6 @@
         "title": "OtpRequested",
         "type": "object"
       },
-      "OtpVerify": {
-        "properties": {
-          "code": {
-            "pattern": "^\\d{6}$",
-            "title": "Code",
-            "type": "string"
-          },
-          "device_id": {
-            "maxLength": 128,
-            "minLength": 8,
-            "title": "Device Id",
-            "type": "string"
-          },
-          "full_name": {
-            "anyOf": [
-              {
-                "maxLength": 120,
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Full Name"
-          },
-          "phone": {
-            "examples": [
-              "0771234567"
-            ],
-            "maxLength": 32,
-            "title": "Phone",
-            "type": "string"
-          }
-        },
-        "required": [
-          "phone",
-          "code",
-          "device_id"
-        ],
-        "title": "OtpVerify",
-        "type": "object"
-      },
       "PayoutCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2338,6 +2548,36 @@
           "created_at"
         ],
         "title": "PayoutRow",
+        "type": "object"
+      },
+      "PhoneVerify": {
+        "properties": {
+          "code": {
+            "pattern": "^\\d{6}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "device_id": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Device Id",
+            "type": "string"
+          },
+          "phone": {
+            "examples": [
+              "0771234567"
+            ],
+            "maxLength": 32,
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone",
+          "code",
+          "device_id"
+        ],
+        "title": "PhoneVerify",
         "type": "object"
       },
       "PlatformLogin": {
@@ -2598,6 +2838,85 @@
           "expires_at"
         ],
         "title": "PreviewOut",
+        "type": "object"
+      },
+      "ProfileUpdate": {
+        "additionalProperties": false,
+        "description": "PATCH: only fields sent are applied.",
+        "properties": {
+          "exam": {
+            "anyOf": [
+              {
+                "enum": [
+                  "grade_5",
+                  "ol",
+                  "al",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam"
+          },
+          "exam_year": {
+            "anyOf": [
+              {
+                "maximum": 2100.0,
+                "minimum": 2000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Year"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "preferred_language": {
+            "anyOf": [
+              {
+                "enum": [
+                  "en",
+                  "si",
+                  "ta"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Language"
+          },
+          "school": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School"
+          }
+        },
+        "title": "ProfileUpdate",
         "type": "object"
       },
       "PublicClass": {
@@ -2898,6 +3217,112 @@
         "title": "PublicMonth",
         "type": "object"
       },
+      "RecoveryComplete": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "device_id": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Device Id",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
+          "token": {
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password",
+          "device_id"
+        ],
+        "title": "RecoveryComplete",
+        "type": "object"
+      },
+      "RecoveryRequest": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "RecoveryRequest",
+        "type": "object"
+      },
+      "RecoveryStart": {
+        "properties": {
+          "token": {
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "RecoveryStart",
+        "type": "object"
+      },
+      "RecoveryStarted": {
+        "properties": {
+          "needs_code": {
+            "title": "Needs Code",
+            "type": "boolean"
+          },
+          "phone_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Hint"
+          },
+          "resend_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resend After"
+          }
+        },
+        "required": [
+          "needs_code"
+        ],
+        "title": "RecoveryStarted",
+        "type": "object"
+      },
       "Redirect": {
         "properties": {
           "fields": {
@@ -2941,6 +3366,42 @@
           "refresh_token"
         ],
         "title": "RefreshRequest",
+        "type": "object"
+      },
+      "Register": {
+        "properties": {
+          "device_id": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Device Id",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Full Name",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "full_name",
+          "device_id"
+        ],
+        "title": "Register",
         "type": "object"
       },
       "ResourceCreate": {
@@ -3540,15 +4001,16 @@
             "title": "Org Type",
             "type": "string"
           },
+          "owner_email": {
+            "format": "email",
+            "maxLength": 254,
+            "title": "Owner Email",
+            "type": "string"
+          },
           "owner_name": {
             "maxLength": 120,
             "minLength": 1,
             "title": "Owner Name",
-            "type": "string"
-          },
-          "owner_phone": {
-            "maxLength": 32,
-            "title": "Owner Phone",
             "type": "string"
           },
           "primary_color": {
@@ -3584,7 +4046,7 @@
         "required": [
           "name",
           "slug",
-          "owner_phone",
+          "owner_email",
           "owner_name"
         ],
         "title": "TenantCreate",
@@ -4131,6 +4593,223 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/device/resend": {
+      "post": {
+        "operationId": "resend_device_code_api_v1_auth_device_resend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceResend"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtpRequested"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resend Device Code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/device/verify": {
+      "post": {
+        "operationId": "verify_device_api_v1_auth_device_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Device",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/resend": {
+      "post": {
+        "operationId": "resend_email_api_v1_auth_email_resend_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resend Email",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/verify": {
+      "post": {
+        "operationId": "verify_email_api_v1_auth_email_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Email",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/google": {
+      "post": {
+        "operationId": "google_api_v1_auth_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Google",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/logout": {
       "post": {
         "operationId": "logout_api_v1_auth_logout_post",
@@ -4174,11 +4853,55 @@
         "tags": [
           "auth"
         ]
+      },
+      "patch": {
+        "operationId": "update_me_api_v1_auth_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Me",
+        "tags": [
+          "auth"
+        ]
       }
     },
-    "/api/v1/auth/otp/request": {
+    "/api/v1/auth/phone/request": {
       "post": {
-        "operationId": "request_otp_api_v1_auth_otp_request_post",
+        "operationId": "request_phone_code_api_v1_auth_phone_request_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4211,20 +4934,64 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Request Otp",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Request Phone Code",
         "tags": [
           "auth"
         ]
       }
     },
-    "/api/v1/auth/otp/verify": {
+    "/api/v1/auth/phone/verify": {
       "post": {
-        "operationId": "verify_otp_api_v1_auth_otp_verify_post",
+        "operationId": "verify_phone_api_v1_auth_phone_verify_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OtpVerify"
+                "$ref": "#/components/schemas/PhoneVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify Phone",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/recovery/complete": {
+      "post": {
+        "operationId": "complete_recovery_api_v1_auth_recovery_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryComplete"
               }
             }
           },
@@ -4252,7 +5019,87 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Verify Otp",
+        "summary": "Complete Recovery",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/recovery/request": {
+      "post": {
+        "operationId": "request_recovery_api_v1_auth_recovery_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Recovery",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/recovery/start": {
+      "post": {
+        "operationId": "start_recovery_api_v1_auth_recovery_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryStarted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Recovery",
         "tags": [
           "auth"
         ]
@@ -4294,6 +5141,47 @@
           }
         },
         "summary": "Refresh",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register",
         "tags": [
           "auth"
         ]

@@ -1,5 +1,6 @@
 
 # Playwright
 /e2e/.outbox.jsonl
+/e2e/.email-outbox.jsonl
 /test-results/
 /playwright-report/

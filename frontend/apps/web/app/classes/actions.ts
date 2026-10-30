@@ -41,7 +41,7 @@ export async function openResource(resourceId: string): Promise<OpenResult> {
   return { ok: true, data: res.data };
 }
 
-export type StartCheckoutResult = { ok: true; redirect: GatewayRedirect } | { ok: false; error: string };
+export type StartCheckoutResult = { ok: true; redirect: GatewayRedirect } | { ok: false; error: string; code?: string };
 
 /** Creates the order and payment; the browser is then sent to the gateway. Access is granted
  * only when the gateway's notification reaches the API, never by coming back to our site. */
@@ -51,7 +51,7 @@ export async function startCheckout(classId: string, monthId: string | null): Pr
     body: { class_id: classId, ...(monthId ? { class_month_id: monthId } : {}) },
   });
   if (res.status === 401) return { ok: false, error: t("errors.UNAUTHORIZED") };
-  if (!res.ok) return { ok: false, error: errorText(t, res.error) };
+  if (!res.ok) return { ok: false, error: errorText(t, res.error), code: res.error.code };
   return { ok: true, redirect: res.data.redirect };
 }
 

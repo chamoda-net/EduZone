@@ -26,7 +26,7 @@ async def test_every_tenant_table_has_forced_rls_policy() -> None:
             JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'tenant_id' AND NOT a.attisdropped
             WHERE n.nspname = 'public' AND c.relkind = 'r'
         """))).all()
-    assert len(rows) >= 20
+    assert len(rows) >= 19  # user_sessions became per account in 0005
     unprotected = [r.relname for r in rows if not (r.relrowsecurity and r.relforcerowsecurity and r.has_policy)]
     assert unprotected == []
 

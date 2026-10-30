@@ -7,6 +7,7 @@ import { api } from "./api";
 import {
   ACCESS_COOKIE,
   DEVICE_COOKIE,
+  NOTICE_COOKIE,
   REFRESH_COOKIE,
   accessCookie,
   deviceCookie,
@@ -22,15 +23,25 @@ export const getBranding = cache(async (): Promise<Branding | null> => {
   return res.ok ? res.data : null;
 });
 
-/** The signed-in member of this tenant, or null. */
-export const getMe = cache(async (): Promise<Me | null> => {
-  if (!(await cookies()).get(ACCESS_COOKIE)) return null;
+type SessionState = { me: Me | null; endedElsewhere: boolean };
+
+/** The signed-in account (with its membership here), and whether a session just ended because
+ * the account signed in on another device. Cached per request. */
+export const getSession = cache(async (): Promise<SessionState> => {
+  const jar = await cookies();
+  const notice = jar.get(NOTICE_COOKIE)?.value === "elsewhere";
+  if (!jar.get(ACCESS_COOKIE)) return { me: null, endedElsewhere: notice };
   const res = await api<Me>("/auth/me");
-  return res.ok ? res.data : null;
+  if (res.ok) return { me: res.data, endedElsewhere: false };
+  return { me: null, endedElsewhere: notice || res.error.code === "SIGNED_IN_ELSEWHERE" };
 });
 
+export const getMe = cache(async (): Promise<Me | null> => (await getSession()).me);
+
+const STAFF = new Set(["owner", "admin", "teacher"]);
+
 export function isStaff(me: Me | null): boolean {
-  return me !== null && me.role !== "student";
+  return me !== null && me.role !== null && STAFF.has(me.role);
 }
 
 // Writing cookies is only allowed in Server Actions and Route Handlers.
@@ -45,6 +56,7 @@ export async function clearSession(): Promise<void> {
   const jar = await cookies();
   jar.delete(ACCESS_COOKIE);
   jar.delete(REFRESH_COOKIE);
+  jar.delete(NOTICE_COOKIE);
 }
 
 /** Stable per-browser id for the backend's one-device rule. */

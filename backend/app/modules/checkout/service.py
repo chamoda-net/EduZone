@@ -27,7 +27,7 @@ from app.core.pagination import decode_cursor, encode_cursor
 from app.core.tenancy import tenant_transaction
 from app.integrations.gateways import Gateway, get_gateway
 from app.integrations.gateways.base import CheckoutRequest, GatewayEvent
-from app.modules.auth.dependencies import Actor, AuthContext
+from app.modules.auth.dependencies import Actor, AuthContext, ensure_student_member
 from app.modules.learning import access
 from app.modules.learning import repository as learning_repo
 from app.modules.ledger import posting
@@ -82,6 +82,13 @@ async def _new_order_no(session: AsyncSession) -> str:
 async def create_checkout(session: AsyncSession, auth: AuthContext, site_host: str, body: CheckoutCreate,
                           gateway: Gateway) -> CheckoutOut:
     s = get_settings()
+    # A verified phone is required to pay (receipts, recovery, the new-device check).
+    verified = (await session.execute(text("SELECT phone_verified_at IS NOT NULL FROM users WHERE id = :u"),
+                                      {"u": auth.user_id})).scalar_one()
+    if not verified:
+        raise ApiError("PHONE_NOT_VERIFIED", "Confirm your mobile number before paying.", status_code=403)
+    # Paying makes the student a member of this organization (if they aren't yet).
+    auth = await ensure_student_member(session, auth)
     c = (await session.execute(text("""
         SELECT id, slug, title, status, pricing_model, monthly_fee_cents, one_time_price_cents, teacher_member_id
         FROM classes WHERE id = :id

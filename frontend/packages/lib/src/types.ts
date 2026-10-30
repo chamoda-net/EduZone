@@ -9,14 +9,30 @@ export type Branding = {
 
 export type Role = "owner" | "admin" | "teacher" | "student";
 
+/** The signed-in account, plus its membership in the tenant of this request (null until the
+ * student joins or pays for something here). */
 export type Me = {
   user_id: string;
-  member_id: string;
   full_name: string;
+  email: string | null;
+  email_verified: boolean;
   phone: string | null;
-  role: Role;
+  phone_verified: boolean;
+  has_password: boolean;
   preferred_language: string;
+  exam: ClassItem["exam"];
+  exam_year: number | null;
+  school: string | null;
+  member_id: string | null;
+  role: Role | null;
 };
+
+export type DeviceCheck = { challenge: string; phone_hint: string; expires_in: number; resend_after: number };
+export type LoginResult =
+  | { status: "signed_in"; tokens: { access_token: string; refresh_token: string; token_type: string; expires_in: number } }
+  | { status: "device_check"; device_check: DeviceCheck };
+export type OtpRequested = { expires_in: number; resend_after: number };
+export type RecoveryStarted = { needs_code: boolean; phone_hint: string | null; resend_after: number | null };
 
 export type PricingModel = "monthly" | "one_time" | "free";
 export type ClassStatus = "draft" | "published" | "archived";

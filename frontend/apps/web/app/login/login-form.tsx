@@ -1,82 +1,107 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { MessageSquareText } from "lucide-react";
+import Link from "next/link";
+import { useActionState, useState, useTransition } from "react";
 
-import { Button, ErrorText, Field, Input, buttonClass } from "@eduzone/ui";
+import { useCountdown } from "@/components/countdown";
+import { GoogleButton, googleEnabled } from "@/components/google-button";
 import { useT } from "@eduzone/lib/i18n/client";
+import type { DeviceCheck } from "@eduzone/lib/types";
+import { Button, CodeInput, ErrorText, Field, Input, PasswordInput } from "@eduzone/ui";
 
-import { requestCode, verifyCode, type RequestCodeState, type VerifyState } from "./actions";
+import { googleSignIn, resendDeviceCode, signIn, verifyDevice, type SignInState } from "./actions";
 
 export function LoginForm({ next }: { next?: string }) {
   const t = useT();
-  const [sendState, send, sending] = useActionState<RequestCodeState, FormData>(requestCode, {});
-  const [verifyState, verify, verifying] = useActionState<VerifyState, FormData>(verifyCode, {});
-  // Which step is showing; the server's answer moves us to the code step.
-  const [changingNumber, setChangingNumber] = useState(false);
-  const onCodeStep = Boolean(sendState.sent) && !changingNumber;
+  const [state, submit, pending] = useActionState<SignInState, FormData>(signIn, {});
+  const [google, setGoogle] = useState<SignInState>({});
+  const [googling, startGoogle] = useTransition();
+  const check = google.check ?? state.check;
 
-  if (!onCodeStep) {
-    return (
-      <form action={(fd) => { setChangingNumber(false); send(fd); }} className="flex flex-col gap-4">
-        <Field label={t("auth.phone")} hint={t("auth.phoneHint")}>
-          <Input
-            name="phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            required
-            defaultValue={sendState.phone}
-            autoFocus
-          />
-        </Field>
-        <ErrorText>{sendState.error}</ErrorText>
-        <Button size="lg" loading={sending}>
-          {t("auth.sendCode")}
-        </Button>
-      </form>
-    );
-  }
+  if (check) return <DeviceCodeForm check={check} next={next} since={(google.check ? google.at : state.at) ?? 0} />;
 
   return (
-    <div className="flex flex-col gap-4">
-      <form action={verify} className="flex flex-col gap-4">
-        <p className="rounded-ez bg-brand-50 px-3 py-2.5 text-sm text-brand-800">{t("auth.codeSentTo", { phone: sendState.phone ?? "" })}</p>
-        <input type="hidden" name="phone" value={sendState.phone} />
+    <div className="flex flex-col gap-5">
+      {googleEnabled && (
+        <>
+          <GoogleButton onCredential={(c) => startGoogle(async () => setGoogle(await googleSignIn(c, next ?? null)))} />
+          {googling && <p className="text-center text-sm text-muted">{t("common.loading")}</p>}
+          <ErrorText>{google.error}</ErrorText>
+          <Divider label={t("auth.or")} />
+        </>
+      )}
+      <form action={submit} className="flex flex-col gap-4">
         {next && <input type="hidden" name="next" value={next} />}
-        <Field label={t("auth.code")}>
-          <Input
-            name="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9]{6}"
-            maxLength={6}
-            required
-            defaultValue={verifyState.code}
-            autoFocus={!verifyState.needName}
-            className="min-h-14 text-center font-display text-2xl tracking-[0.5em]"
-          />
+        <Field label={t("auth.email")}>
+          <Input name="email" type="email" autoComplete="email" required defaultValue={state.email} autoFocus />
         </Field>
-        {verifyState.needName && (
-          <Field label={t("auth.fullName")} hint={t("auth.fullNameHint")}>
-            <Input name="full_name" autoComplete="name" required maxLength={120} defaultValue={verifyState.fullName} autoFocus />
-          </Field>
-        )}
-        <ErrorText>{verifyState.error ?? sendState.error}</ErrorText>
-        <Button size="lg" loading={verifying}>
+        <Field label={t("auth.password")} htmlFor="login-password">
+          <PasswordInput id="login-password" name="password" autoComplete="current-password" required showLabel={t("auth.showPassword")}
+                         hideLabel={t("auth.hidePassword")} />
+        </Field>
+        <Link href="/recover" className="-mt-2 self-end text-sm font-semibold text-brand hover:underline">
+          {t("auth.forgot")}
+        </Link>
+        <ErrorText>{state.error}</ErrorText>
+        <Button size="lg" loading={pending}>
           {t("auth.verify")}
         </Button>
       </form>
-      <div className="flex flex-wrap justify-between gap-2 text-sm">
-        <button type="button" className={buttonClass.link} onClick={() => setChangingNumber(true)}>
-          {t("auth.changeNumber")}
-        </button>
-        <form action={send}>
-          <input type="hidden" name="phone" value={sendState.phone} />
-          <button className={buttonClass.link} disabled={sending}>
-            {t("auth.resend")}
-          </button>
-        </form>
-      </div>
     </div>
+  );
+}
+
+export function Divider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 text-xs font-semibold tracking-wide text-subtle uppercase">
+      <span className="h-px flex-1 bg-border" />
+      {label}
+      <span className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
+/** New device: the code went to the account's phone. Signing in here signs out the other device. */
+function DeviceCodeForm({ check, next, since }: { check: DeviceCheck; next?: string; since: number }) {
+  const t = useT();
+  const [state, submit, pending] = useActionState(verifyDevice, {});
+  const [resent, setResent] = useState<{ at: number; after: number; error?: string } | null>(null);
+  const [resending, startResend] = useTransition();
+  const wait = useCountdown(resent?.after ?? check.resend_after, resent?.at ?? since);
+
+  return (
+    <form action={submit} className="flex flex-col gap-4">
+      <div className="flex gap-3 rounded-ez bg-brand-50 px-4 py-3 text-sm text-brand-800">
+        <MessageSquareText className="mt-0.5 size-4.5 shrink-0" />
+        <div>
+          <p className="font-semibold">{t("auth.device.title")}</p>
+          <p>{t("auth.device.body", { phone: check.phone_hint })}</p>
+        </div>
+      </div>
+      <input type="hidden" name="challenge" value={check.challenge} />
+      {next && <input type="hidden" name="next" value={next} />}
+      <Field label={t("auth.code")}>
+        <CodeInput name="code" defaultValue={state.code} autoFocus />
+      </Field>
+      <ErrorText>{state.error ?? resent?.error}</ErrorText>
+      <Button size="lg" loading={pending}>
+        {t("auth.verify")}
+      </Button>
+      <Button
+        type="button"
+        variant="link"
+        disabled={wait > 0 || resending}
+        onClick={() =>
+          startResend(async () => {
+            const r = await resendDeviceCode(check.challenge);
+            setResent({ at: Date.now(), after: r.resendAfter ?? 60, error: r.error });
+          })
+        }
+      >
+        {wait > 0 ? t("auth.resendIn", { seconds: wait }) : t("auth.resend")}
+      </Button>
+      <p className="text-xs text-muted">{t("auth.device.note")}</p>
+    </form>
   );
 }

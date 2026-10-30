@@ -2,9 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import {
   ACCESS_COOKIE,
+  NOTICE_COOKIE,
   REFRESH_COOKIE,
   accessCookie,
   expiresSoon,
+  noticeCookie,
   refreshCookie,
   type TokenPair,
 } from "./lib/cookies";
@@ -43,12 +45,16 @@ export async function proxy(request: NextRequest) {
   }
 
   if (res.status === 401) {
-    // Signed out elsewhere (another device, logout, suspension): drop the dead session.
+    // The session ended (signed in on another device, logout, password reset): drop it. If it
+    // was the one-device rule, leave a note so the next page can say why.
+    const code = ((await res.json().catch(() => null)) as { error?: { code?: string } } | null)?.error?.code;
     request.cookies.delete(ACCESS_COOKIE);
     request.cookies.delete(REFRESH_COOKIE);
+    if (code === "SIGNED_IN_ELSEWHERE") request.cookies.set(NOTICE_COOKIE, "elsewhere");
     const response = NextResponse.next({ request: { headers: request.headers } });
     response.cookies.delete(ACCESS_COOKIE);
     response.cookies.delete(REFRESH_COOKIE);
+    if (code === "SIGNED_IN_ELSEWHERE") response.cookies.set(NOTICE_COOKIE, "elsewhere", noticeCookie());
     return response;
   }
   return NextResponse.next();

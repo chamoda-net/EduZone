@@ -98,17 +98,17 @@ async def create_tenant(session: AsyncSession, actor: PlatformActor, body: Tenan
 
     # The owner: an existing person keeps their name; a new one is created.
     user_id = (await session.execute(text("""
-        INSERT INTO users (phone, full_name) VALUES (:p, :n)
-        ON CONFLICT (phone) DO UPDATE SET phone = users.phone
+        INSERT INTO users (email, full_name) VALUES (:e, :n)
+        ON CONFLICT (email) DO UPDATE SET email = users.email
         RETURNING id
-    """), {"p": body.owner_phone, "n": body.owner_name})).scalar_one()
+    """), {"e": body.owner_email, "n": body.owner_name})).scalar_one()
     await _set_tenant(session, tenant_id)
     member_id = (await session.execute(text("""
         INSERT INTO tenant_members (tenant_id, user_id, role, display_name)
         VALUES (:t, :u, 'owner', :n) RETURNING id
     """), {"t": tenant_id, "u": user_id, "n": body.owner_name})).scalar_one()
     await _audit(session, actor, "platform.tenant.create", "tenant", tenant_id,
-                 {"slug": body.slug, "owner_phone": body.owner_phone})
+                 {"slug": body.slug, "owner_email": body.owner_email})
     return TenantCreated(tenant=await get_tenant(session, tenant_id), owner_user_id=user_id, owner_member_id=member_id)
 
 

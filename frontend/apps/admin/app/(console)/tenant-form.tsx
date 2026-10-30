@@ -79,8 +79,8 @@ export function TenantForm({ action, initial }: {
           </>
         ) : (
           <>
-            <Field label={t("platform.form.ownerPhone")} hint={t("auth.phoneHint")}>
-              <Input name="owner_phone" type="tel" required />
+            <Field label={t("platform.form.ownerEmail")} hint={t("platform.form.ownerEmailHint")}>
+              <Input name="owner_email" type="email" autoComplete="off" required />
             </Field>
             <Field label={t("platform.form.ownerName")}>
               <Input name="owner_name" required maxLength={120} />

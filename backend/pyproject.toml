@@ -13,6 +13,9 @@ dependencies = [
     "alembic>=1.14",
     "psycopg[binary]>=3.2",
     "pyjwt>=2.9",
+    "cryptography>=43",  # RS256 for Google ID tokens
+    "argon2-cffi>=23.1",  # password hashing
+    "email-validator>=2.2",  # pydantic EmailStr
     "httpx>=0.28",
     "python-multipart>=0.0.20",
 ]

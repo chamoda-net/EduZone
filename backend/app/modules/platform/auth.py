@@ -26,11 +26,10 @@ from app.core.db import AdminSession
 from app.core.errors import ApiError
 from app.core.i18n import t
 from app.integrations.sms import SmsSender
-from app.modules.auth import repository as auth_repo
+from app.modules.auth import otp
 from app.modules.auth.dependencies import client_ip, user_agent
 from app.modules.auth.schemas import OtpRequested, _PhoneBody
-from app.modules.auth.service import check_and_consume_otp
-from app.modules.auth.tokens import hash_otp, hash_refresh_token, new_otp_code, new_refresh_token
+from app.modules.auth.tokens import hash_refresh_token, new_refresh_token
 from app.modules.platform import totp
 
 _TYP = "platform"
@@ -92,17 +91,12 @@ _ADMIN_BY_PHONE = """
 async def request_code(phone: str, ip: str | None, sms: SmsSender) -> OtpRequested:
     """Same answer whether or not the phone belongs to an admin; a code is sent only if it does."""
     s = get_settings()
-    code = new_otp_code()
+    code: str | None = None
     async with AdminSession() as session, session.begin():
-        await auth_repo.lock_phone(session, phone)
-        stats = await auth_repo.otp_request_stats(session, phone, ip, s.otp_resend_cooldown_seconds)
-        if stats.in_cooldown or stats.phone_last_hour >= s.otp_max_per_phone_per_hour \
-                or stats.ip_last_hour >= s.otp_max_per_ip_per_hour:
-            raise ApiError("OTP_RATE_LIMITED", "Too many code requests. Please wait and try again.", 429)
         admin = (await session.execute(text(_ADMIN_BY_PHONE), {"p": phone})).one_or_none()
         if admin is not None:
-            await auth_repo.insert_otp(session, phone, hash_otp(phone, code), s.otp_ttl_seconds, ip)
-    if admin is not None:
+            code = await otp.issue(session, phone, "login", ip)  # limits as for every code
+    if admin is not None and code is not None:
         await sms.send(phone, t("sms.admin_code", admin.preferred_language, code=code,
                                 minutes=s.otp_ttl_seconds // 60))
     return OtpRequested(expires_in=s.otp_ttl_seconds, resend_after=s.otp_resend_cooldown_seconds)
@@ -113,7 +107,7 @@ async def login(body: PlatformLogin, ip: str | None, ua: str | None) -> Platform
     try:
         # SMS code first: wrong guesses are counted and lock the code, which also limits
         # guessing the authenticator code (a new SMS is needed after any failure).
-        await check_and_consume_otp(body.phone, body.code, full_name="-")
+        await otp.consume(body.phone, "login", body.code)
     except ApiError as exc:
         if exc.code in ("OTP_TOO_MANY_ATTEMPTS",):
             raise

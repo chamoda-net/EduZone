@@ -14,7 +14,7 @@ from app.core.config import get_settings
 from app.core.db import AdminSession
 from app.modules.platform import totp
 from tests.conftest import AddMember, FakeSms, Seed, SeededTenant, purge_tenants
-from tests.helpers import auth_headers, error_code, skip_cooldown
+from tests.helpers import auth_headers, email_for, error_code, skip_cooldown
 from tests.test_money import sell
 
 Headers = dict[str, str]
@@ -134,16 +134,25 @@ async def test_network_allowlist(client: AsyncClient, ph: Headers) -> None:
 async def test_create_organization_and_owner(client: AsyncClient, sms: FakeSms, phones: Callable[[], str],
                                              ph: Headers, created_tenants: list[UUID]) -> None:
     slug, owner_phone = f"new-{uuid4().hex[:8]}", phones()
+    owner_email = email_for(owner_phone)
     resp = await client.post("/api/v1/platform/tenants", headers=ph, json={
         "name": "Sipsala Institute", "slug": slug, "org_type": "institute", "commission_bps": 1500,
-        "owner_phone": owner_phone, "owner_name": "Mrs Perera", "primary_color": "#0F766E"})
+        "owner_email": owner_email.upper(), "owner_name": "Mrs Perera", "primary_color": "#0F766E"})
     assert resp.status_code == 201, resp.text
     created = resp.json()
     created_tenants.append(UUID(created["tenant"]["id"]))
     assert created["tenant"]["status"] == "active" and created["tenant"]["commission_bps"] == 1500
     assert created["tenant"]["members"] == 1 and created["tenant"]["balance_due_cents"] == 0
 
-    # The owner can sign in on the new site straight away.
+    # A new owner has no password yet (they set one with "Forgot password") and no phone.
+    async with AdminSession() as s, s.begin():
+        owner = (await s.execute(text("SELECT email, password_hash, phone FROM users WHERE email = :e"),
+                                 {"e": owner_email})).one()
+        assert owner.password_hash is None and owner.phone is None
+        # Simulate that: password set, phone verified (the helper below fills both in).
+        await s.execute(text("UPDATE users SET phone = :p WHERE email = :e"), {"p": owner_phone, "e": owner_email})
+
+    # Then the owner signs in on the new site.
     host = f"{slug}.{get_settings().base_domain}"
     assert (await client.get("/api/v1/public/tenant", headers={"host": host})).json()["name"] == "Sipsala Institute"
     site = SeededTenant(UUID(created["tenant"]["id"]), slug, "Sipsala Institute", host, uuid4(), owner_phone, uuid4())
@@ -151,10 +160,10 @@ async def test_create_organization_and_owner(client: AsyncClient, sms: FakeSms, 
     assert (await client.get("/api/v1/auth/me", headers=owner)).json()["role"] == "owner"
 
     dup = await client.post("/api/v1/platform/tenants", headers=ph, json={
-        "name": "Copy", "slug": slug, "owner_phone": phones(), "owner_name": "X"})
+        "name": "Copy", "slug": slug, "owner_email": email_for(phones()), "owner_name": "X"})
     assert dup.status_code == 409 and error_code(dup) == "SLUG_TAKEN"
     reserved = await client.post("/api/v1/platform/tenants", headers=ph, json={
-        "name": "Nope", "slug": "admin", "owner_phone": phones(), "owner_name": "X"})
+        "name": "Nope", "slug": "admin", "owner_email": email_for(phones()), "owner_name": "X"})
     assert reserved.status_code == 422
 
     async with AdminSession() as s:

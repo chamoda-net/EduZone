@@ -186,9 +186,10 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
 ## 5. Multi-tenancy rules (non-negotiable)
 
 1. **Every business table has `tenant_id`.** Platform-level tables (`tenants`, `users`,
-   `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`, `platform_admins`, and the planned
-   identity, `subjects`, `teacher_profiles`, `teacher_applications`, `checkouts`, `checkout_payments` and
-   `cart_items` tables) are the only exceptions.
+   `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`, `platform_admins`, the identity tables
+   `user_sessions`, `user_devices`, `user_identities`, `email_verifications`, `recovery_tokens`,
+   `login_attempts`, and the planned `subjects`, `teacher_profiles`, `teacher_applications`, `checkouts`,
+   `checkout_payments` and `cart_items`) are the only exceptions.
 2. **How a request finds its tenant (target):**
    - **Teacher console** `/teach/<tenant>/...`: tenant slug from the path, `resolve_tenant(slug)`, then a
      **membership check** (active staff member of that tenant), then the tenant transaction.
@@ -260,8 +261,9 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
 ```
 
 **Planned for the marketplace** (added by the migration phases and mirrored in the schema file as they land):
-- Identity (phase 2): `user_identities` (Google), `email_verifications`, `recovery_tokens` (hashed,
-  expiring), `user_devices` (trusted devices); `user_sessions` loses `tenant_id` (sessions are per user).
+- Identity (phase 2, **built**, migration 0005): `user_identities` (Google), `email_verifications`,
+  `recovery_tokens` (hashed, expiring), `user_devices` (trusted devices), `login_attempts`, profile columns
+  on `users`; `user_sessions` lost `tenant_id` (sessions are per user).
 - Marketplace (phase 4): `subjects` (EduZone-managed slugs), `classes.subject_id`, `teacher_profiles`
   (slug unique platform-wide, photo, headline, bio, highlights), `tenants.is_listed`.
 - Onboarding (phase 5): `teacher_applications` (document in private storage); new tenants start `pending`.
@@ -478,8 +480,8 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 
 ## 10. Content protection (v1)
 
-- **One active device per account** (target): signing in on a new device (after its SMS code) signs out
-  the older device, which then explains why. **Built (pre-migration):** per tenant, students only.
+- **One active device per account:** signing in on a new device (after its SMS code) signs out
+  the older device, which then explains why. Staff of any organization are exempt (built, phase 2).
 - **Watermark** inside our player container (visible in fullscreen): the student's name and the last
   4 digits of their phone, repositioning about every 20 s.
 - **Short-lived signed video URLs**; never expose permanent Bunny URLs.
@@ -501,20 +503,40 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   Console requests add a **membership check** for the tenant in the path on every request.
 - People may browse and fill a cart without an account; registration and phone verification happen at checkout.
 
-**Built (pre-migration)** in `app/modules/auth` (routes under `/api/v1/auth` on the tenant host; phone OTP
-on every sign-in; tokens carry `tenant_id`):
-- `POST /otp/request` → 6-digit code by SMS, HMAC-hashed with `OTP_SECRET`, valid 5 minutes.
-  Limits: 60 s resend cooldown, 5 per phone per hour, 20 per IP per hour (`otp_codes.request_ip`).
-- `POST /otp/verify` → token pair. 5 wrong guesses lock the code; a wrong guess is committed in
-  its own transaction so it counts. A new phone gets `NAME_REQUIRED` (code not spent) until
-  `full_name` is sent. First login on a tenant creates a `student` member; `suspended` members get 403.
-- `POST /refresh` rotates the refresh token (old one stops working). `POST /logout`, `GET /me`.
-- The one-device rule revokes a **student's** other sessions in that tenant on login; staff may
-  use several devices. `CurrentMember` checks the session row on **every** request, so revocation
-  and suspension take effect immediately, and the role comes from the member row, not the token.
+**Built (phase 2)** in `app/modules/auth` (routes under `/api/v1/auth`; migration 0005):
+- **Accounts are global.** Access JWTs carry only `sub` (user) and `sid` (session); sessions
+  (`user_sessions`) are per account. `CurrentUser` checks the session row on **every** request.
+  `CurrentMember` adds the member row for the tenant of the request (today: the host) on every request:
+  `member_id`/`role` are None until the student joins or pays there (`ensure_student_member()` in the
+  enroll, checkout and open-file paths creates it). Suspended members get 403 on that tenant only.
+  `StaffActor` requires owner/admin/teacher membership in that tenant.
+- `POST /register` (email, password of 8+ characters, name, device) signs in, trusts the device and emails a
+  verification link. `POST /login` returns `{status: signed_in, tokens}` or, on an unknown device of an
+  account with a verified phone, `{status: device_check, device_check: {challenge, phone_hint}}` and sends an
+  SMS code; then `POST /device/verify` (the challenge is a 10-minute signed JWT bound to that device) or
+  `POST /device/resend`. A wrong password and an unknown email give the same `LOGIN_INVALID`; failures are
+  throttled per email and per IP (`login_attempts`). Passwords: argon2id (`passwords.py`).
+- **One device per account:** every sign-in revokes the account's other sessions with reason
+  `signed_in_on_another_device` (the old device then gets `SIGNED_IN_ELSEWHERE`), except for staff of any
+  tenant (`user_is_staff_anywhere()`, SECURITY DEFINER).
+- **Phone** (`POST /phone/request`, `/phone/verify`): unique (`PHONE_IN_USE` 409), verified once; the device
+  that verified it becomes trusted. **Checkout requires a verified phone** (`PHONE_NOT_VERIFIED` 403).
+- **Email:** `POST /email/verify {token}`, `POST /email/resend`. **Recovery:** `POST /recovery/request`
+  (always 202) emails a link `/recover/<token>` (30 min, single use); `POST /recovery/start` sends an SMS code
+  when the account has a verified phone; `POST /recovery/complete` sets the password, signs out everywhere
+  and signs in on this device. Organization owners created by the platform admin start with no password and
+  set one this way.
+- **Google** (`POST /google {id_token}`): verified against Google's keys (`google.py`, `GOOGLE_CLIENT_ID`;
+  unset gives 503 `GOOGLE_NOT_CONFIGURED`). Links by subject, else by verified email; an existing account
+  whose email was never verified loses its password and sessions when the real owner arrives with Google.
+- `GET/PATCH /me` (profile: name, language, exam, exam year, school; plus membership here).
+- **Email links are built from the request's host only on routes that resolve a tenant** (register,
+  resend, recovery request), so a forged Host header can't put someone else's domain into our emails.
+- SMS codes for every purpose go through `auth/otp.py` (`issue`/`consume`; hashed with the purpose; 60 s
+  resend cooldown, 5 per number per hour, 20 per IP per hour, 5 wrong guesses lock a code).
+- SMS: `app.integrations.sms`; email: `app.integrations.email`. Both `console` (log) or `file` (JSON lines at
+  `SMS_OUTBOX_PATH` / `EMAIL_OUTBOX_PATH`, `ENVIRONMENT=local` only, for browser tests).
 - Phone input accepts local forms (`0771234567`, `94771234567`) and is normalised to E.164.
-- SMS goes through `app.integrations.sms` (`SMS_PROVIDER=console` logs the code locally; `file` appends
-  it to `SMS_OUTBOX_PATH` as JSON lines for browser tests, and is refused outside `ENVIRONMENT=local`).
 - `client_ip()` uses the direct peer address; behind a proxy or CDN it must read the trusted
   forwarded header instead.
 - Platform admins (`users.is_platform_admin`) use a separate login path and session
@@ -538,6 +560,8 @@ on every sign-in; tokens carry `tenant_id`):
   (`platform.*`); tenant-scoped rows set `app.tenant_id` in the admin transaction first.
 - **Usage:** tenant rows show storage (from `media_assets`) and this month's bandwidth from
   `tenant_usage_daily`. The daily Bunny usage sync job is **not built yet** (needs Bunny's account API).
+- **New organizations** are created with the owner's **email** (`owner_email`); a new owner sets a password
+  with "Forgot password" on the site and verifies their phone on first sign-in.
 - **Frontend:** its own Next app, `frontend/apps/admin` (port 3001, private network, `noindex`), with its own
   cookies (`ez_padmin_*`, `SameSite=Strict`) and token refresh in its `proxy.ts`. Pages: `/login`,
   `/` (organizations), `/tenants/new`, `/tenants/[id]` (figures, record payout, history, edit), `/payments`.
@@ -612,7 +636,8 @@ httpOnly cookies.
   If new classes don't show up in `next dev`, stop it and delete the app's `.next` (stale Turbopack cache).
 - **Backend calls happen only on the Next server** (`lib/api.ts`: Server Components and Server
   Actions), sending `X-Forwarded-Host` with the user's host. The browser never calls the API.
-- **Tokens live in httpOnly cookies** (`lib/cookies.ts`); browser JavaScript never sees them.
+- **Tokens live in httpOnly cookies** (`lib/cookies.ts`: `ez_session`, `ez_refresh`, `ez_device`, prefixed
+  `__Host-` in production); browser JavaScript never sees them.
   `proxy.ts` refreshes the access token shortly before it expires and drops dead sessions.
   A per-browser `ez_device` cookie is the `device_id` for the one-device rule.
 - **Every page renders per request** (tenant host + session); `cacheComponents` is off.
@@ -631,14 +656,26 @@ httpOnly cookies.
   files), `/org/media` (+ `/[id]` preview). Videos upload from the browser straight to Bunny (tus-js-client);
   PDFs go through the streaming route `/api/upload/document`, which proxy.ts skips.
   Student routes: `/classes/[slug]`, `/my`, `/lessons/[id]`, `/checkout/[id]`, `/payments[/[id]]`.
+  Identity (phase 2): `/login` (password or Google, then the SMS code on a new device), `/register`,
+  `/verify-phone` (`?next=`, `?change=1`), `/recover`, `/recover/[token]`, `/verify-email`, `/account`.
+  All identity server actions live in `app/login/actions.ts`; `next` is always checked to be a same-site
+  path. Pages opened from email links act only on a button press (mail scanners open links). Pay sends an
+  unverified student to `/verify-phone?next=<class>`. When the one-device rule ends a session, `proxy.ts`
+  leaves an `ez_notice` cookie and the site shows "You were signed out" (`getSession().endedElsewhere`).
+  The Google button shows only when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is set.
 - Local dev (from `frontend/`): `npm install`, then `npm run dev:web` (open `http://<slug>.localhost:3000`
   with the API on `BASE_DOMAIN=localhost`) and `npm run dev:admin` (`http://localhost:3001`). Each app
   has `API_URL` in its `.env.local`. Checks: `npm run typecheck`, `npm run lint`, `npm run build`.
 - **Smoke suite:** `npm run e2e` (Playwright; first time `npx playwright install chromium`). It starts
   its own API (port 8010, `SMS_PROVIDER=file` so tests read OTP codes from `e2e/.outbox.jsonl`) and web
   app (port 3010, build dir `.next-e2e`), so it runs beside the dev servers; it needs the migrated local
-  database and seeds the `demo` organization. Covers: student signs in, joins, pays with the fake gateway;
-  teacher opens the console. Add a test here for each flow a later phase changes.
+  database and seeds the `demo` organization; it also sets `EMAIL_PROVIDER=file`. Covers: a student
+  registers, confirms the phone, joins and pays with the fake gateway; a second browser signs the first out;
+  the teacher signs in (with the new-device code) and opens the console. Add a test for each flow a later
+  phase changes.
+- **Demo sign-in (local):** `scripts/seed_demo.py` gives the demo owner and teacher an email and a local
+  test password (constants at the top of that file). The first sign-in in a browser asks for the SMS code,
+  which `SMS_PROVIDER=console` writes to the API log.
 
 ---
 
@@ -691,7 +728,7 @@ httpOnly cookies.
 ### Migration to the marketplace (details: `docs/frontend-migration-plan.md`)
 0. Spec: this file and `FRONTEND.md` agree (done)
 1. Frontend groundwork: monorepo, `packages/ui` tokens, generated API client, next-intl, Playwright smoke suite (done)
-2. Identity: Google + email/password, phone verification, new-device OTP, recovery, account-wide sessions
+2. Identity: Google + email/password, phone verification, new-device OTP, recovery, account-wide sessions (done)
 3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads)
 4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools
 5. Teacher self-registration and approval
