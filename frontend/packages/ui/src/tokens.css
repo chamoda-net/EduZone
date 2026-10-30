@@ -1,52 +1,88 @@
-/* EduZone design tokens (FRONTEND.md section 9). Components read colours only from tokens,
-   so the final brand drops in by changing the values below. No dark mode in v1. */
+/* EduZone design tokens (FRONTEND.md section 9). Components read colours only from tokens.
+   Direction: "scholarly modern" — deep forest green, warm gold, ivory paper. No dark mode in v1. */
 
 :root {
-  /* Brand (placeholder until announced) */
-  --ez-brand-600: #2d5bff;
-  --ez-brand-700: #2148d6;
-  --ez-brand-50: #eef2ff;
-  --ez-on-brand: #ffffff;
+  /* Brand: forest green */
+  --ez-brand-950: #06190f;
+  --ez-brand-900: #0a2a1d;
+  --ez-brand-800: #0e3a28;
+  --ez-brand-700: #124a33;
+  --ez-brand-600: #17603f;
+  --ez-brand-500: #23805a;
+  --ez-brand-300: #8cc3a5;
+  --ez-brand-100: #d8ece0;
+  --ez-brand-50: #edf6f0;
+  --ez-on-brand: #fbfaf5;
 
-  /* Accent used by components: the brand on the main site. Pre-migration tenant sites and
-     (v1.1) company sites replace it with their own colour. */
-  --ez-accent: var(--ez-brand-600);
+  /* Gold: highlights only (marks, stars, "new", focus on dark) */
+  --ez-gold-600: #a8761d;
+  --ez-gold-500: #d4a03f;
+  --ez-gold-300: #ecd08f;
+  --ez-gold-100: #f8eed4;
+
+  /* Accent used by components: the brand. v1.1 company sites replace it with their colour. */
+  --ez-accent: var(--ez-brand-700);
+  --ez-accent-hover: var(--ez-brand-800);
   --ez-on-accent: var(--ez-on-brand);
 
-  /* Neutrals */
+  /* Neutrals: warm paper */
   --ez-bg: #ffffff;
-  --ez-surface: #f6f7f9;
-  --ez-border: #e3e6ea;
-  --ez-text: #14171c;
-  --ez-text-muted: #5b6470;
+  --ez-surface: #faf8f3;
+  --ez-sunken: #f2eee4;
+  --ez-border: #e5dfd2;
+  --ez-border-strong: #cfc6b4;
+  --ez-text: #14201a;
+  --ez-text-muted: #5c6862;
+  --ez-text-subtle: #8a938e;
 
   /* Status (never themed) */
-  --ez-success: #1e8e3e;
-  --ez-success-bg: #e8f5ec;
-  --ez-warning: #b26a00;
-  --ez-warning-bg: #fff4e0;
-  --ez-danger: #c62828;
-  --ez-danger-bg: #fdecec;
-  --ez-info: #1f6fb2;
-  --ez-info-bg: #e8f1fa;
+  --ez-success: #17703f;
+  --ez-success-bg: #e3f3e8;
+  --ez-warning: #9a5b00;
+  --ez-warning-bg: #fdf0d6;
+  --ez-danger: #b42318;
+  --ez-danger-bg: #fdecea;
+  --ez-info: #1c5f8f;
+  --ez-info-bg: #e5f0f8;
 
   /* Shape */
-  --ez-radius-sm: 6px;
-  --ez-radius: 10px;
-  --ez-radius-lg: 16px;
-  --ez-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.06);
+  --ez-radius-sm: 8px;
+  --ez-radius: 12px;
+  --ez-radius-lg: 20px;
+  --ez-shadow-sm: 0 1px 2px rgb(20 32 26 / 0.06);
+  --ez-shadow: 0 1px 2px rgb(20 32 26 / 0.05), 0 4px 16px -4px rgb(20 32 26 / 0.1);
+  --ez-shadow-lg: 0 2px 4px rgb(20 32 26 / 0.04), 0 18px 40px -12px rgb(20 32 26 / 0.22);
+
+  /* Motion */
+  --ez-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Tailwind names used across the apps, mapped onto the tokens.
-   `background` is the page (light grey), `surface` is cards and inputs (white). */
+   `background` is the page (paper), `surface` is cards and inputs (white). */
 @theme inline {
   --color-brand: var(--ez-accent);
+  --color-brand-hover: var(--ez-accent-hover);
   --color-on-brand: var(--ez-on-accent);
+  --color-brand-950: var(--ez-brand-950);
+  --color-brand-900: var(--ez-brand-900);
+  --color-brand-800: var(--ez-brand-800);
+  --color-brand-600: var(--ez-brand-600);
+  --color-brand-500: var(--ez-brand-500);
+  --color-brand-300: var(--ez-brand-300);
+  --color-brand-100: var(--ez-brand-100);
+  --color-brand-50: var(--ez-brand-50);
+  --color-gold: var(--ez-gold-500);
+  --color-gold-strong: var(--ez-gold-600);
+  --color-gold-300: var(--ez-gold-300);
+  --color-gold-100: var(--ez-gold-100);
   --color-background: var(--ez-surface);
   --color-surface: var(--ez-bg);
+  --color-sunken: var(--ez-sunken);
   --color-foreground: var(--ez-text);
   --color-muted: var(--ez-text-muted);
+  --color-subtle: var(--ez-text-subtle);
   --color-border: var(--ez-border);
+  --color-border-strong: var(--ez-border-strong);
   --color-success: var(--ez-success);
   --color-success-bg: var(--ez-success-bg);
   --color-warning: var(--ez-warning);
@@ -55,18 +91,41 @@
   --color-danger-bg: var(--ez-danger-bg);
   --color-info: var(--ez-info);
   --color-info-bg: var(--ez-info-bg);
+  --radius-ez-sm: var(--ez-radius-sm);
   --radius-ez: var(--ez-radius);
-  --font-sans: var(--font-inter), var(--font-sinhala), system-ui, sans-serif;
+  --radius-ez-lg: var(--ez-radius-lg);
+  --shadow-ez-sm: var(--ez-shadow-sm);
+  --shadow-ez: var(--ez-shadow);
+  --shadow-ez-lg: var(--ez-shadow-lg);
+  --font-sans: var(--font-body), var(--font-sinhala), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-serif), var(--font-sinhala), ui-serif, Georgia, serif;
+  --ease-ez: var(--ez-ease);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   background: var(--ez-surface);
   color: var(--ez-text);
   line-height: 1.5;
+  font-feature-settings: "ss01", "cv11";
 }
 
 :lang(si) {
   line-height: 1.6;
+}
+
+::selection {
+  background: var(--ez-gold-300);
+  color: var(--ez-brand-950);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ez-brand-500);
+  outline-offset: 2px;
 }
 
 input,
@@ -77,4 +136,115 @@ textarea {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Helper classes live in the components layer so Tailwind utilities (fixed, sticky…) override them. */
+@layer components {
+  /* Display headings: Fraunces with a soft optical size. */
+  .font-display {
+    font-variation-settings: "SOFT" 50, "WONK" 0;
+    letter-spacing: -0.02em;
+  }
+
+  /* A hand-drawn gold underline for one emphasised word in a headline. */
+  .ez-mark {
+    background-image: linear-gradient(transparent 62%, var(--ez-gold-300) 62%, var(--ez-gold-300) 88%, transparent 88%);
+    padding-inline: 0.06em;
+  }
+
+  /* Fine film grain over dark hero panels. */
+  .ez-grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .ez-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.22;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Faint ruled-paper lines behind light sections. */
+  .ez-ruled {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      color-mix(in srgb, var(--ez-border) 55%, transparent) 31px,
+      color-mix(in srgb, var(--ez-border) 55%, transparent) 32px
+    );
+  }
+}
+
+/* Page-load reveal: add .ez-rise to blocks, stagger with style="--i: n". */
+@keyframes ez-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ez-rise {
+  animation: ez-rise 0.6s var(--ez-ease) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@keyframes ez-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ez-pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@keyframes ez-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes ez-drawer {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes ez-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+.ez-skeleton {
+  background: linear-gradient(90deg, var(--ez-sunken) 25%, var(--ez-border) 37%, var(--ez-sunken) 63%);
+  background-size: 400% 100%;
+  animation: ez-shimmer 1.6s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ez-rise,
+  .ez-skeleton {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .ez-no-print {
+    display: none !important;
+  }
 }

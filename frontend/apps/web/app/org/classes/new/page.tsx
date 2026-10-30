@@ -10,7 +10,7 @@ export default function NewClassPage() {
   return (
     <>
       <Link href="/org/classes" className={`${buttonClass.link} text-sm`}>← {t("classes.back")}</Link>
-      <h1 className="text-2xl font-semibold">{t("classes.new")}</h1>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("classes.new")}</h1>
       <Card>
         <ClassForm action={createClass} />
       </Card>

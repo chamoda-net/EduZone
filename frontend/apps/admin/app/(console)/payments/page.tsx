@@ -1,6 +1,7 @@
+import { Receipt } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, ErrorText, buttonClass } from "@eduzone/ui";
+import { Badge, buttonClass, EmptyState, ErrorText } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { formatDateTime, formatMoney } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
@@ -20,13 +21,13 @@ export default async function PlatformPaymentsPage({ searchParams }: PageProps<"
   return (
     <>
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t("platform.nav.payments")}</h1>
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("platform.nav.payments")}</h1>
         {tenantId && <Link href="/payments" className={`${buttonClass.link} text-sm`}>{t("platform.payments.all")}</Link>}
       </div>
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && res.data.items.length === 0 && <p className="text-muted">{t("orgPayments.empty")}</p>}
+      {res.ok && res.data.items.length === 0 && <EmptyState icon={<Receipt />} title={t("orgPayments.empty")} />}
       {res.ok && res.data.items.length > 0 && (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+        <ul className="divide-y divide-border overflow-hidden rounded-ez-lg border border-border bg-surface">
           {res.data.items.map((p) => (
             <li key={p.order_id} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">

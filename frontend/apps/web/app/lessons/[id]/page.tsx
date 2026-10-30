@@ -1,15 +1,22 @@
+import { ArrowLeft, CalendarClock, ExternalLink, FileText, Lock, MonitorPlay, ShieldAlert, Video } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { StudentHeader } from "@/components/student-header";
-import { Badge, Card, ErrorText, buttonClass } from "@eduzone/ui";
+import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
+import { getMe } from "@/lib/session";
 import { formatDateTime } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
-import { getMe } from "@/lib/session";
-import type { StudentLessonDetail } from "@eduzone/lib/types";
+import type { LessonType, StudentLessonDetail } from "@eduzone/lib/types";
+import { Badge, Card, CardTitle, EmptyState, ErrorText, buttonStyles } from "@eduzone/ui";
 
 import { PdfResource, VideoResource } from "./player";
+
+const typeIcon: Record<LessonType, React.ReactNode> = {
+  live: <Video />,
+  recorded: <MonitorPlay />,
+  document: <FileText />,
+};
 
 export default async function LessonPage({ params }: PageProps<"/lessons/[id]">) {
   const { id } = await params;
@@ -17,61 +24,74 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
   const res = await api<StudentLessonDetail>(`/student/lessons/${id}`);
   if (!res.ok) {
     if (res.status === 404 || res.status === 422) notFound();
-    return <ErrorText>{errorText(t, res.error)}</ErrorText>;
+    return <SiteShell width="md"><ErrorText>{errorText(t, res.error)}</ErrorText></SiteShell>;
   }
   const l = res.data;
 
   return (
-    <>
-      <StudentHeader />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6">
-        <Link href={`/classes/${l.class_slug}`} className={`${buttonClass.link} text-sm`}>
-          ← {l.class_title}
-        </Link>
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold">{l.title}</h1>
-            {l.is_free_preview && <Badge tone="upcoming">{t("class.freePreview")}</Badge>}
-          </div>
-          <p className="text-sm text-muted">
-            {[t(`lessons.type.${l.lesson_type}`), l.scheduled_at && formatDateTime(l.scheduled_at),
-              l.duration_minutes && `${l.duration_minutes} min`].filter(Boolean).join(" · ")}
-          </p>
-        </div>
+    <SiteShell width="md">
+      <Link href={`/classes/${l.class_slug}`} className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-muted hover:text-foreground">
+        <ArrowLeft className="size-4" />
+        {l.class_title}
+      </Link>
 
-        {!l.unlocked ? (
-          <Card className="flex flex-col items-start gap-3">
-            <h2 className="text-lg font-semibold">🔒 {t("lesson.lockedTitle")}</h2>
-            <p className="text-muted">{t("lesson.lockedBody")}</p>
-            <Link href={`/classes/${l.class_slug}`} className={buttonClass.primary}>{t("lesson.back")}</Link>
-          </Card>
-        ) : (
-          <>
-            {l.description && <p className="whitespace-pre-line">{l.description}</p>}
-            {l.lesson_type === "live" && (
-              <Card className="flex flex-col items-start gap-2">
-                {l.zoom_join_url ? (
-                  <a href={l.zoom_join_url} target="_blank" rel="noopener noreferrer" className={buttonClass.primary}>
-                    {t("lesson.joinZoom")}
-                  </a>
-                ) : (
-                  <p className="text-muted">{t("lesson.zoomLater")}</p>
-                )}
-              </Card>
+      <header className="ez-rise flex items-start gap-4">
+        <span className="grid size-14 shrink-0 place-items-center rounded-ez-lg bg-brand-900 text-gold [&>svg]:size-6">
+          {typeIcon[l.lesson_type]}
+        </span>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <p className="text-xs font-bold tracking-[0.14em] text-brand-600 uppercase">{t(`lessons.type.${l.lesson_type}`)}</p>
+          <h1 className="font-display text-3xl leading-tight font-semibold sm:text-4xl">{l.title}</h1>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+            {l.scheduled_at && (
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarClock className="size-4" />
+                {formatDateTime(l.scheduled_at)}
+              </span>
             )}
-            <Card className="flex flex-col gap-4">
-              <h2 className="text-lg font-semibold">{t("lesson.materials")}</h2>
-              {l.resources.length === 0 && <p className="text-sm text-muted">{t("lesson.noMaterials")}</p>}
-              {l.resources.map((r) =>
-                r.kind === "video" ? <VideoResource key={r.id} r={r} /> : <PdfResource key={r.id} r={r} />,
+            {l.duration_minutes && <span>{t("lesson.minutes", { count: l.duration_minutes })}</span>}
+            {l.is_free_preview && <Badge tone="gold">{t("class.freePreview")}</Badge>}
+          </div>
+        </div>
+      </header>
+
+      {!l.unlocked ? (
+        <EmptyState
+          icon={<Lock />}
+          title={t("lesson.lockedTitle")}
+          body={t("lesson.lockedBody")}
+          action={<Link href={`/classes/${l.class_slug}`} className={buttonStyles("primary")}>{t("lesson.back")}</Link>}
+        />
+      ) : (
+        <>
+          {l.lesson_type === "live" && (
+            <div className="ez-grain ez-rise flex flex-col gap-4 overflow-hidden rounded-ez-lg bg-brand-900 p-6 text-on-brand sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-display text-xl font-semibold">{t("lesson.liveTitle")}</p>
+                <p className="text-sm text-brand-100/80">{l.zoom_join_url ? t("lesson.liveBody") : t("lesson.zoomLater")}</p>
+              </div>
+              {l.zoom_join_url && (
+                <a href={l.zoom_join_url} target="_blank" rel="noopener noreferrer" className={buttonStyles("gold", "lg")}>
+                  {t("lesson.joinZoom")}
+                  <ExternalLink className="size-4" />
+                </a>
               )}
-              {l.resources.some((r) => r.kind === "video") && (
-                <p className="text-xs text-muted">{t("lesson.watermarkNote")}</p>
-              )}
-            </Card>
-          </>
-        )}
-      </main>
-    </>
+            </div>
+          )}
+          {l.description && <p className="text-[1.0625rem] leading-relaxed whitespace-pre-line text-foreground/85">{l.description}</p>}
+          <Card className="flex flex-col gap-5">
+            <CardTitle>{t("lesson.materials")}</CardTitle>
+            {l.resources.length === 0 && <p className="text-sm text-muted">{t("lesson.noMaterials")}</p>}
+            {l.resources.map((r) => (r.kind === "video" ? <VideoResource key={r.id} r={r} /> : <PdfResource key={r.id} r={r} />))}
+            {l.resources.some((r) => r.kind === "video") && (
+              <p className="flex items-start gap-2 rounded-ez bg-gold-100 px-3 py-2.5 text-xs text-gold-strong">
+                <ShieldAlert className="mt-px size-4 shrink-0" />
+                {t("lesson.watermarkNote")}
+              </p>
+            )}
+          </Card>
+        </>
+      )}
+    </SiteShell>
   );
 }

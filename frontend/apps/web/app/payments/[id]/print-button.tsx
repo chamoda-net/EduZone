@@ -1,13 +1,15 @@
 "use client";
 
-import { buttonClass } from "@eduzone/ui";
+import { Printer } from "lucide-react";
+
 import { useT } from "@eduzone/lib/i18n/client";
+import { Button } from "@eduzone/ui";
 
 export function PrintButton() {
   const t = useT();
   return (
-    <button type="button" onClick={() => window.print()} className={`${buttonClass.secondary} print:hidden`}>
+    <Button type="button" variant="secondary" onClick={() => window.print()} icon={<Printer className="size-4" />} className="ez-no-print">
       {t("receipt.print")}
-    </button>
+    </Button>
   );
 }

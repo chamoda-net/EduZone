@@ -1,6 +1,7 @@
+import { Clapperboard } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, Card, ErrorText, buttonClass } from "@eduzone/ui";
+import { Badge, buttonClass, Card, EmptyState, ErrorText } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { formatBytes, formatDuration } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
@@ -39,7 +40,7 @@ export default async function MediaPageView({ searchParams }: PageProps<"/org/me
   return (
     <>
       <div>
-        <h1 className="text-2xl font-semibold">{t("media.title")}</h1>
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("media.title")}</h1>
         <p className="text-sm text-muted">{t("media.subtitle")}</p>
       </div>
 
@@ -53,8 +54,8 @@ export default async function MediaPageView({ searchParams }: PageProps<"/org/me
           <Link
             key={f ?? "all"}
             href={href(f)}
-            className={`rounded-full border px-3 py-1.5 text-sm whitespace-nowrap ${
-              f === kind ? "border-brand bg-brand text-on-brand" : "border-border bg-surface"
+            className={`inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 text-sm font-semibold whitespace-nowrap transition-all ${
+              f === kind ? "border-brand-800 bg-brand-800 text-on-brand shadow-ez-sm" : "border-border-strong bg-surface text-muted hover:border-foreground/40 hover:text-foreground"
             }`}
           >
             {f ? t(`media.filter.${f}`) : t("classes.filter.all")}
@@ -63,12 +64,12 @@ export default async function MediaPageView({ searchParams }: PageProps<"/org/me
       </div>
 
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && items.length === 0 && <p className="text-muted">{t("media.empty")}</p>}
+      {res.ok && items.length === 0 && <EmptyState icon={<Clapperboard />} title={t("media.empty")} />}
       {items.length > 0 && (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+        <ul className="divide-y divide-border overflow-hidden rounded-ez-lg border border-border bg-surface">
           {items.map((m) => (
             <li key={m.id}>
-              <Link href={`/org/media/${m.id}`} className="flex flex-col gap-1 p-4 hover:bg-background sm:flex-row sm:items-center sm:justify-between">
+              <Link href={`/org/media/${m.id}`} className="flex flex-col gap-1 p-4 hover:bg-sunken/50 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{m.name}</p>
                   <p className="text-sm text-muted">

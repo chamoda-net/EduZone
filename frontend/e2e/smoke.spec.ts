@@ -17,7 +17,9 @@ test("student signs in, joins a class and pays for the open month", async ({ pag
 
   await expect(page.getByText("Payment received")).toBeVisible({ timeout: 20_000 });
   await page.getByRole("link", { name: "Go to the class" }).click();
-  await expect(page.getByRole("button", { name: /^Pay Rs/ })).toHaveCount(0);
+  // November now shows access, and its lessons open.
+  await expect(page.getByRole("listitem").filter({ hasText: "November 2026" }).getByText("You have access")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Live class/ })).toBeVisible();
 });
 
 test("teacher opens the console and sees their class", async ({ page }) => {

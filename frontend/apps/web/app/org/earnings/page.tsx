@@ -1,6 +1,7 @@
+import { HandCoins } from "lucide-react";
 import Link from "next/link";
 
-import { Card, ErrorText, buttonClass } from "@eduzone/ui";
+import { buttonClass, Card, EmptyState, ErrorText } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { colomboMonth, formatMoney, formatMonth, shiftMonth } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
@@ -16,7 +17,7 @@ export default async function EarningsPage({ searchParams }: PageProps<"/org/ear
   return (
     <>
       <div>
-        <h1 className="text-2xl font-semibold">{t("earnings.title")}</h1>
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("earnings.title")}</h1>
         <p className="text-sm text-muted">{t("earnings.subtitle")}</p>
       </div>
 
@@ -33,7 +34,7 @@ export default async function EarningsPage({ searchParams }: PageProps<"/org/ear
       </div>
 
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && res.data.teachers.length === 0 && <p className="text-muted">{t("earnings.empty")}</p>}
+      {res.ok && res.data.teachers.length === 0 && <EmptyState icon={<HandCoins />} title={t("earnings.empty")} />}
       {res.ok && res.data.teachers.length > 0 && (() => {
         const e = res.data;
         const money = (cents: number) => formatMoney(cents, e.currency);

@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 
-import { ErrorText, Field, Input, buttonClass } from "@eduzone/ui";
+import { Button, ErrorText, Field, Input, buttonClass } from "@eduzone/ui";
 import { useT } from "@eduzone/lib/i18n/client";
 
 import { requestCode, verifyCode, type RequestCodeState, type VerifyState } from "./actions";
@@ -30,9 +30,9 @@ export function LoginForm({ next }: { next?: string }) {
           />
         </Field>
         <ErrorText>{sendState.error}</ErrorText>
-        <button className={buttonClass.primary} disabled={sending}>
-          {sending ? t("common.loading") : t("auth.sendCode")}
-        </button>
+        <Button size="lg" loading={sending}>
+          {t("auth.sendCode")}
+        </Button>
       </form>
     );
   }
@@ -40,7 +40,7 @@ export function LoginForm({ next }: { next?: string }) {
   return (
     <div className="flex flex-col gap-4">
       <form action={verify} className="flex flex-col gap-4">
-        <p className="text-sm text-muted">{t("auth.codeSentTo", { phone: sendState.phone ?? "" })}</p>
+        <p className="rounded-ez bg-brand-50 px-3 py-2.5 text-sm text-brand-800">{t("auth.codeSentTo", { phone: sendState.phone ?? "" })}</p>
         <input type="hidden" name="phone" value={sendState.phone} />
         {next && <input type="hidden" name="next" value={next} />}
         <Field label={t("auth.code")}>
@@ -53,7 +53,7 @@ export function LoginForm({ next }: { next?: string }) {
             required
             defaultValue={verifyState.code}
             autoFocus={!verifyState.needName}
-            className="tracking-[0.4em] text-lg"
+            className="min-h-14 text-center font-display text-2xl tracking-[0.5em]"
           />
         </Field>
         {verifyState.needName && (
@@ -62,9 +62,9 @@ export function LoginForm({ next }: { next?: string }) {
           </Field>
         )}
         <ErrorText>{verifyState.error ?? sendState.error}</ErrorText>
-        <button className={buttonClass.primary} disabled={verifying}>
-          {verifying ? t("common.loading") : t("auth.verify")}
-        </button>
+        <Button size="lg" loading={verifying}>
+          {t("auth.verify")}
+        </Button>
       </form>
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <button type="button" className={buttonClass.link} onClick={() => setChangingNumber(true)}>

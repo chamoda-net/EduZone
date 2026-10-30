@@ -8,7 +8,7 @@ export default function OrgError({ reset }: { error: Error & { digest?: string }
   const t = useT();
   return (
     <div className="flex flex-col items-start gap-3 py-10">
-      <h1 className="text-xl font-semibold">{t("errors.generic")}</h1>
+      <h1 className="font-display text-2xl font-semibold">{t("errors.generic")}</h1>
       <button className={buttonClass.secondary} onClick={() => reset()}>
         {t("common.tryAgain")}
       </button>

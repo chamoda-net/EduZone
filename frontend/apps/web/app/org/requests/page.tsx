@@ -1,7 +1,8 @@
+import { Inbox } from "lucide-react";
 import Link from "next/link";
 
 import { ActionButton } from "@eduzone/ui/action-button";
-import { Badge, ErrorText } from "@eduzone/ui";
+import { Badge, EmptyState, ErrorText } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { formatDateTime, formatMonth } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
@@ -21,14 +22,14 @@ export default async function RequestsPage({ searchParams }: PageProps<"/org/req
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t("requests.title")}</h1>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("requests.title")}</h1>
       <div className="flex gap-2 overflow-x-auto">
         {TABS.map((s) => (
           <Link
             key={s}
             href={s === "pending" ? "/org/requests" : `/org/requests?status=${s}`}
-            className={`rounded-full border px-3 py-1.5 text-sm whitespace-nowrap ${
-              s === status ? "border-brand bg-brand text-on-brand" : "border-border bg-surface"
+            className={`inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 text-sm font-semibold whitespace-nowrap transition-all ${
+              s === status ? "border-brand-800 bg-brand-800 text-on-brand shadow-ez-sm" : "border-border-strong bg-surface text-muted hover:border-foreground/40 hover:text-foreground"
             }`}
           >
             {t(`requests.status.${s}`)}
@@ -37,9 +38,9 @@ export default async function RequestsPage({ searchParams }: PageProps<"/org/req
       </div>
 
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && res.data.length === 0 && <p className="text-muted">{t("requests.empty")}</p>}
+      {res.ok && res.data.length === 0 && <EmptyState icon={<Inbox />} title={t("requests.empty")} />}
       {res.ok && res.data.length > 0 && (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+        <ul className="divide-y divide-border overflow-hidden rounded-ez-lg border border-border bg-surface">
           {res.data.map((r) => (
             <li key={r.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">

@@ -1,10 +1,11 @@
+import { Building2, LogOut, Receipt } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { buttonClass } from "@eduzone/ui";
 import type { Schema } from "@eduzone/api-client";
 import { api } from "@/lib/api";
 import { t } from "@eduzone/lib/i18n";
+import { Avatar, ConsoleFrame, Logo } from "@eduzone/ui";
 
 import { adminSignOut } from "../actions";
 
@@ -17,23 +18,33 @@ export default async function PlatformConsoleLayout({ children }: LayoutProps<"/
   if (!me.ok) redirect("/login");
 
   return (
-    <>
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-5 text-sm">
-            <span className="font-semibold">{t("platform.title")}</span>
-            <Link href="/" className={buttonClass.link}>{t("platform.nav.tenants")}</Link>
-            <Link href="/payments" className={buttonClass.link}>{t("platform.nav.payments")}</Link>
+    <ConsoleFrame
+      menuLabel={t("nav.menu")}
+      brand={
+        <Link href="/" className="block">
+          <Logo name="EduZone" sub={t("platform.badge")} />
+        </Link>
+      }
+      items={[
+        { href: "/", label: t("platform.nav.tenants"), icon: <Building2 />, exact: true },
+        { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt /> },
+      ]}
+      footer={
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <Avatar name={me.data.full_name} size="sm" className="ring-brand-900" />
+            <p className="truncate text-sm font-semibold text-on-brand">{me.data.full_name}</p>
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-muted sm:inline">{me.data.full_name}</span>
-            <form action={adminSignOut}>
-              <button className={buttonClass.link}>{t("auth.signOut")}</button>
-            </form>
-          </div>
+          <form action={adminSignOut}>
+            <button className="flex min-h-9 w-full items-center gap-2 rounded-ez px-3 text-sm font-medium text-brand-100/80 hover:bg-brand-800 hover:text-on-brand">
+              <LogOut className="size-4" />
+              {t("auth.signOut")}
+            </button>
+          </form>
         </div>
-      </header>
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 px-4 py-6">{children}</main>
-    </>
+      }
+    >
+      {children}
+    </ConsoleFrame>
   );
 }

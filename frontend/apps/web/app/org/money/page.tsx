@@ -1,6 +1,6 @@
-import Link from "next/link";
+import { Landmark, Percent, TrendingUp } from "lucide-react";
 
-import { Card, ErrorText } from "@eduzone/ui";
+import { Card, ErrorText, FilterChips, PageHeader, StatTile } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { colomboMonth, formatMoney, formatMonth, shiftMonth } from "@eduzone/lib/format";
 import { errorText, t, type MessageKey } from "@eduzone/lib/i18n";
@@ -24,7 +24,7 @@ export default async function MoneyPage({ searchParams }: PageProps<"/org/money"
   if (!res.ok) {
     return (
       <>
-        <h1 className="text-2xl font-semibold">{t("money.title")}</h1>
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("money.title")}</h1>
         <ErrorText>{res.status === 403 ? t("money.ownersOnly") : errorText(t, res.error)}</ErrorText>
       </>
     );
@@ -43,39 +43,41 @@ export default async function MoneyPage({ searchParams }: PageProps<"/org/money"
 
   return (
     <>
-      <div>
-        <h1 className="text-2xl font-semibold">{t("money.title")}</h1>
-        <p className="text-sm text-muted">{t("money.subtitle")}</p>
+      <PageHeader eyebrow={t("shell.console")} title={t("money.title")} description={t("money.subtitle")} />
+
+      <div className="grid gap-4 md:grid-cols-[1.3fr_1fr_1fr]">
+        <StatTile
+          tone="brand"
+          icon={<Landmark />}
+          label={t("money.balanceDue")}
+          value={money(c.balance_due_cents)}
+          hint={t("money.balanceHint")}
+        />
+        <StatTile icon={<TrendingUp />} label={t("money.net")} value={money(c.totals.net_cents)} hint={t(`money.range.${preset}`)} />
+        <StatTile
+          tone="gold"
+          icon={<Percent />}
+          label={t("money.commission")}
+          value={`${c.commission_bps / 100}%`}
+          hint={t("money.rate", { rate: c.commission_bps / 100, bearer: t(`money.bearer.${c.gateway_fee_bearer}`) })}
+        />
       </div>
 
-      <Card className="flex flex-col gap-1">
-        <p className="text-sm text-muted">{t("money.balanceDue")}</p>
-        <p className="text-3xl font-semibold">{money(c.balance_due_cents)}</p>
-        <p className="text-xs text-muted">{t("money.balanceHint")}</p>
-        <p className="text-xs text-muted">
-          {t("money.rate", { rate: c.commission_bps / 100, bearer: t(`money.bearer.${c.gateway_fee_bearer}`) })}
-        </p>
-      </Card>
-
-      <div className="flex gap-2 overflow-x-auto">
-        {(["12", "3", "year"] as const).map((p) => (
-          <Link
-            key={p}
-            href={p === "12" ? "/org/money" : `/org/money?range=${p}`}
-            className={`rounded-full border px-3 py-1.5 text-sm whitespace-nowrap ${
-              p === preset ? "border-brand bg-brand text-on-brand" : "border-border bg-surface"
-            }`}
-          >
-            {t(`money.range.${p}`)}
-          </Link>
-        ))}
-      </div>
+      <FilterChips
+        items={(["12", "3", "year"] as const).map((p) => ({
+          href: p === "12" ? "/org/money" : `/org/money?range=${p}`,
+          label: t(`money.range.${p}`),
+          active: p === preset,
+        }))}
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {columns.map(([field, label]) => (
-          <Card key={field} className="flex flex-col gap-1 p-3 sm:p-4">
-            <p className="text-xs text-muted">{t(label)}</p>
-            <p className={`text-lg font-semibold ${field === "net_cents" ? "text-brand" : ""}`}>{money(c.totals[field])}</p>
+          <Card key={field} className="flex flex-col gap-1 p-4 sm:p-5">
+            <p className="text-xs font-medium text-muted">{t(label)}</p>
+            <p className={`font-display text-xl font-semibold tabular-nums ${field === "net_cents" ? "text-brand" : ""}`}>
+              {money(c.totals[field])}
+            </p>
           </Card>
         ))}
       </div>
@@ -96,13 +98,13 @@ export default async function MoneyPage({ searchParams }: PageProps<"/org/money"
           </li>
         ))}
       </ul>
-      <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface sm:block">
+      <div className="hidden overflow-x-auto rounded-ez-lg border border-border bg-surface shadow-ez-sm sm:block">
         <table className="w-full text-sm">
-          <thead className="text-left text-xs text-muted">
+          <thead className="bg-sunken/60 text-left text-xs tracking-wide text-muted uppercase">
             <tr className="border-b border-border">
               <th className="p-3 font-medium">{t("money.month")}</th>
               {columns.map(([field, label]) => (
-                <th key={field} className="p-3 text-right font-medium">{t(label)}</th>
+                <th key={field} className="p-3 text-right font-semibold">{t(label)}</th>
               ))}
             </tr>
           </thead>
@@ -111,7 +113,7 @@ export default async function MoneyPage({ searchParams }: PageProps<"/org/money"
               <tr key={m.month}>
                 <td className="p-3 whitespace-nowrap">{formatMonth(m.month)}</td>
                 {columns.map(([field]) => (
-                  <td key={field} className={`p-3 text-right tabular-nums ${field === "net_cents" ? "font-medium" : ""}`}>
+                  <td key={field} className={`p-3 text-right whitespace-nowrap tabular-nums ${field === "net_cents" ? "font-semibold text-brand" : ""}`}>
                     {money(m[field])}
                   </td>
                 ))}
@@ -122,7 +124,7 @@ export default async function MoneyPage({ searchParams }: PageProps<"/org/money"
             <tr>
               <td className="p-3">{t("money.totals")}</td>
               {columns.map(([field]) => (
-                <td key={field} className="p-3 text-right tabular-nums">{money(c.totals[field])}</td>
+                <td key={field} className="p-3 text-right whitespace-nowrap tabular-nums">{money(c.totals[field])}</td>
               ))}
             </tr>
           </tfoot>

@@ -1,6 +1,7 @@
+import { Building2 } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, ErrorText, buttonClass } from "@eduzone/ui";
+import { Badge, buttonClass, EmptyState, ErrorText } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { formatBytes, formatMoney } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
@@ -17,16 +18,16 @@ export default async function TenantsPage() {
   return (
     <>
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t("platform.nav.tenants")}</h1>
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("platform.nav.tenants")}</h1>
         <Link href="/tenants/new" className={buttonClass.primary}>{t("platform.tenants.new")}</Link>
       </div>
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && res.data.length === 0 && <p className="text-muted">{t("platform.tenants.empty")}</p>}
+      {res.ok && res.data.length === 0 && <EmptyState icon={<Building2 />} title={t("platform.tenants.empty")} />}
       {res.ok && res.data.length > 0 && (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+        <ul className="divide-y divide-border overflow-hidden rounded-ez-lg border border-border bg-surface">
           {res.data.map((x) => (
             <li key={x.id}>
-              <Link href={`/tenants/${x.id}`} className="flex flex-col gap-2 p-4 hover:bg-background md:flex-row md:items-center md:justify-between">
+              <Link href={`/tenants/${x.id}`} className="flex flex-col gap-2 p-4 hover:bg-sunken/50 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 font-medium">
                     {x.name} <Badge tone={tenantTone[x.status]}>{t(`platform.status.${x.status}`)}</Badge>

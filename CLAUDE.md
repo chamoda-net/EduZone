@@ -599,10 +599,17 @@ httpOnly cookies.
   (listed in `transpilePackages`); `@/` stays app-local (`lib/api.ts`, `lib/cookies.ts`, `lib/session.ts`).
 - Read `frontend/apps/web/AGENTS.md` first: Next 16 differs from older versions (e.g. `proxy.ts`
   replaces middleware). Its docs ship in `frontend/node_modules/next/dist/docs/`.
-- **Design tokens:** colours, radii and shadows come only from `--ez-*` in `packages/ui/src/tokens.css`,
-  exposed to Tailwind as `brand`, `on-brand`, `background`, `surface`, `foreground`, `muted`, `border`
-  and `success|warning|danger|info` (+ `-bg`). No raw palette classes, no dark mode. Font: Inter, with
-  Noto Sans Sinhala. A tenant's `primary_color` sets `--ez-accent` on tenant sites until phase 3.
+- **Design system** (FRONTEND.md section 9): forest green brand, gold accents, ivory paper; Fraunces
+  headings (`font-display`), Instrument Sans text, Noto Sans Sinhala. Colours, radii and shadows come only
+  from `--ez-*` in `packages/ui/src/tokens.css` via Tailwind names (`brand`, `gold`, `sunken`, `muted`,
+  `border-strong`, status `success|warning|danger|info` + `-bg`, `rounded-ez*`, `shadow-ez*`). No raw palette
+  classes, no dark mode, no tenant colours (a tenant's `primary_color` is no longer applied).
+- **Building screens:** use the kit in `@eduzone/ui` (Button/`buttonStyles`, Field, Card, PageHeader,
+  EmptyState for every empty list, StatusPill for access states, ClassCover for class imagery, Skeleton in
+  `loading.tsx`), the student frame `components/shell.tsx` (`SiteShell`; `bare` for full-bleed pages) and
+  `ConsoleFrame` for consoles. Custom CSS helpers go in tokens.css inside `@layer components`, so Tailwind
+  utilities still override them. Review new components on the dev-only `/design` page.
+  If new classes don't show up in `next dev`, stop it and delete the app's `.next` (stale Turbopack cache).
 - **Backend calls happen only on the Next server** (`lib/api.ts`: Server Components and Server
   Actions), sending `X-Forwarded-Host` with the user's host. The browser never calls the API.
 - **Tokens live in httpOnly cookies** (`lib/cookies.ts`); browser JavaScript never sees them.
@@ -660,7 +667,7 @@ httpOnly cookies.
 | Commission tiers for large teachers | Idea: 20% normally, lower above a monthly volume |
 | SMS provider | Undecided |
 | Plan limits per tier | Needs Bunny pricing check |
-| EduZone brand (logo, colours) | Placeholder tokens until announced |
+| EduZone brand | Colours and fonts decided (forest green + gold, Fraunces + Instrument Sans); logo still placeholder |
 | Sinhala at the pilot | Depends on the pilot teachers |
 | Email provider | Undecided |
 | Institute URL | `/institutes/<slug>` (assumed) |

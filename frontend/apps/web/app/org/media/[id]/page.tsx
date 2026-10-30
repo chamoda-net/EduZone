@@ -28,7 +28,7 @@ export default async function MediaDetailPage({ params }: PageProps<"/org/media/
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="truncate text-2xl font-semibold">{m.name}</h1>
+            <h1 className="truncate font-display text-3xl font-semibold">{m.name}</h1>
             <Badge tone={mediaTone[m.status]}>{t(`media.status.${m.status}`)}</Badge>
           </div>
           <p className="text-sm text-muted">
@@ -55,7 +55,7 @@ export default async function MediaDetailPage({ params }: PageProps<"/org/media/
       {preview?.ok && m.kind === "video" && (
         <Card className="p-0 sm:p-0">
           {/* Staff preview of the signed embed. Students get the watermarked player (step 6). */}
-          <div className="relative aspect-video overflow-hidden rounded-xl">
+          <div className="relative aspect-video overflow-hidden rounded-ez-lg">
             <iframe
               src={preview.data.url}
               title={m.name}

@@ -1,10 +1,11 @@
+import { LibraryBig, Plus } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, ErrorText, buttonClass } from "@eduzone/ui";
 import { api } from "@/lib/api";
-import { classMeta, priceLabel } from "@/lib/catalog";
+import { classMeta, priceParts } from "@/lib/catalog";
 import { errorText, t } from "@eduzone/lib/i18n";
 import type { ClassPage, ClassStatus } from "@eduzone/lib/types";
+import { Badge, ClassCover, EmptyState, ErrorText, FilterChips, PageHeader, buttonStyles } from "@eduzone/ui";
 
 const FILTERS: (ClassStatus | null)[] = [null, "draft", "published", "archived"];
 
@@ -27,53 +28,67 @@ export default async function ClassesPage({ searchParams }: PageProps<"/org/clas
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t("classes.title")}</h1>
-        <Link href="/org/classes/new" className={buttonClass.primary}>
-          {t("classes.new")}
-        </Link>
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto">
-        {FILTERS.map((f) => (
-          <Link
-            key={f ?? "all"}
-            href={href(f)}
-            className={`rounded-full border px-3 py-1.5 text-sm whitespace-nowrap ${
-              f === status ? "border-brand bg-brand text-on-brand" : "border-border bg-surface"
-            }`}
-          >
-            {f ? t(`status.${f}`) : t("classes.filter.all")}
+      <PageHeader
+        eyebrow={t("shell.console")}
+        title={t("classes.title")}
+        description={t("classes.subtitle")}
+        actions={
+          <Link href="/org/classes/new" className={buttonStyles("primary")}>
+            <Plus className="size-4.5" />
+            {t("classes.new")}
           </Link>
-        ))}
-      </div>
+        }
+      />
+
+      <FilterChips
+        items={FILTERS.map((f) => ({ href: href(f), label: f ? t(`status.${f}`) : t("classes.filter.all"), active: f === status }))}
+      />
 
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && res.data.items.length === 0 && <p className="text-muted">{t("classes.empty")}</p>}
+      {res.ok && res.data.items.length === 0 && (
+        <EmptyState
+          icon={<LibraryBig />}
+          title={t("classes.empty")}
+          body={t("classes.emptyBody")}
+          action={<Link href="/org/classes/new" className={buttonStyles("primary")}>{t("classes.new")}</Link>}
+        />
+      )}
       {res.ok && res.data.items.length > 0 && (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
-          {res.data.items.map((c) => (
-            <li key={c.id}>
-              <Link href={`/org/classes/${c.id}`} className="flex flex-col gap-1 p-4 hover:bg-background sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{c.title}</p>
-                  <p className="truncate text-sm text-muted">{classMeta(t, c)}</p>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <span>{priceLabel(t, c)}</span>
-                  <Badge tone={c.status}>{t(`status.${c.status}`)}</Badge>
-                </div>
-              </Link>
-            </li>
-          ))}
+        <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {res.data.items.map((c, i) => {
+            const price = priceParts(t, c);
+            return (
+              <li key={c.id} className="ez-rise" style={{ "--i": i } as React.CSSProperties}>
+                <Link
+                  href={`/org/classes/${c.id}`}
+                  className="group flex h-full flex-col overflow-hidden rounded-ez-lg border border-border bg-surface shadow-ez-sm transition duration-300 ease-ez hover:-translate-y-0.5 hover:shadow-ez-lg"
+                >
+                  <div className="relative">
+                    <ClassCover title={c.title} subject={c.subject} imageUrl={c.cover_image_url} label={c.exam ? t(`exam.${c.exam}`) : null} size="sm" />
+                    <Badge tone={c.status} dot className="absolute top-3 right-3 shadow-ez-sm">
+                      {t(`status.${c.status}`)}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 p-5">
+                    <p className="truncate text-xs font-bold tracking-[0.12em] text-brand-600 uppercase">{classMeta(t, c)}</p>
+                    <p className="font-display text-lg leading-snug font-semibold">{c.title}</p>
+                    <p className="mt-auto pt-2 text-sm">
+                      <span className="font-semibold tabular-nums">{price.amount}</span>{" "}
+                      {price.unit && <span className="text-muted">{price.unit}</span>}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
 
       {res.ok && (cursor || res.data.next_cursor) && (
         <div className="flex justify-between">
-          {cursor ? <Link href={href(status)} className={buttonClass.link}>{t("classes.firstPage")}</Link> : <span />}
+          {cursor ? <Link href={href(status)} className={buttonStyles("secondary")}>{t("classes.firstPage")}</Link> : <span />}
           {res.data.next_cursor && (
-            <Link href={href(status, res.data.next_cursor)} className={buttonClass.link}>
+            <Link href={href(status, res.data.next_cursor)} className={buttonStyles("secondary")}>
               {t("classes.loadMore")}
             </Link>
           )}

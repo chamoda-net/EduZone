@@ -51,7 +51,7 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
 
       <Card className="flex flex-col gap-3">
         <div>
-          <h2 className="text-lg font-semibold">{t("platform.payout.title")}</h2>
+          <h2 className="font-display text-xl font-semibold">{t("platform.payout.title")}</h2>
           <p className="text-sm text-muted">{t("platform.payout.body")}</p>
           {x.payout_bank_name && (
             <p className="text-sm">{x.payout_bank_name} {x.payout_account_masked}</p>

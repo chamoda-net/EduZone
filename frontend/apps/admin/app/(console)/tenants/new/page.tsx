@@ -10,7 +10,7 @@ export default function NewTenantPage() {
   return (
     <>
       <Link href="/" className={`${buttonClass.link} text-sm`}>← {t("platform.back")}</Link>
-      <h1 className="text-2xl font-semibold">{t("platform.tenants.new")}</h1>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("platform.tenants.new")}</h1>
       <Card>
         <TenantForm action={createTenant} />
       </Card>

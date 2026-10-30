@@ -93,6 +93,12 @@ student had to retype the OTP code after entering their name (found by the smoke
   phases can't silently break them.
 - Drop dark mode styles.
 
+### Phase 1b — Design foundation ✅ done
+Added at the user's request before phase 2, so new screens are built once at the final quality bar:
+brand (forest green, gold, ivory), Fraunces + Instrument Sans, the component kit and page frames in
+`packages/ui`, generated class covers, every existing student, console and admin screen restyled, and a
+dev-only style guide at `/design`. Tenant colours are no longer applied (marketplace decision).
+
 ### Phase 2 — Identity (backend + frontend) **[L]**
 Backend:
 - Schema: `user_identities` (provider, subject, e.g. Google), `email_verifications` and `recovery_tokens`

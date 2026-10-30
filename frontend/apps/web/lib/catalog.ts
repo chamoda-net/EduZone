@@ -17,3 +17,17 @@ export function classMeta(t: Translate, c: Pick<ClassItem, "subject" | "exam" | 
     .filter(Boolean)
     .join(" · ");
 }
+
+/** Price split for large display: the amount, and "/ month" or "once" beside it. */
+export function priceParts(t: Translate, c: Pick<ClassItem, "pricing_model" | "monthly_fee_cents" | "one_time_price_cents" | "currency">): {
+  amount: string;
+  unit: string | null;
+} {
+  if (c.pricing_model === "monthly" && c.monthly_fee_cents !== null) {
+    return { amount: formatMoney(c.monthly_fee_cents, c.currency), unit: t("price.perMonth") };
+  }
+  if (c.pricing_model === "one_time" && c.one_time_price_cents !== null) {
+    return { amount: formatMoney(c.one_time_price_cents, c.currency), unit: t("price.once") };
+  }
+  return { amount: t("classes.free"), unit: null };
+}

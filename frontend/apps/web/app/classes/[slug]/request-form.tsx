@@ -1,9 +1,10 @@
 "use client";
 
+import { MessageSquareText } from "lucide-react";
 import { useActionState, useState } from "react";
 
-import { ErrorText, Input, buttonClass } from "@eduzone/ui";
 import { useT } from "@eduzone/lib/i18n/client";
+import { Button, ErrorText, Input } from "@eduzone/ui";
 
 import type { FormState } from "../../org/classes/actions";
 
@@ -15,18 +16,18 @@ export function RequestLateForm({ action }: { action: (s: FormState, fd: FormDat
 
   if (!open) {
     return (
-      <button type="button" className={`${buttonClass.secondary} min-h-9 px-3 text-sm`} onClick={() => setOpen(true)}>
+      <Button type="button" variant="outline" size="sm" icon={<MessageSquareText className="size-4" />} onClick={() => setOpen(true)}>
         {t("class.requestAccess")}
-      </button>
+      </Button>
     );
   }
   return (
     <form action={submit} className="flex w-full flex-col gap-2 sm:w-72">
-      <Input name="note" maxLength={500} placeholder={t("class.requestNote")} aria-label={t("class.requestNote")} />
+      <Input name="note" maxLength={500} placeholder={t("class.requestNote")} aria-label={t("class.requestNote")} autoFocus />
       <ErrorText>{state.error}</ErrorText>
-      <button className={`${buttonClass.primary} min-h-9 px-3 text-sm`} disabled={pending}>
-        {pending ? t("common.saving") : t("class.requestAccess")}
-      </button>
+      <Button size="sm" loading={pending}>
+        {t("class.requestAccess")}
+      </Button>
     </form>
   );
 }

@@ -1,8 +1,9 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ActionButton } from "@eduzone/ui/action-button";
-import { Badge, Card, ErrorText, buttonClass } from "@eduzone/ui";
+import { Badge, Card, ClassCover, ErrorText, buttonClass } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { classMeta, priceLabel } from "@/lib/catalog";
 import { formatDateTime, formatMoney, formatMonth } from "@eduzone/lib/format";
@@ -64,15 +65,24 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
 
   return (
     <>
-      <Link href="/org/classes" className={`${buttonClass.link} text-sm`}>← {t("classes.back")}</Link>
+      <Link href="/org/classes" className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-muted hover:text-foreground">
+        <ArrowLeft className="size-4" />
+        {t("classes.back")}
+      </Link>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold">{c.title}</h1>
-            <Badge tone={c.status}>{t(`status.${c.status}`)}</Badge>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-5">
+          <div className="hidden w-36 shrink-0 overflow-hidden rounded-ez shadow-ez sm:block">
+            <ClassCover title={c.title} subject={c.subject} imageUrl={c.cover_image_url} size="sm" />
           </div>
-          <p className="text-sm text-muted">{[classMeta(t, c), priceLabel(t, c)].filter(Boolean).join(" · ")}</p>
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <p className="text-xs font-bold tracking-[0.12em] text-brand-600 uppercase">{classMeta(t, c)}</p>
+            <h1 className="font-display text-3xl leading-tight font-semibold sm:text-4xl">{c.title}</h1>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+              <Badge tone={c.status} dot>{t(`status.${c.status}`)}</Badge>
+              <span>{priceLabel(t, c)}</span>
+            </div>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {c.status === "draft" && (
@@ -98,7 +108,7 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
       {monthly && (
         <Card className="flex flex-col gap-4">
           <div>
-            <h2 className="text-lg font-semibold">{t("months.title")}</h2>
+            <h2 className="font-display text-xl font-semibold">{t("months.title")}</h2>
             <p className="text-xs text-muted">{t("months.closedHint")}</p>
           </div>
           {months.length === 0 ? (
@@ -129,7 +139,7 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
       )}
 
       <Card className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">{t("lessons.title")}</h2>
+        <h2 className="font-display text-xl font-semibold">{t("lessons.title")}</h2>
         {lessons.length === 0 && <p className="text-sm text-muted">{t("lessons.empty")}</p>}
         {groupLessons(lessons, months, monthly).map((group) => (
           <div key={group.key} className="flex flex-col gap-1">
@@ -215,7 +225,7 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
       </Card>
 
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">{t("students.title")}</h2>
+        <h2 className="font-display text-xl font-semibold">{t("students.title")}</h2>
         {monthly && months.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-muted">{t("students.month")}</span>
@@ -224,7 +234,7 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
                 key={m.id}
                 href={`/org/classes/${c.id}?month=${m.id}`}
                 scroll={false}
-                className={`rounded-full border px-3 py-1 ${m.id === rosterMonth?.id ? "border-brand bg-brand text-on-brand" : "border-border"}`}
+                className={`rounded-full border px-3 py-1 ${m.id === rosterMonth?.id ? "border-brand-800 bg-brand-800 text-on-brand shadow-ez-sm" : "border-border"}`}
               >
                 {formatMonth(m.month_start)}
               </Link>
@@ -282,7 +292,7 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">{t("classDetail.details")}</h2>
+        <h2 className="font-display text-xl font-semibold">{t("classDetail.details")}</h2>
         <ClassForm action={updateClass.bind(null, c.id)} initial={c} pricingLocked={pricingLocked} />
       </Card>
     </>

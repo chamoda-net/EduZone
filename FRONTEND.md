@@ -271,52 +271,39 @@ who are not technical. Design every screen against these rules:
 ## 9. Design system
 
 ### Brand
-EduZone's final logo and colours will be announced later. Use the **placeholder tokens** below; all
-components must read colours from tokens only, so the real brand drops in with no code changes.
+Decided 2026-10-30: **deep forest green** as the brand colour, **warm gold** for emphasis only (marks,
+"new", highlights on dark), on an **ivory "paper"** page background. Direction: scholarly and modern,
+calm and trustworthy for parents, premium enough to compete with global platforms. The final logo is
+still to come; `LogoMark` in `packages/ui` is a placeholder (an open book whose pages form a leaf).
+All components read colours from tokens only, so a logo or shade change needs no code changes.
+Teachers and institutes get **no own colours** on the marketplace (section 2 of CLAUDE.md).
 
 ### Tokens
-```css
-:root {
-  /* Brand (placeholder) */
-  --ez-brand-600: #2D5BFF;
-  --ez-brand-700: #2148D6;
-  --ez-brand-50:  #EEF2FF;
-  --ez-on-brand:  #FFFFFF;
-
-  /* Accent used by components; equals brand on the main site,
-     replaced by the company colour on company sites only */
-  --ez-accent:    var(--ez-brand-600);
-  --ez-on-accent: var(--ez-on-brand);
-
-  /* Neutrals */
-  --ez-bg:         #FFFFFF;
-  --ez-surface:    #F6F7F9;
-  --ez-border:     #E3E6EA;
-  --ez-text:       #14171C;
-  --ez-text-muted: #5B6470;
-
-  /* Status (never themed) */
-  --ez-success: #1E8E3E;  --ez-success-bg: #E8F5EC;
-  --ez-warning: #B26A00;  --ez-warning-bg: #FFF4E0;
-  --ez-danger:  #C62828;  --ez-danger-bg:  #FDECEC;
-  --ez-info:    #1F6FB2;  --ez-info-bg:    #E8F1FA;
-
-  /* Shape and spacing */
-  --ez-radius-sm: 6px;  --ez-radius: 10px;  --ez-radius-lg: 16px;
-  --ez-space: 4px;      /* scale: 4, 8, 12, 16, 24, 32, 48 */
-  --ez-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.06);
-}
-```
-Company colours (v1.1) are contrast-checked; `--ez-on-accent` switches between white and near-black
-automatically to meet WCAG AA.
+The source of truth is `frontend/packages/ui/src/tokens.css`: brand `--ez-brand-50…950`
+(accent = `--ez-brand-700` `#124A33`), gold `--ez-gold-100…600`, warm neutrals (`--ez-surface` page
+`#FAF8F3`, `--ez-bg` cards `#FFFFFF`, `--ez-sunken`, `--ez-border`, `--ez-text` `#14201A`), status colours
+(never themed), radii 8/12/20, three shadows and one easing curve. Tailwind names map onto them
+(`bg-brand`, `text-muted`, `bg-gold`, `rounded-ez-lg`, `shadow-ez`…). Helpers: `font-display`,
+`ez-grain` (film grain on dark panels), `ez-ruled`, `ez-mark`, `ez-rise` (staggered page-load reveal,
+`--i` = order), `ez-skeleton`; all respect `prefers-reduced-motion`.
+Company colours (v1.1) replace `--ez-accent` only and are contrast-checked; `--ez-on-accent` switches
+between white and near-black to meet WCAG AA.
 
 ### Typography
-- Latin: **Inter** (variable, subset). Sinhala: **Noto Sans Sinhala**. Tamil: **Noto Sans Tamil**.
-- Load each script's font only when that language is active.
-- Scale: 12 / 14 / 16 (base) / 18 / 20 / 24 / 30. Line-height 1.5; 1.6 for Sinhala and Tamil.
-- Numbers in tables and money use tabular figures.
+- Headings: **Fraunces** (variable serif, soft optical axis), via `font-display`.
+- Text and UI: **Instrument Sans**. Sinhala: **Noto Sans Sinhala**; Tamil: **Noto Sans Tamil** (later).
+  All through `next/font` (self-hosted, subset, no layout shift).
+- Scale: 12 / 14 / 15 (UI) / 16 (base) / 18 / 24 / 30 / 36 / 48–66 (hero). Line-height 1.5; 1.6 for
+  Sinhala and Tamil. Eyebrows: 12 px bold, 0.14em tracking, upper case, brand-600.
+- Numbers in tables and money use tabular figures; big amounts use the display face.
 
 ### Components (`packages/ui`, Radix primitives, shadcn/ui style)
+Built so far (design foundation): Button (7 variants, 3 sizes, loading), Field/Input/Select/Textarea/
+Checkbox, Badge, StatusPill, Card, CardTitle, PageHeader, Alert, EmptyState, Skeleton, StatTile,
+DataList, Avatar, Logo, ClassCover (generated book-cover artwork when a class has no image), FilterChips,
+Dialog (bottom sheet on phones), Toast, SideNav/NavDrawer/ConsoleFrame (console), HeaderNav/TabBar
+(student site). A dev-only style guide shows them all at `/design` in `apps/web`. Still to build as
+screens need them:
 Button, IconButton, Input, PasswordInput, PhoneInput (LK), OtpInput, Select, Combobox, Checkbox, Switch,
 Textarea, FileUpload (progress, resumable), Dialog, BottomSheet, Toast, Tabs, Badge, **StatusPill**,
 Card, **ClassCard**, **TeacherCard**, **MonthRow**, **CartGroup**, Table (cards on mobile), EmptyState,

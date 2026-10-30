@@ -1,42 +1,49 @@
+import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ClassCard } from "@/components/class-card";
-import { StudentHeader } from "@/components/student-header";
-import { ErrorText, buttonClass } from "@eduzone/ui";
+import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
-import { errorText, t } from "@eduzone/lib/i18n";
 import { getMe } from "@/lib/session";
+import { errorText, t } from "@eduzone/lib/i18n";
 import type { MyClass } from "@eduzone/lib/types";
+import { Badge, EmptyState, ErrorText, PageHeader, buttonStyles } from "@eduzone/ui";
 
 export default async function MyClassesPage() {
-  if (!(await getMe())) redirect("/login?next=/my");
+  const me = await getMe();
+  if (!me) redirect("/login?next=/my");
   const res = await api<MyClass[]>("/student/classes");
+  const first = me.full_name.split(/\s+/)[0];
 
   return (
-    <>
-      <StudentHeader />
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 px-4 py-8">
-        <h1 className="text-2xl font-semibold">{t("my.title")}</h1>
-        {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-        {res.ok && res.data.length === 0 && (
-          <div className="flex flex-col items-start gap-3">
-            <p className="text-muted">{t("my.empty")}</p>
-            <Link href="/" className={buttonClass.primary}>{t("my.browse")}</Link>
-          </div>
-        )}
-        {res.ok && res.data.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {res.data.map((m) => (
-              <ClassCard
-                key={m.class.id}
-                c={m.class}
-                footer={<p className="text-sm text-muted">{t("my.unlocked", { count: m.unlocked_months })}</p>}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-    </>
+    <SiteShell>
+      <PageHeader eyebrow={t("my.eyebrow")} title={t("my.greeting", { name: first })} description={t("my.subtitle")} />
+      {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
+      {res.ok && res.data.length === 0 && (
+        <EmptyState
+          icon={<BookOpen />}
+          title={t("my.empty")}
+          body={t("my.emptyBody")}
+          action={<Link href="/" className={buttonStyles("primary")}>{t("my.browse")}</Link>}
+        />
+      )}
+      {res.ok && res.data.length > 0 && (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {res.data.map((m, i) => (
+            <ClassCard
+              key={m.class.id}
+              c={m.class}
+              index={i}
+              footer={
+                <Badge tone={m.unlocked_months > 0 ? "success" : "neutral"} dot>
+                  {t("my.unlocked", { count: m.unlocked_months })}
+                </Badge>
+              }
+            />
+          ))}
+        </div>
+      )}
+    </SiteShell>
   );
 }

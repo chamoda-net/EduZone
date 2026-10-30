@@ -8,5 +8,10 @@
     "./action-button": "./src/action-button.tsx",
     "./tokens.css": "./src/tokens.css"
   },
-  "peerDependencies": { "react": "^19" }
+  "peerDependencies": {
+    "react": "^19",
+    "next": "^16",
+    "lucide-react": "*",
+    "@radix-ui/react-dialog": "^1"
+  }
 }

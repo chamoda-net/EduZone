@@ -1,6 +1,7 @@
+import { Receipt } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, ErrorText, buttonClass } from "@eduzone/ui";
+import { Badge, buttonClass, EmptyState, ErrorText } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { formatDateTime, formatMoney } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
@@ -27,14 +28,14 @@ export default async function OrgPaymentsPage({ searchParams }: PageProps<"/org/
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t("orgPayments.title")}</h1>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("orgPayments.title")}</h1>
       <div className="flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => (
           <Link
             key={f ?? "all"}
             href={href(f)}
-            className={`rounded-full border px-3 py-1.5 text-sm whitespace-nowrap ${
-              f === status ? "border-brand bg-brand text-on-brand" : "border-border bg-surface"
+            className={`inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 text-sm font-semibold whitespace-nowrap transition-all ${
+              f === status ? "border-brand-800 bg-brand-800 text-on-brand shadow-ez-sm" : "border-border-strong bg-surface text-muted hover:border-foreground/40 hover:text-foreground"
             }`}
           >
             {f ? t(`payments.status.${f}`) : t("classes.filter.all")}
@@ -42,9 +43,9 @@ export default async function OrgPaymentsPage({ searchParams }: PageProps<"/org/
         ))}
       </div>
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && res.data.items.length === 0 && <p className="text-muted">{t("orgPayments.empty")}</p>}
+      {res.ok && res.data.items.length === 0 && <EmptyState icon={<Receipt />} title={t("orgPayments.empty")} />}
       {res.ok && res.data.items.length > 0 && (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+        <ul className="divide-y divide-border overflow-hidden rounded-ez-lg border border-border bg-surface">
           {res.data.items.map((o) => (
             <li key={o.id} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">

@@ -1,12 +1,12 @@
 "use client";
 
+import { CreditCard } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { startCheckout } from "@/app/classes/actions";
 import { useT } from "@eduzone/lib/i18n/client";
 import type { GatewayRedirect } from "@eduzone/lib/types";
-
-import { ErrorText, buttonClass } from "@eduzone/ui";
+import { Button, ErrorText, cx } from "@eduzone/ui";
 
 /** Sends the browser to the gateway the way it expects: a form POST (PayHere) or a GET. */
 function goToGateway(r: GatewayRedirect) {
@@ -21,18 +21,19 @@ function goToGateway(r: GatewayRedirect) {
     form.appendChild(input);
   }
   if (r.method === "GET" && Object.keys(r.fields).length === 0) {
-    window.location.assign(r.url);   // keep the URL's own query string
+    window.location.assign(r.url); // keep the URL's own query string
     return;
   }
   document.body.appendChild(form);
   form.submit();
 }
 
-export function PayButton({ classId, monthId, label, small = false }: {
+export function PayButton({ classId, monthId, label, small = false, block = false }: {
   classId: string;
   monthId: string | null;
   label: string;
   small?: boolean;
+  block?: boolean;
 }) {
   const t = useT();
   const [pending, start] = useTransition();
@@ -54,15 +55,17 @@ export function PayButton({ classId, monthId, label, small = false }: {
 
   const busy = pending || leaving;
   return (
-    <div className="flex flex-col items-end gap-1">
-      <button
+    <div className={cx("flex flex-col gap-2", block ? "w-full" : "items-end")}>
+      <Button
         type="button"
         onClick={pay}
-        disabled={busy}
-        className={`${buttonClass.primary} ${small ? "min-h-9 px-3 text-sm" : ""}`}
+        loading={busy}
+        size={small ? "sm" : block ? "lg" : "md"}
+        icon={!small && <CreditCard className="size-4.5" />}
+        className={block ? "w-full" : undefined}
       >
         {busy ? t("pay.redirecting") : label}
-      </button>
+      </Button>
       {error && <ErrorText>{error}</ErrorText>}
     </div>
   );
