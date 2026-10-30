@@ -10,7 +10,7 @@ import { classMeta, priceLabel } from "@/lib/catalog";
 import { formatDateTime, formatMoney, formatMonth } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
 import { mediaTone } from "@/lib/media";
-import type { ClassItem, ClassStudent, Lesson, LessonResource, MediaPage, Month } from "@eduzone/lib/types";
+import type { ClassItem, ClassStudent, Lesson, LessonResource, MediaPage, Month, SubjectOut } from "@eduzone/lib/types";
 
 import {
   createLesson,
@@ -63,6 +63,8 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
   const rosterRes = monthly && !rosterMonth ? null
     : await api<ClassStudent[]>(`~/classes/${id}/students${rosterMonth ? `?month_id=${rosterMonth.id}` : ""}`);
   const roster = rosterRes?.ok ? rosterRes.data : [];
+  const subjectsRes = await api<SubjectOut[]>("/market/subjects", { token: null });
+  const subjects = subjectsRes.ok ? subjectsRes.data : [];
   const pricingLocked = c.status !== "draft" || months.length > 0 || lessons.length > 0;
 
   return (
@@ -295,7 +297,7 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
 
       <Card className="flex flex-col gap-4">
         <h2 className="font-display text-xl font-semibold">{t("classDetail.details")}</h2>
-        <ClassForm action={updateClass.bind(null, c.id)} initial={c} pricingLocked={pricingLocked} />
+        <ClassForm action={updateClass.bind(null, c.id)} initial={c} subjects={subjects} pricingLocked={pricingLocked} />
       </Card>
     </>
   );

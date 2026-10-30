@@ -142,7 +142,15 @@ Backend:
 Frontend: `/teach/<tenant>/...` (move `/org/*`), workspace switcher, `/learn` (Today, classes, class, month,
 lesson, schedule, requests, payments), middleware routing per FRONTEND.md section 3.
 
-### Phase 4 — Marketplace **[L]**
+### Phase 4 — Marketplace **[L]** ✅ done
+Built as below, with these choices: the read path is a set of admin-owned views (`public_*`), not functions;
+search is Postgres full-text (`simple` config, prefix matching) over the view, with a subject index on
+classes (enough for the pilot's size). Teacher profiles are created automatically when a class is published
+and edited from the console; photo is a URL until uploads arrive. Institutes are tenants with
+`org_type = 'institute'`. Tenant subdomains redirect to the marketplace. Static pages are drafts pending
+the legal review. Not done yet: page caching and revalidation (pages read the session for the header, so
+they render per request; split the header's user part into a client island to cache the rest, phase 9),
+"Add to cart" (phase 6), teacher photo upload.
 Backend:
 - `subjects` (platform-managed, slug), `classes.subject_id`; `teacher_profiles` (slug unique, photo,
   headline, bio, highlights, subjects); institutes = `tenants.org_type = 'institute'` with a public slug.

@@ -13,6 +13,7 @@ from app.modules.catalog.router import org_router as catalog_org_router
 from app.modules.checkout import router as checkout
 from app.modules.learn.router import router as learn_router
 from app.modules.learning import router as learning
+from app.modules.market import router as market
 from app.modules.ledger.router import org_router as ledger_org_router
 from app.modules.media.router import org_router as media_org_router
 from app.modules.media.router import webhook_router as media_webhook_router
@@ -52,6 +53,8 @@ for staff_router in STAFF_ROUTERS:
 api.include_router(tenants_public_router)
 api.include_router(auth_router)
 api.include_router(learn_router)
+api.include_router(market.router)
+api.include_router(market.me_router)
 api.include_router(media_webhook_router)
 api.include_router(learning.public_router)
 api.include_router(learning.student_router)

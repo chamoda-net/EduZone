@@ -347,6 +347,18 @@
             ],
             "title": "Subject"
           },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
           "teacher_member_id": {
             "anyOf": [
               {
@@ -504,6 +516,18 @@
             ],
             "title": "Subject"
           },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
           "teacher_member_id": {
             "format": "uuid",
             "title": "Teacher Member Id",
@@ -526,6 +550,7 @@
           "slug",
           "description",
           "subject",
+          "subject_id",
           "exam",
           "batch_year",
           "medium",
@@ -818,6 +843,18 @@
             ],
             "title": "Subject"
           },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
           "teacher_member_id": {
             "anyOf": [
               {
@@ -1097,6 +1134,116 @@
           "database"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "Home": {
+        "properties": {
+          "classes": {
+            "title": "Classes",
+            "type": "integer"
+          },
+          "popular": {
+            "items": {
+              "$ref": "#/components/schemas/MarketClass"
+            },
+            "title": "Popular",
+            "type": "array"
+          },
+          "starting": {
+            "items": {
+              "$ref": "#/components/schemas/MarketClass"
+            },
+            "title": "Starting",
+            "type": "array"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectOut"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "teachers": {
+            "title": "Teachers",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "subjects",
+          "popular",
+          "starting",
+          "classes",
+          "teachers"
+        ],
+        "title": "Home",
+        "type": "object"
+      },
+      "InstituteOut": {
+        "properties": {
+          "class_count": {
+            "title": "Class Count",
+            "type": "integer"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "subjects": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "teacher_count": {
+            "title": "Teacher Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "logo_url",
+          "class_count",
+          "teacher_count",
+          "subjects"
+        ],
+        "title": "InstituteOut",
+        "type": "object"
+      },
+      "InstitutePage": {
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/MarketClass"
+            },
+            "title": "Classes",
+            "type": "array"
+          },
+          "institute": {
+            "$ref": "#/components/schemas/InstituteOut"
+          }
+        },
+        "required": [
+          "institute",
+          "classes"
+        ],
+        "title": "InstitutePage",
         "type": "object"
       },
       "LateRequestCreate": {
@@ -1731,6 +1878,396 @@
           "status"
         ],
         "title": "LoginResult",
+        "type": "object"
+      },
+      "MarketClass": {
+        "description": "A class card on the marketplace: public fields only.",
+        "properties": {
+          "batch_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Year"
+          },
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "exam": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam"
+          },
+          "has_free_preview": {
+            "title": "Has Free Preview",
+            "type": "boolean"
+          },
+          "has_live": {
+            "title": "Has Live",
+            "type": "boolean"
+          },
+          "has_recorded": {
+            "title": "Has Recorded",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "medium": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Medium"
+          },
+          "monthly_fee_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Fee Cents"
+          },
+          "one_time_price_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "One Time Price Cents"
+          },
+          "open_month_fee_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Month Fee Cents"
+          },
+          "open_month_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Month Start"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "org_slug": {
+            "title": "Org Slug",
+            "type": "string"
+          },
+          "org_type": {
+            "title": "Org Type",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "pricing_model": {
+            "title": "Pricing Model",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "students": {
+            "title": "Students",
+            "type": "integer"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "subject_slug": {
+            "title": "Subject Slug",
+            "type": "string"
+          },
+          "teacher_name": {
+            "title": "Teacher Name",
+            "type": "string"
+          },
+          "teacher_photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Photo Url"
+          },
+          "teacher_slug": {
+            "title": "Teacher Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "exam",
+          "batch_year",
+          "medium",
+          "cover_image_url",
+          "pricing_model",
+          "monthly_fee_cents",
+          "one_time_price_cents",
+          "currency",
+          "subject_slug",
+          "subject_name",
+          "teacher_slug",
+          "teacher_name",
+          "teacher_photo_url",
+          "org_slug",
+          "org_name",
+          "org_type",
+          "open_month_start",
+          "open_month_fee_cents",
+          "has_live",
+          "has_recorded",
+          "has_free_preview",
+          "students",
+          "path"
+        ],
+        "title": "MarketClass",
+        "type": "object"
+      },
+      "MarketClassDetail": {
+        "properties": {
+          "class": {
+            "$ref": "#/components/schemas/MarketClass"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "lessons": {
+            "items": {
+              "$ref": "#/components/schemas/MarketLesson"
+            },
+            "title": "Lessons",
+            "type": "array"
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/MarketMonth"
+            },
+            "title": "Months",
+            "type": "array"
+          },
+          "teacher": {
+            "$ref": "#/components/schemas/TeacherCard"
+          }
+        },
+        "required": [
+          "class",
+          "description",
+          "teacher",
+          "months",
+          "lessons"
+        ],
+        "title": "MarketClassDetail",
+        "type": "object"
+      },
+      "MarketClassPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MarketClass"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_cursor"
+        ],
+        "title": "MarketClassPage",
+        "type": "object"
+      },
+      "MarketLesson": {
+        "properties": {
+          "class_month_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Month Id"
+          },
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_free_preview": {
+            "title": "Is Free Preview",
+            "type": "boolean"
+          },
+          "lesson_type": {
+            "title": "Lesson Type",
+            "type": "string"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "class_month_id",
+          "title",
+          "lesson_type",
+          "scheduled_at",
+          "duration_minutes",
+          "is_free_preview"
+        ],
+        "title": "MarketLesson",
+        "type": "object"
+      },
+      "MarketMonth": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "fee_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fee Cents"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "month_start": {
+            "format": "date",
+            "title": "Month Start",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "month_start",
+          "status",
+          "fee_cents",
+          "currency"
+        ],
+        "title": "MarketMonth",
         "type": "object"
       },
       "Me": {
@@ -3035,83 +3572,74 @@
         "title": "PreviewOut",
         "type": "object"
       },
-      "ProfileUpdate": {
-        "additionalProperties": false,
-        "description": "PATCH: only fields sent are applied.",
+      "ProfileOut": {
         "properties": {
-          "exam": {
+          "bio": {
             "anyOf": [
               {
-                "enum": [
-                  "grade_5",
-                  "ol",
-                  "al",
-                  "other"
-                ],
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Exam"
+            "title": "Bio"
           },
-          "exam_year": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "headline": {
             "anyOf": [
               {
-                "maximum": 2100.0,
-                "minimum": 2000.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Exam Year"
-          },
-          "full_name": {
-            "anyOf": [
-              {
-                "maxLength": 120,
-                "minLength": 1,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Full Name"
+            "title": "Headline"
           },
-          "preferred_language": {
+          "highlights": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Highlights",
+            "type": "array"
+          },
+          "photo_url": {
             "anyOf": [
               {
-                "enum": [
-                  "en",
-                  "si",
-                  "ta"
-                ],
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Preferred Language"
+            "title": "Photo Url"
           },
-          "school": {
-            "anyOf": [
-              {
-                "maxLength": 120,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "School"
+          "public_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Public Paths",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
           }
         },
-        "title": "ProfileUpdate",
+        "required": [
+          "slug",
+          "display_name",
+          "headline",
+          "bio",
+          "photo_url",
+          "highlights",
+          "public_paths"
+        ],
+        "title": "ProfileOut",
         "type": "object"
       },
       "PublicClass": {
@@ -3687,6 +4215,46 @@
         "title": "ResourceOut",
         "type": "object"
       },
+      "SitemapOut": {
+        "properties": {
+          "classes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Classes",
+            "type": "array"
+          },
+          "institutes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Institutes",
+            "type": "array"
+          },
+          "subjects": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "teachers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Teachers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "subjects",
+          "teachers",
+          "classes",
+          "institutes"
+        ],
+        "title": "SitemapOut",
+        "type": "object"
+      },
       "StreamWebhook": {
         "properties": {
           "VideoGuid": {
@@ -4070,6 +4638,128 @@
         "title": "StudentResource",
         "type": "object"
       },
+      "SubjectOut": {
+        "properties": {
+          "class_count": {
+            "title": "Class Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "teacher_count": {
+            "title": "Teacher Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "id",
+          "class_count",
+          "teacher_count"
+        ],
+        "title": "SubjectOut",
+        "type": "object"
+      },
+      "SubjectPage": {
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/MarketClass"
+            },
+            "title": "Classes",
+            "type": "array"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/SubjectOut"
+          },
+          "teachers": {
+            "items": {
+              "$ref": "#/components/schemas/TeacherOut"
+            },
+            "title": "Teachers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "subject",
+          "classes",
+          "teachers"
+        ],
+        "title": "SubjectPage",
+        "type": "object"
+      },
+      "SubjectRef": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name"
+        ],
+        "title": "SubjectRef",
+        "type": "object"
+      },
+      "TeacherCard": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "headline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headline"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "display_name",
+          "headline",
+          "photo_url"
+        ],
+        "title": "TeacherCard",
+        "type": "object"
+      },
       "TeacherEarning": {
         "properties": {
           "commission_cents": {
@@ -4112,6 +4802,133 @@
           "net_cents"
         ],
         "title": "TeacherEarning",
+        "type": "object"
+      },
+      "TeacherOut": {
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "class_count": {
+            "title": "Class Count",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "headline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headline"
+          },
+          "highlights": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Highlights",
+            "type": "array"
+          },
+          "mediums": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Mediums",
+            "type": "array"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "students": {
+            "title": "Students",
+            "type": "integer"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectRef"
+            },
+            "title": "Subjects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "slug",
+          "display_name",
+          "headline",
+          "bio",
+          "photo_url",
+          "highlights",
+          "class_count",
+          "students",
+          "subjects",
+          "mediums"
+        ],
+        "title": "TeacherOut",
+        "type": "object"
+      },
+      "TeacherPage": {
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/MarketClass"
+            },
+            "title": "Classes",
+            "type": "array"
+          },
+          "other_subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectRef"
+            },
+            "title": "Other Subjects",
+            "type": "array"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubjectRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "teacher": {
+            "$ref": "#/components/schemas/TeacherOut"
+          }
+        },
+        "required": [
+          "teacher",
+          "subject",
+          "classes",
+          "other_subjects"
+        ],
+        "title": "TeacherPage",
         "type": "object"
       },
       "TenantBranding": {
@@ -4918,6 +5735,154 @@
         ],
         "title": "Workspace",
         "type": "object"
+      },
+      "app__modules__auth__schemas__ProfileUpdate": {
+        "additionalProperties": false,
+        "description": "PATCH: only fields sent are applied.",
+        "properties": {
+          "exam": {
+            "anyOf": [
+              {
+                "enum": [
+                  "grade_5",
+                  "ol",
+                  "al",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam"
+          },
+          "exam_year": {
+            "anyOf": [
+              {
+                "maximum": 2100.0,
+                "minimum": 2000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Year"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "preferred_language": {
+            "anyOf": [
+              {
+                "enum": [
+                  "en",
+                  "si",
+                  "ta"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Language"
+          },
+          "school": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School"
+          }
+        },
+        "title": "ProfileUpdate",
+        "type": "object"
+      },
+      "app__modules__market__schemas__ProfileUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "display_name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "headline": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headline"
+          },
+          "highlights": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "title": "Highlights",
+            "type": "array"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "slug": {
+            "maxLength": 40,
+            "minLength": 3,
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "display_name"
+        ],
+        "title": "ProfileUpdate",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -5202,7 +6167,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProfileUpdate"
+                "$ref": "#/components/schemas/app__modules__auth__schemas__ProfileUpdate"
               }
             }
           },
@@ -6116,6 +7081,677 @@
         "summary": "Today",
         "tags": [
           "learn"
+        ]
+      }
+    },
+    "/api/v1/market/classes": {
+      "get": {
+        "operationId": "classes_api_v1_market_classes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exam",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "grade_5",
+                    "ol",
+                    "al",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Exam"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          },
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2100,
+                  "minimum": 2000,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "medium",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "si",
+                    "ta",
+                    "en"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Medium"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_fee",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Fee"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "live",
+                    "recorded"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Format"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "popular",
+              "enum": [
+                "popular",
+                "newest",
+                "price"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "maximum": 60,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketClassPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Classes",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/classes/by-id/{class_id}": {
+      "get": {
+        "description": "The public card (and canonical path) of a class, e.g. to link from the student area.",
+        "operationId": "class_by_id_api_v1_market_classes_by_id__class_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "class_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Class Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketClass"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Class By Id",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/classes/{subject_slug}/{teacher_slug}/{class_slug}": {
+      "get": {
+        "operationId": "class_detail_api_v1_market_classes__subject_slug___teacher_slug___class_slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_slug",
+            "required": true,
+            "schema": {
+              "title": "Subject Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "teacher_slug",
+            "required": true,
+            "schema": {
+              "title": "Teacher Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "class_slug",
+            "required": true,
+            "schema": {
+              "title": "Class Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketClassDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Class Detail",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/home": {
+      "get": {
+        "operationId": "home_api_v1_market_home_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Home"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Home",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/institutes": {
+      "get": {
+        "operationId": "institutes_api_v1_market_institutes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InstituteOut"
+                  },
+                  "title": "Response Institutes Api V1 Market Institutes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Institutes",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/institutes/{slug}": {
+      "get": {
+        "operationId": "institute_page_api_v1_market_institutes__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Institute Page",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/sitemap": {
+      "get": {
+        "operationId": "sitemap_api_v1_market_sitemap_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SitemapOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sitemap",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/subjects": {
+      "get": {
+        "operationId": "subjects_api_v1_market_subjects_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubjectOut"
+                  },
+                  "title": "Response Subjects Api V1 Market Subjects Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Subjects",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/subjects/{slug}": {
+      "get": {
+        "operationId": "subject_page_api_v1_market_subjects__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Subject Page",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/teachers": {
+      "get": {
+        "operationId": "teachers_api_v1_market_teachers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TeacherOut"
+                  },
+                  "title": "Response Teachers Api V1 Market Teachers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Teachers",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/teachers/{teacher_slug}": {
+      "get": {
+        "operationId": "teacher_page_api_v1_market_teachers__teacher_slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "teacher_slug",
+            "required": true,
+            "schema": {
+              "title": "Teacher Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Teacher Page",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/me/teacher-profile": {
+      "get": {
+        "operationId": "my_profile_api_v1_me_teacher_profile_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Profile",
+        "tags": [
+          "market"
+        ]
+      },
+      "put": {
+        "operationId": "update_profile_api_v1_me_teacher_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__market__schemas__ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Profile",
+        "tags": [
+          "market"
         ]
       }
     },

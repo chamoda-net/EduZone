@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,6 +35,7 @@ from app.modules.catalog.schemas import (
     MonthOut,
     MonthUpdate,
 )
+from app.modules.market import profiles
 
 # Allowed class status changes. A published class never goes back to draft:
 # students may already have paid for it.
@@ -122,6 +124,14 @@ async def list_classes(session: AsyncSession, actor: Actor, *, status: str | Non
     )
 
 
+async def _subject_name(session: AsyncSession, subject_id: UUID) -> str:
+    name = (await session.execute(text("SELECT name FROM subjects WHERE id = :id AND is_active"),
+                                  {"id": subject_id})).scalar_one_or_none()
+    if name is None:
+        raise ApiError("SUBJECT_INVALID", "Choose a subject from the list.", status_code=422)
+    return str(name)
+
+
 async def get_class(session: AsyncSession, actor: Actor, class_id: UUID) -> ClassOut:
     return _class_out(await _load_class(session, actor, class_id), await repo.get_currency(session))
 
@@ -129,6 +139,8 @@ async def get_class(session: AsyncSession, actor: Actor, class_id: UUID) -> Clas
 async def create_class(session: AsyncSession, actor: Actor, body: ClassCreate) -> ClassOut:
     values = body.model_dump()
     values["teacher_member_id"] = body.teacher_member_id or actor.auth.member_id
+    if body.subject_id is not None:
+        values["subject"] = await _subject_name(session, body.subject_id)
     await _check_teacher(session, actor, values["teacher_member_id"])
     _check_pricing(body.pricing_model, body.monthly_fee_cents, body.one_time_price_cents)
     if body.slug is None:
@@ -160,11 +172,17 @@ async def update_class(session: AsyncSession, actor: Actor, class_id: UUID, body
     if "slug" in changes and await repo.class_slug_taken(session, changes["slug"], exclude_id=c.id):
         raise ApiError("SLUG_TAKEN", "Another class already uses this slug.", status_code=409)
 
+    if changes.get("subject_id") is not None:
+        changes["subject"] = await _subject_name(session, changes["subject_id"])
+
     merged = {k: changes.get(k, getattr(c, k))
               for k in ("pricing_model", "monthly_fee_cents", "one_time_price_cents")}
     _check_pricing(merged["pricing_model"], merged["monthly_fee_cents"], merged["one_time_price_cents"])
 
     updated = await repo.update_class(session, c.id, changes)
+    if updated.status == "published" and ({"status", "teacher_member_id"} & set(changes)):
+        # Published classes appear on the marketplace under their teacher's public profile.
+        await profiles.ensure_for_member(session, updated.teacher_member_id)
     action = _STATUS_ACTIONS[changes["status"]] if set(changes) == {"status"} else "class.update"
     await _audit(session, actor, action, "class", c.id, {"changes": changes})
     return _class_out(updated, await repo.get_currency(session))

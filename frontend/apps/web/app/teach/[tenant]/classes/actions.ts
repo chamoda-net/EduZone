@@ -27,7 +27,7 @@ function classBody(fd: FormData): Record<string, unknown> | { error: string } {
   }
   return {
     title: text(fd, "title"),
-    subject: textOrNull(fd, "subject"),
+    subject_id: textOrNull(fd, "subject_id"),
     exam: textOrNull(fd, "exam"),
     batch_year: intOrNull(fd, "batch_year"),
     medium: textOrNull(fd, "medium"),

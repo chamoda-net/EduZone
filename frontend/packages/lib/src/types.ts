@@ -48,6 +48,7 @@ export type ClassItem = {
   slug: string;
   description: string | null;
   subject: string | null;
+  subject_id: string | null;
   exam: "grade_5" | "ol" | "al" | "other" | null;
   batch_year: number | null;
   medium: "si" | "ta" | "en" | null;
@@ -414,4 +415,93 @@ export type Payout = {
   created_by_name: string | null;
   sent_at: string | null;
   created_at: string;
+};
+
+// --- Marketplace (public; phase 4) -------------------------------------------------------------
+
+export type SubjectRef = { slug: string; name: string };
+export type SubjectOut = SubjectRef & { id: string; class_count: number; teacher_count: number };
+
+export type MarketClass = {
+  id: string;
+  slug: string;
+  title: string;
+  exam: ClassItem["exam"];
+  batch_year: number | null;
+  medium: ClassItem["medium"];
+  cover_image_url: string | null;
+  pricing_model: PricingModel;
+  monthly_fee_cents: number | null;
+  one_time_price_cents: number | null;
+  currency: string;
+  subject_slug: string;
+  subject_name: string;
+  teacher_slug: string;
+  teacher_name: string;
+  teacher_photo_url: string | null;
+  org_slug: string;
+  org_name: string;
+  org_type: "individual" | "institute" | "corporate";
+  open_month_start: string | null;
+  open_month_fee_cents: number | null;
+  has_live: boolean;
+  has_recorded: boolean;
+  has_free_preview: boolean;
+  students: number;
+  /** /<subject>/<teacher>/<class> */
+  path: string;
+};
+
+export type MarketClassPage = { items: MarketClass[]; total: number; next_cursor: string | null };
+export type MarketMonth = { id: string; month_start: string; status: MonthStatus; fee_cents: number | null; currency: string };
+export type MarketLesson = {
+  id: string;
+  class_month_id: string | null;
+  title: string;
+  lesson_type: LessonType;
+  scheduled_at: string | null;
+  duration_minutes: number | null;
+  is_free_preview: boolean;
+};
+export type TeacherCard = { slug: string; display_name: string; headline: string | null; photo_url: string | null };
+export type MarketClassDetail = {
+  class: MarketClass;
+  description: string | null;
+  teacher: TeacherCard;
+  months: MarketMonth[];
+  lessons: MarketLesson[];
+};
+export type TeacherOut = {
+  slug: string;
+  display_name: string;
+  headline: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  highlights: string[];
+  class_count: number;
+  students: number;
+  subjects: SubjectRef[];
+  mediums: string[];
+};
+export type TeacherPage = { teacher: TeacherOut; subject: SubjectRef | null; classes: MarketClass[]; other_subjects: SubjectRef[] };
+export type InstituteOut = {
+  slug: string;
+  name: string;
+  logo_url: string | null;
+  class_count: number;
+  teacher_count: number;
+  subjects: string[];
+};
+export type InstitutePage = { institute: InstituteOut; classes: MarketClass[] };
+export type SubjectPage = { subject: SubjectOut; classes: MarketClass[]; teachers: TeacherOut[] };
+export type MarketHome = { subjects: SubjectOut[]; popular: MarketClass[]; starting: MarketClass[]; classes: number; teachers: number };
+export type Sitemap = { subjects: string[]; teachers: string[]; classes: string[]; institutes: string[] };
+export type TeacherProfile = {
+  slug: string;
+  display_name: string;
+  headline: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  highlights: string[];
+  public_paths: string[];
 };

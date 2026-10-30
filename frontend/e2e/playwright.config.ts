@@ -21,7 +21,7 @@ export default defineConfig({
   timeout: 60_000,
   reporter: [["list"]],
   use: {
-    baseURL: `http://demo.localhost:${WEB_PORT}`,
+    baseURL: `http://localhost:${WEB_PORT}`, // the main site (marketplace, student area, consoles)
     trace: "retain-on-failure",
     ...devices["Pixel 7"], // students are mostly on phones
   },

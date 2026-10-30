@@ -62,6 +62,7 @@ class ClassCreate(BaseModel):
     slug: Slug | None = None                    # generated from the title when omitted
     description: str | None = Field(default=None, max_length=5000)
     subject: str | None = Field(default=None, max_length=100)
+    subject_id: UUID | None = None              # an EduZone subject; sets `subject` to its name
     exam: Exam | None = None
     batch_year: int | None = Field(default=None, ge=2000, le=2100)
     medium: Medium | None = None
@@ -83,6 +84,7 @@ class ClassUpdate(_Patch):
     slug: Slug | None = None
     description: str | None = Field(default=None, max_length=5000)
     subject: str | None = Field(default=None, max_length=100)
+    subject_id: UUID | None = None
     exam: Exam | None = None
     batch_year: int | None = Field(default=None, ge=2000, le=2100)
     medium: Medium | None = None
@@ -105,6 +107,7 @@ class ClassOut(BaseModel):
     slug: str
     description: str | None
     subject: str | None
+    subject_id: UUID | None
     exam: str | None
     batch_year: int | None
     medium: str | None

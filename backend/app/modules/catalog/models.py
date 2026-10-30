@@ -17,6 +17,7 @@ class ClassModel(Base):
     slug: Mapped[str]
     description: Mapped[str | None]
     subject: Mapped[str | None]
+    subject_id: Mapped[UUID | None]
     exam: Mapped[str | None]
     batch_year: Mapped[int | None] = mapped_column(SmallInteger)
     medium: Mapped[str | None]

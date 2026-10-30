@@ -5,18 +5,20 @@ import { useActionState, useState } from "react";
 import { ErrorText, Field, Input, Select, buttonClass, inputClass } from "@eduzone/ui";
 import { centsToRupeesInput } from "@eduzone/lib/format";
 import { useT } from "@eduzone/lib/i18n/client";
-import type { ClassItem, PricingModel } from "@eduzone/lib/types";
+import type { ClassItem, PricingModel, SubjectOut } from "@eduzone/lib/types";
 
 import type { FormState } from "./actions";
 
 type Props = {
   action: (state: FormState, form: FormData) => Promise<FormState>;
   initial?: ClassItem;
+  /** EduZone's subjects: a class is listed on the marketplace under its subject. */
+  subjects: SubjectOut[];
   /** Pricing model can only change on a draft class with no months or lessons. */
   pricingLocked?: boolean;
 };
 
-export function ClassForm({ action, initial, pricingLocked = false }: Props) {
+export function ClassForm({ action, initial, subjects, pricingLocked = false }: Props) {
   const t = useT();
   const [state, submit, pending] = useActionState(action, {});
   const [pricing, setPricing] = useState<PricingModel>(initial?.pricing_model ?? "monthly");
@@ -29,8 +31,11 @@ export function ClassForm({ action, initial, pricingLocked = false }: Props) {
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t("classForm.subject")}>
-          <Input name="subject" maxLength={100} defaultValue={initial?.subject ?? ""} />
+        <Field label={t("classForm.subject")} hint={t("classForm.subjectHint")}>
+          <Select name="subject_id" defaultValue={initial?.subject_id ?? ""}>
+            <option value="">{t("classForm.subjectNone")}</option>
+            {subjects.map((s) => <option key={s.slug} value={s.id}>{s.name}</option>)}
+          </Select>
         </Field>
         <Field label={t("classForm.exam")}>
           <Select name="exam" defaultValue={initial?.exam ?? ""}>

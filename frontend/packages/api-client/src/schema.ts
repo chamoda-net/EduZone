@@ -488,6 +488,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/market/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Classes */
+        get: operations["classes_api_v1_market_classes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/classes/by-id/{class_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Class By Id
+         * @description The public card (and canonical path) of a class, e.g. to link from the student area.
+         */
+        get: operations["class_by_id_api_v1_market_classes_by_id__class_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/classes/{subject_slug}/{teacher_slug}/{class_slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Class Detail */
+        get: operations["class_detail_api_v1_market_classes__subject_slug___teacher_slug___class_slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Home */
+        get: operations["home_api_v1_market_home_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/institutes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Institutes */
+        get: operations["institutes_api_v1_market_institutes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/institutes/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Institute Page */
+        get: operations["institute_page_api_v1_market_institutes__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/sitemap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sitemap */
+        get: operations["sitemap_api_v1_market_sitemap_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subjects */
+        get: operations["subjects_api_v1_market_subjects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/subjects/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subject Page */
+        get: operations["subject_page_api_v1_market_subjects__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/teachers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teachers */
+        get: operations["teachers_api_v1_market_teachers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/teachers/{teacher_slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teacher Page */
+        get: operations["teacher_page_api_v1_market_teachers__teacher_slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/teacher-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Profile */
+        get: operations["my_profile_api_v1_me_teacher_profile_get"];
+        /** Update Profile */
+        put: operations["update_profile_api_v1_me_teacher_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/org/cashflow": {
         parameters: {
             query?: never;
@@ -1764,6 +1972,8 @@ export interface components {
             slug?: string | null;
             /** Subject */
             subject?: string | null;
+            /** Subject Id */
+            subject_id?: string | null;
             /** Teacher Member Id */
             teacher_member_id?: string | null;
             /** Title */
@@ -1809,6 +2019,8 @@ export interface components {
             status: string;
             /** Subject */
             subject: string | null;
+            /** Subject Id */
+            subject_id: string | null;
             /**
              * Teacher Member Id
              * Format: uuid
@@ -1874,6 +2086,8 @@ export interface components {
             status?: ("draft" | "published" | "archived") | null;
             /** Subject */
             subject?: string | null;
+            /** Subject Id */
+            subject_id?: string | null;
             /** Teacher Member Id */
             teacher_member_id?: string | null;
             /** Title */
@@ -1980,6 +2194,40 @@ export interface components {
             database: string;
             /** Status */
             status: string;
+        };
+        /** Home */
+        Home: {
+            /** Classes */
+            classes: number;
+            /** Popular */
+            popular: components["schemas"]["MarketClass"][];
+            /** Starting */
+            starting: components["schemas"]["MarketClass"][];
+            /** Subjects */
+            subjects: components["schemas"]["SubjectOut"][];
+            /** Teachers */
+            teachers: number;
+        };
+        /** InstituteOut */
+        InstituteOut: {
+            /** Class Count */
+            class_count: number;
+            /** Logo Url */
+            logo_url: string | null;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Subjects */
+            subjects: string[];
+            /** Teacher Count */
+            teacher_count: number;
+        };
+        /** InstitutePage */
+        InstitutePage: {
+            /** Classes */
+            classes: components["schemas"]["MarketClass"][];
+            institute: components["schemas"]["InstituteOut"];
         };
         /** LateRequestCreate */
         LateRequestCreate: {
@@ -2192,6 +2440,126 @@ export interface components {
              */
             status: "signed_in" | "device_check";
             tokens?: components["schemas"]["TokenPair"] | null;
+        };
+        /**
+         * MarketClass
+         * @description A class card on the marketplace: public fields only.
+         */
+        MarketClass: {
+            /** Batch Year */
+            batch_year: number | null;
+            /** Cover Image Url */
+            cover_image_url: string | null;
+            /** Currency */
+            currency: string;
+            /** Exam */
+            exam: string | null;
+            /** Has Free Preview */
+            has_free_preview: boolean;
+            /** Has Live */
+            has_live: boolean;
+            /** Has Recorded */
+            has_recorded: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Medium */
+            medium: string | null;
+            /** Monthly Fee Cents */
+            monthly_fee_cents: number | null;
+            /** One Time Price Cents */
+            one_time_price_cents: number | null;
+            /** Open Month Fee Cents */
+            open_month_fee_cents: number | null;
+            /** Open Month Start */
+            open_month_start: string | null;
+            /** Org Name */
+            org_name: string;
+            /** Org Slug */
+            org_slug: string;
+            /** Org Type */
+            org_type: string;
+            /** Path */
+            path: string;
+            /** Pricing Model */
+            pricing_model: string;
+            /** Slug */
+            slug: string;
+            /** Students */
+            students: number;
+            /** Subject Name */
+            subject_name: string;
+            /** Subject Slug */
+            subject_slug: string;
+            /** Teacher Name */
+            teacher_name: string;
+            /** Teacher Photo Url */
+            teacher_photo_url: string | null;
+            /** Teacher Slug */
+            teacher_slug: string;
+            /** Title */
+            title: string;
+        };
+        /** MarketClassDetail */
+        MarketClassDetail: {
+            class: components["schemas"]["MarketClass"];
+            /** Description */
+            description: string | null;
+            /** Lessons */
+            lessons: components["schemas"]["MarketLesson"][];
+            /** Months */
+            months: components["schemas"]["MarketMonth"][];
+            teacher: components["schemas"]["TeacherCard"];
+        };
+        /** MarketClassPage */
+        MarketClassPage: {
+            /** Items */
+            items: components["schemas"]["MarketClass"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total */
+            total: number;
+        };
+        /** MarketLesson */
+        MarketLesson: {
+            /** Class Month Id */
+            class_month_id: string | null;
+            /** Duration Minutes */
+            duration_minutes: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Free Preview */
+            is_free_preview: boolean;
+            /** Lesson Type */
+            lesson_type: string;
+            /** Scheduled At */
+            scheduled_at: string | null;
+            /** Title */
+            title: string;
+        };
+        /** MarketMonth */
+        MarketMonth: {
+            /** Currency */
+            currency: string;
+            /** Fee Cents */
+            fee_cents: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Month Start
+             * Format: date
+             */
+            month_start: string;
+            /** Status */
+            status: string;
         };
         /** Me */
         Me: {
@@ -2690,21 +3058,22 @@ export interface components {
             /** Url */
             url: string;
         };
-        /**
-         * ProfileUpdate
-         * @description PATCH: only fields sent are applied.
-         */
-        ProfileUpdate: {
-            /** Exam */
-            exam?: ("grade_5" | "ol" | "al" | "other") | null;
-            /** Exam Year */
-            exam_year?: number | null;
-            /** Full Name */
-            full_name?: string | null;
-            /** Preferred Language */
-            preferred_language?: ("en" | "si" | "ta") | null;
-            /** School */
-            school?: string | null;
+        /** ProfileOut */
+        ProfileOut: {
+            /** Bio */
+            bio: string | null;
+            /** Display Name */
+            display_name: string;
+            /** Headline */
+            headline: string | null;
+            /** Highlights */
+            highlights: string[];
+            /** Photo Url */
+            photo_url: string | null;
+            /** Public Paths */
+            public_paths: string[];
+            /** Slug */
+            slug: string;
         };
         /** PublicClass */
         PublicClass: {
@@ -2898,6 +3267,17 @@ export interface components {
             /** Title */
             title: string | null;
         };
+        /** SitemapOut */
+        SitemapOut: {
+            /** Classes */
+            classes: string[];
+            /** Institutes */
+            institutes: string[];
+            /** Subjects */
+            subjects: string[];
+            /** Teachers */
+            teachers: string[];
+        };
         /** StreamWebhook */
         StreamWebhook: {
             /** Videoguid */
@@ -3027,6 +3407,48 @@ export interface components {
             /** Views Used */
             views_used: number;
         };
+        /** SubjectOut */
+        SubjectOut: {
+            /** Class Count */
+            class_count: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Teacher Count */
+            teacher_count: number;
+        };
+        /** SubjectPage */
+        SubjectPage: {
+            /** Classes */
+            classes: components["schemas"]["MarketClass"][];
+            subject: components["schemas"]["SubjectOut"];
+            /** Teachers */
+            teachers: components["schemas"]["TeacherOut"][];
+        };
+        /** SubjectRef */
+        SubjectRef: {
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+        };
+        /** TeacherCard */
+        TeacherCard: {
+            /** Display Name */
+            display_name: string;
+            /** Headline */
+            headline: string | null;
+            /** Photo Url */
+            photo_url: string | null;
+            /** Slug */
+            slug: string;
+        };
         /** TeacherEarning */
         TeacherEarning: {
             /** Commission Cents */
@@ -3046,6 +3468,38 @@ export interface components {
             teacher_member_id: string;
             /** Teacher Name */
             teacher_name: string;
+        };
+        /** TeacherOut */
+        TeacherOut: {
+            /** Bio */
+            bio: string | null;
+            /** Class Count */
+            class_count: number;
+            /** Display Name */
+            display_name: string;
+            /** Headline */
+            headline: string | null;
+            /** Highlights */
+            highlights: string[];
+            /** Mediums */
+            mediums: string[];
+            /** Photo Url */
+            photo_url: string | null;
+            /** Slug */
+            slug: string;
+            /** Students */
+            students: number;
+            /** Subjects */
+            subjects: components["schemas"]["SubjectRef"][];
+        };
+        /** TeacherPage */
+        TeacherPage: {
+            /** Classes */
+            classes: components["schemas"]["MarketClass"][];
+            /** Other Subjects */
+            other_subjects: components["schemas"]["SubjectRef"][];
+            subject: components["schemas"]["SubjectRef"] | null;
+            teacher: components["schemas"]["TeacherOut"];
         };
         /**
          * TenantBranding
@@ -3316,6 +3770,37 @@ export interface components {
             /** Slug */
             slug: string;
         };
+        /**
+         * ProfileUpdate
+         * @description PATCH: only fields sent are applied.
+         */
+        app__modules__auth__schemas__ProfileUpdate: {
+            /** Exam */
+            exam?: ("grade_5" | "ol" | "al" | "other") | null;
+            /** Exam Year */
+            exam_year?: number | null;
+            /** Full Name */
+            full_name?: string | null;
+            /** Preferred Language */
+            preferred_language?: ("en" | "si" | "ta") | null;
+            /** School */
+            school?: string | null;
+        };
+        /** ProfileUpdate */
+        app__modules__market__schemas__ProfileUpdate: {
+            /** Bio */
+            bio?: string | null;
+            /** Display Name */
+            display_name: string;
+            /** Headline */
+            headline?: string | null;
+            /** Highlights */
+            highlights?: string[];
+            /** Photo Url */
+            photo_url?: string | null;
+            /** Slug */
+            slug: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -3553,7 +4038,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProfileUpdate"];
+                "application/json": components["schemas"]["app__modules__auth__schemas__ProfileUpdate"];
             };
         };
         responses: {
@@ -4187,6 +4672,369 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Today"];
+                };
+            };
+        };
+    };
+    classes_api_v1_market_classes_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                exam?: ("grade_5" | "ol" | "al" | "other") | null;
+                subject?: string | null;
+                year?: number | null;
+                medium?: ("si" | "ta" | "en") | null;
+                max_fee?: number | null;
+                format?: ("live" | "recorded") | null;
+                sort?: "popular" | "newest" | "price";
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketClassPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    class_by_id_api_v1_market_classes_by_id__class_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketClass"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    class_detail_api_v1_market_classes__subject_slug___teacher_slug___class_slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subject_slug: string;
+                teacher_slug: string;
+                class_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketClassDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    home_api_v1_market_home_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Home"];
+                };
+            };
+        };
+    };
+    institutes_api_v1_market_institutes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstituteOut"][];
+                };
+            };
+        };
+    };
+    institute_page_api_v1_market_institutes__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstitutePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sitemap_api_v1_market_sitemap_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitemapOut"];
+                };
+            };
+        };
+    };
+    subjects_api_v1_market_subjects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectOut"][];
+                };
+            };
+        };
+    };
+    subject_page_api_v1_market_subjects__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    teachers_api_v1_market_teachers_get: {
+        parameters: {
+            query?: {
+                subject?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    teacher_page_api_v1_market_teachers__teacher_slug__get: {
+        parameters: {
+            query?: {
+                subject?: string | null;
+            };
+            header?: never;
+            path: {
+                teacher_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_profile_api_v1_me_teacher_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+        };
+    };
+    update_profile_api_v1_me_teacher_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__market__schemas__ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

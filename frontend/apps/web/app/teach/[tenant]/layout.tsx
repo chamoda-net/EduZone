@@ -1,4 +1,4 @@
-import { Clapperboard, ExternalLink, HandCoins, Inbox, Landmark, LibraryBig, Receipt } from "lucide-react";
+import { Clapperboard, ExternalLink, HandCoins, Inbox, Landmark, LibraryBig, Receipt, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -41,6 +41,7 @@ export default async function TeachLayout({ children, params }: LayoutProps<"/te
     { href: `${base}/earnings`, label: t("org.nav.earnings"), icon: <HandCoins /> },
     ...(managesAll ? [{ href: `${base}/money`, label: t("org.nav.money"), icon: <Landmark /> }] : []),
     { href: `${base}/media`, label: t("org.nav.media"), icon: <Clapperboard /> },
+    { href: `${base}/profile`, label: t("org.nav.profile"), icon: <UserRound /> },
   ];
 
   return (

@@ -11,7 +11,7 @@ export type ApiError = { code: string; message: string };
 export type ApiResult<T> = { ok: true; status: number; data: T } | { ok: false; status: number; error: ApiError };
 
 type Options = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** Defaults to the session's access token; pass null for an anonymous call. */
   token?: string | null;

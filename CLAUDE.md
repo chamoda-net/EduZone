@@ -217,9 +217,11 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
    (classes, months, lessons) have no user policy: anything about a class runs in that class's tenant
    transaction. Writes always happen inside the tenant transaction. Never set `app.user_id` and
    `app.tenant_id` in the same transaction. `tests/test_learn.py` holds the user isolation tests.
-5. **Public marketplace reads** go through **one narrow read path** (a `SECURITY DEFINER` function set or
-   an admin-owned view) exposing public fields of listed, approved tenants and published classes only.
-   Never by relaxing tenant RLS.
+5. **Public marketplace reads** go through **one narrow read path**: the `public_*` views (migration 0007,
+   owned by `eduzone_admin`, SELECT-only for the app role) expose public fields of active, listed tenants and
+   published classes that have a subject and a teacher profile. Never by relaxing tenant RLS. A new public
+   field is added to a view on purpose; Zoom links, descriptions of lessons, money settings and member ids
+   never are (`tests/test_market.py` checks).
 6. **Never accept `tenant_id` or `user_id` from the client.** They come from the resolved path or the session.
 7. The app connects as role **`eduzone_app`** (subject to RLS). Platform admin endpoints and
    background jobs use **`eduzone_admin`** (BYPASSRLS) through a separate session factory.
@@ -272,8 +274,10 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
 - Identity (phase 2, **built**, migration 0005): `user_identities` (Google), `email_verifications`,
   `recovery_tokens` (hashed, expiring), `user_devices` (trusted devices), `login_attempts`, profile columns
   on `users`; `user_sessions` lost `tenant_id` (sessions are per user).
-- Marketplace (phase 4): `subjects` (EduZone-managed slugs), `classes.subject_id`, `teacher_profiles`
-  (slug unique platform-wide, photo, headline, bio, highlights), `tenants.is_listed`.
+- Marketplace (phase 4, **built**, migration 0007): `subjects` (EduZone-managed; a slug can never be a
+  reserved route, `is_reserved_slug()`), `classes.subject_id`, `teacher_profiles` (one per person, slug unique
+  platform-wide, photo URL, headline, bio, highlights; created when a class of theirs is published),
+  `tenants.is_listed`, and the `public_*` views.
 - Onboarding (phase 5): `teacher_applications` (document in private storage); new tenants start `pending`.
 - Cart (phase 6): `cart_items` (per user), `checkouts` and `checkout_payments` (platform-level: one
   payment for many orders); `orders.checkout_id`.
@@ -666,6 +670,17 @@ httpOnly cookies.
   payments, earnings, money. Videos upload from the browser straight to Bunny (tus-js-client); PDFs go through
   the streaming route `/teach/<slug>/upload/document`, which proxy.ts skips. Student routes: `/learn/...` (below),
   the tenant site's public `/classes/[slug]`, and the gateway return page `/checkout/[id]`.
+  **Phase 4 (marketplace, main host):** `/` (home: search, exam tabs, subjects, starting now, popular),
+  `/classes` (catalogue; filters in the URL: q, exam, subject, year, medium, format, max_fee, sort, org),
+  `/<subject>`, `/<subject>/<teacher>`, `/<subject>/<teacher>/<class>` (Join or pay → `/learn/classes/<id>`),
+  `/teachers`, `/institutes[/<slug>]`, and draft static pages (`/about`, `/terms`, `/privacy`, `/refund-policy`,
+  `/contact`; final wording pending the legal review). Data from `/api/v1/market/...` (no sign-in) via
+  `lib/market.ts`. Share tools (`components/share-tools.tsx`: WhatsApp, copy link, QR from `/qr?path=`, own
+  paths only), Open Graph images (`opengraph-image.tsx` on teacher and class pages), JSON-LD (`Person`,
+  `Course`), `sitemap.ts`, `robots.ts`. Teachers edit their page at `/teach/<slug>/profile`
+  (`/api/v1/me/teacher-profile`); the class form picks a subject. Tenant subdomains now redirect: `/` to
+  `/classes?org=<slug>` and `/classes/<slug>` to the marketplace page. Pages render per request (no caching
+  yet; FRONTEND.md section 12 wants it, see the migration plan).
   **Phase 3:** the student area is `/learn` (Today, `/learn/classes[/<id>]`, `/learn/lessons/<id>`,
   `/learn/schedule`, `/learn/requests`, `/learn/payments[/<id>]`, `/learn/profile`) and calls only
   `/api/v1/learn/...` (by id, any host). The console is `/teach/<slug>/...` (`/teach` picks a workspace; a
@@ -692,6 +707,8 @@ httpOnly cookies.
   registers, confirms the phone, joins and pays with the fake gateway; a second browser signs the first out;
   the teacher signs in (with the new-device code) and opens the console. Add a test for each flow a later
   phase changes.
+- **Marketplace demo (local):** `scripts/seed_market.py` (after `seed_demo.py`) adds an individual teacher's
+  organization with two classes and a chemistry teacher at the demo institute, with profiles and months.
 - **Demo sign-in (local):** `scripts/seed_demo.py` gives the demo owner, teacher and a demo student (in the
   physics class, November unlocked) an email and a local test password (constants at the top of that file). The first sign-in in a browser asks for the SMS code,
   which `SMS_PROVIDER=console` writes to the API log.
@@ -749,7 +766,7 @@ httpOnly cookies.
 1. Frontend groundwork: monorepo, `packages/ui` tokens, generated API client, next-intl, Playwright smoke suite (done)
 2. Identity: Google + email/password, phone verification, new-device OTP, recovery, account-wide sessions (done)
 3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads) (done)
-4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools
+4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools (done)
 5. Teacher self-registration and approval
 6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment)
 7. Own hls.js video player with signed HLS URLs and progress
