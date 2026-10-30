@@ -12,7 +12,7 @@ FeeBearer = Literal["tenant", "platform"]
 
 # Subdomains no organization can take.
 RESERVED_SLUGS = frozenset({
-    "admin", "api", "www", "app", "learn", "teach", "t", "login", "register", "support", "status", "mail",
+    "admin", "api", "www", "app", "apply", "learn", "teach", "t", "login", "register", "support", "status", "mail",
     "static", "assets", "platform", "dev", "staging", "eduzone",
 })
 

@@ -678,6 +678,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/teacher-application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Application */
+        get: operations["my_application_api_v1_me_teacher_application_get"];
+        /** Resubmit */
+        put: operations["resubmit_api_v1_me_teacher_application_put"];
+        /** Apply */
+        post: operations["apply_api_v1_me_teacher_application_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/teacher-profile": {
         parameters: {
             query?: never;
@@ -1062,6 +1081,91 @@ export interface paths {
         get: operations["org_orders_api_v1_org_orders_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Applications */
+        get: operations["list_applications_api_v1_platform_applications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/applications/{application_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Application */
+        get: operations["get_application_api_v1_platform_applications__application_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/applications/{application_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide */
+        post: operations["decide_api_v1_platform_applications__application_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/applications/{application_id}/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Application Document */
+        get: operations["application_document_api_v1_platform_applications__application_id__document_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/applications/{application_id}/reveal-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reveal Account */
+        post: operations["reveal_account_api_v1_platform_applications__application_id__reveal_account_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1859,6 +1963,211 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AccountNumber */
+        AccountNumber: {
+            /** Account Number */
+            account_number: string;
+        };
+        /** ApplicationDetail */
+        ApplicationDetail: {
+            /** Applicant Email */
+            applicant_email: string | null;
+            /** Applicant Name */
+            applicant_name: string;
+            /** Applicant Phone */
+            applicant_phone: string | null;
+            /** Document Name */
+            document_name: string;
+            /** Document Type */
+            document_type: string;
+            /** Experience */
+            experience: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "individual" | "institute";
+            /** Org Name */
+            org_name: string;
+            /** Payout Account Masked */
+            payout_account_masked: string;
+            /** Payout Account Name */
+            payout_account_name: string;
+            /** Payout Bank Name */
+            payout_bank_name: string;
+            /** Payout Branch */
+            payout_branch: string | null;
+            /** Review Note */
+            review_note: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /** Reviewed By Name */
+            reviewed_by_name: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "submitted" | "changes_requested" | "approved" | "rejected";
+            /** Subjects */
+            subjects: components["schemas"]["app__modules__onboarding__schemas__SubjectRef"][];
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Slug */
+            tenant_slug: string;
+            /** Terms Version */
+            terms_version: string;
+        };
+        /** ApplicationOut */
+        ApplicationOut: {
+            /** Document Name */
+            document_name: string;
+            /** Experience */
+            experience: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "individual" | "institute";
+            /** Org Name */
+            org_name: string;
+            /** Payout Account Masked */
+            payout_account_masked: string;
+            /** Payout Account Name */
+            payout_account_name: string;
+            /** Payout Bank Name */
+            payout_bank_name: string;
+            /** Payout Branch */
+            payout_branch: string | null;
+            /** Review Note */
+            review_note: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "submitted" | "changes_requested" | "approved" | "rejected";
+            /** Subjects */
+            subjects: components["schemas"]["app__modules__onboarding__schemas__SubjectRef"][];
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /** Tenant Slug */
+            tenant_slug: string;
+        };
+        /**
+         * ApplicationRow
+         * @description Platform admin list.
+         */
+        ApplicationRow: {
+            /** Applicant Email */
+            applicant_email: string | null;
+            /** Applicant Name */
+            applicant_name: string;
+            /** Applicant Phone */
+            applicant_phone: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "individual" | "institute";
+            /** Org Name */
+            org_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "submitted" | "changes_requested" | "approved" | "rejected";
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Slug */
+            tenant_slug: string;
+        };
+        /** Body_apply_api_v1_me_teacher_application_post */
+        Body_apply_api_v1_me_teacher_application_post: {
+            /**
+             * Accept Terms
+             * @default false
+             */
+            accept_terms: boolean;
+            /** Document */
+            document: string;
+            /** Experience */
+            experience?: string | null;
+            /** Kind */
+            kind: string;
+            /** Org Name */
+            org_name: string;
+            /** Payout Account Name */
+            payout_account_name: string;
+            /** Payout Account Number */
+            payout_account_number?: string | null;
+            /** Payout Bank Name */
+            payout_bank_name: string;
+            /** Payout Branch */
+            payout_branch?: string | null;
+            /** Subject Ids */
+            subject_ids: string[];
+        };
+        /** Body_resubmit_api_v1_me_teacher_application_put */
+        Body_resubmit_api_v1_me_teacher_application_put: {
+            /**
+             * Accept Terms
+             * @default false
+             */
+            accept_terms: boolean;
+            /** Document */
+            document?: string | null;
+            /** Experience */
+            experience?: string | null;
+            /** Kind */
+            kind: string;
+            /** Org Name */
+            org_name: string;
+            /** Payout Account Name */
+            payout_account_name: string;
+            /** Payout Account Number */
+            payout_account_number?: string | null;
+            /** Payout Bank Name */
+            payout_bank_name: string;
+            /** Payout Branch */
+            payout_branch?: string | null;
+            /** Subject Ids */
+            subject_ids: string[];
+        };
         /** Body_upload_document_api_v1_org_media_documents_post */
         Body_upload_document_api_v1_org_media_documents_post: {
             /** File */
@@ -2092,6 +2401,16 @@ export interface components {
             teacher_member_id?: string | null;
             /** Title */
             title?: string | null;
+        };
+        /** DecisionIn */
+        DecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "request_changes" | "reject";
+            /** Note */
+            note?: string | null;
         };
         /**
          * DeviceCheck
@@ -3431,13 +3750,6 @@ export interface components {
             /** Teachers */
             teachers: components["schemas"]["TeacherOut"][];
         };
-        /** SubjectRef */
-        SubjectRef: {
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
-        };
         /** TeacherCard */
         TeacherCard: {
             /** Display Name */
@@ -3490,15 +3802,15 @@ export interface components {
             /** Students */
             students: number;
             /** Subjects */
-            subjects: components["schemas"]["SubjectRef"][];
+            subjects: components["schemas"]["app__modules__market__schemas__SubjectRef"][];
         };
         /** TeacherPage */
         TeacherPage: {
             /** Classes */
             classes: components["schemas"]["MarketClass"][];
             /** Other Subjects */
-            other_subjects: components["schemas"]["SubjectRef"][];
-            subject: components["schemas"]["SubjectRef"] | null;
+            other_subjects: components["schemas"]["app__modules__market__schemas__SubjectRef"][];
+            subject: components["schemas"]["app__modules__market__schemas__SubjectRef"] | null;
             teacher: components["schemas"]["TeacherOut"];
         };
         /**
@@ -3769,6 +4081,8 @@ export interface components {
             role: string;
             /** Slug */
             slug: string;
+            /** Status */
+            status: string;
         };
         /**
          * ProfileUpdate
@@ -3800,6 +4114,23 @@ export interface components {
             photo_url?: string | null;
             /** Slug */
             slug: string;
+        };
+        /** SubjectRef */
+        app__modules__market__schemas__SubjectRef: {
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+        };
+        /** SubjectRef */
+        app__modules__onboarding__schemas__SubjectRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
     };
     responses: never;
@@ -4986,6 +5317,92 @@ export interface operations {
             };
         };
     };
+    my_application_api_v1_me_teacher_application_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"] | null;
+                };
+            };
+        };
+    };
+    resubmit_api_v1_me_teacher_application_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_resubmit_api_v1_me_teacher_application_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_api_v1_me_teacher_application_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_apply_api_v1_me_teacher_application_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     my_profile_api_v1_me_teacher_profile_get: {
         parameters: {
             query?: never;
@@ -5997,6 +6414,165 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrgOrderPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_applications_api_v1_platform_applications_get: {
+        parameters: {
+            query?: {
+                status?: ("submitted" | "changes_requested" | "approved" | "rejected") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_application_api_v1_platform_applications__application_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_api_v1_platform_applications__application_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    application_document_api_v1_platform_applications__application_id__document_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reveal_account_api_v1_platform_applications__application_id__reveal_account_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountNumber"];
                 };
             };
             /** @description Validation Error */

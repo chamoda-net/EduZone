@@ -165,6 +165,9 @@ async def update_class(session: AsyncSession, actor: Actor, class_id: UUID, body
         await _check_teacher(session, actor, changes["teacher_member_id"])
     if "status" in changes and changes["status"] not in _STATUS_FLOW[c.status]:
         raise ApiError("STATUS_INVALID", f"A {c.status} class cannot become {changes['status']}.", status_code=409)
+    if changes.get("status") == "published" and await repo.tenant_status(session) != "active":
+        # Draft mode: an organization waiting for EduZone's approval prepares classes but can't publish.
+        raise ApiError("TENANT_NOT_APPROVED", "You can publish once EduZone approves your application.", status_code=409)
     if "pricing_model" in changes and (c.status != "draft" or await repo.class_has_content(session, c.id)):
         raise ApiError("PRICING_LOCKED",
                        "The pricing model can only change on a draft class with no months or lessons.",

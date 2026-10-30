@@ -37,3 +37,13 @@ class StorageClient:
                 res.raise_for_status()
         except httpx.HTTPError as exc:
             raise _storage_down() from exc
+
+    async def download(self, path: str) -> bytes:
+        try:
+            res = await self._http.get(f"{self._base}/{path.lstrip('/')}", headers={"AccessKey": self._key})
+            if res.status_code == 404:
+                raise ApiError("NOT_FOUND", "File not found.", status_code=404)
+            res.raise_for_status()
+            return res.content
+        except httpx.HTTPError as exc:
+            raise _storage_down() from exc

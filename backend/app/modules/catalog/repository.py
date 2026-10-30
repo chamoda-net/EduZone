@@ -145,3 +145,7 @@ async def update_lesson(session: AsyncSession, lesson_id: UUID, values: dict[str
 
 async def delete_lesson(session: AsyncSession, lesson_id: UUID) -> None:
     await session.execute(delete(Lesson).where(Lesson.id == lesson_id))
+
+
+async def tenant_status(session: AsyncSession) -> str:
+    return (await session.execute(text("SELECT status FROM tenants WHERE id = current_tenant_id()"))).scalar_one()

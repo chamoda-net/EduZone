@@ -11,6 +11,7 @@ from app.integrations.bunny import close_bunny_http
 from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import org_router as catalog_org_router
 from app.modules.checkout import router as checkout
+from app.modules.onboarding.router import router as onboarding_router
 from app.modules.learn.router import router as learn_router
 from app.modules.learning import router as learning
 from app.modules.market import router as market
@@ -55,6 +56,7 @@ api.include_router(auth_router)
 api.include_router(learn_router)
 api.include_router(market.router)
 api.include_router(market.me_router)
+api.include_router(onboarding_router)
 api.include_router(media_webhook_router)
 api.include_router(learning.public_router)
 api.include_router(learning.student_router)

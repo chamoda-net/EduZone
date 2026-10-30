@@ -76,3 +76,27 @@ test("teacher signs in, sees their class and their public profile", async ({ pag
   await expect(page.getByRole("heading", { name: "Public profile" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: /\/physics\/kasun-perera/ })).toBeVisible();
 });
+
+test("a new user applies to teach and gets a console in draft mode", async ({ page }) => {
+  await registerStudent(page, newStudentEmail(), newStudentPhone());
+  await page.goto("/teach");
+  await expect(page).toHaveURL(/\/teach\/apply$/);
+
+  const name = `E2E Physics ${Date.now().toString(36)}`;
+  await page.getByLabel("Name for your classes").fill(name);
+  await page.getByRole("button", { name: "Physics", exact: true }).click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "nic.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n% e2e\n"),
+  });
+  await page.getByLabel("Bank", { exact: true }).fill("Bank of Ceylon");
+  await page.getByLabel("Account holder name").fill("E2E Teacher");
+  await page.getByLabel("Account number").fill("0081 2345 6789");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Submit application" }).click();
+
+  await expect(page.getByRole("heading", { name: "We are reviewing your application" })).toBeVisible();
+  await expect(page.getByText("****6789")).toBeVisible();
+  await page.getByRole("link", { name: "Open your console" }).click();
+  await expect(page.getByText("Draft mode")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Classes" })).toBeVisible();
+});

@@ -188,8 +188,10 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
 1. **Every business table has `tenant_id`.** Platform-level tables (`tenants`, `users`,
    `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`, `platform_admins`, the identity tables
    `user_sessions`, `user_devices`, `user_identities`, `email_verifications`, `recovery_tokens`,
-   `login_attempts`, and the planned `subjects`, `teacher_profiles`, `teacher_applications`, `checkouts`,
-   `checkout_payments` and `cart_items`) are the only exceptions.
+   `login_attempts`, `subjects`, `teacher_profiles`, `teacher_applications`, and the planned `checkouts`,
+   `checkout_payments` and `cart_items`) are the only exceptions. `teacher_applications` carries the
+   `tenant_id` it opened but is guarded by a user policy (`applicant_own`: the app role sees only the rows of
+   `app.user_id`).
 2. **How a request finds its tenant (target):**
    - **Teacher console** `/teach/<tenant>/...`: tenant slug from the path, `resolve_tenant(slug)`, then a
      **membership check** (active staff member of that tenant), then the tenant transaction.
@@ -278,7 +280,8 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   reserved route, `is_reserved_slug()`), `classes.subject_id`, `teacher_profiles` (one per person, slug unique
   platform-wide, photo URL, headline, bio, highlights; created when a class of theirs is published),
   `tenants.is_listed`, and the `public_*` views.
-- Onboarding (phase 5): `teacher_applications` (document in private storage); new tenants start `pending`.
+- Onboarding (phase 5, **built**, migration 0008): `teacher_applications` (document in private storage,
+  account number encrypted); applicants' tenants start `pending` through `open_pending_tenant()`.
 - Cart (phase 6): `cart_items` (per user), `checkouts` and `checkout_payments` (platform-level: one
   payment for many orders); `orders.checkout_id`.
 
@@ -579,6 +582,37 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   `/` (organizations), `/tenants/new`, `/tenants/[id]` (figures, record payout, history, edit), `/payments`.
   It calls only `/api/v1/platform/...` and sends no tenant host.
 
+### Teacher onboarding (phase 5: `app/modules/onboarding`, `app/modules/platform/applications.py`)
+- **Apply** (`/api/v1/me/teacher-application`, signed in, **verified phone** else 403 `PHONE_NOT_VERIFIED`):
+  `GET` (latest or null), `POST` multipart (fields + `document`) and `PUT` (edit while `submitted` or
+  `changes_requested`; back to `submitted`; omit the account number or the file to keep the stored one; the
+  organization type is fixed). One open application per user (409 `APPLICATION_OPEN`); after a rejection
+  they may apply again (a new organization).
+- **What applying creates**, in one transaction: the document in private storage first, then the tenant
+  (`pending`, slug from the name, never a reserved one) and its owner member via the `SECURITY DEFINER`
+  function `open_pending_tenant()` (the app role has no INSERT on `tenants`), the teacher profile, the
+  application and an `application.submit` audit row.
+- **Document:** PDF, JPEG or PNG by magic bytes, up to 10 MB, stored by key in **private storage**
+  (`app/integrations/private_storage.py`: `PRIVATE_STORAGE=local` folder for development, `bunny` = the
+  storage zone under `_private/`, never signed for the CDN). Only the platform admin reads it, through the API.
+- **Account number:** Fernet-encrypted (`app/core/crypto.py`, `PAYOUT_ENCRYPTION_KEY`; locally derived from
+  `JWT_SECRET` when unset) plus a masked copy (`****6789`). Approval copies the bank name and masked number
+  to `tenants`.
+- **Draft mode:** a `pending` tenant resolves only for console routes (`/teach/<slug>`, membership-checked),
+  appears in `me.workspaces` with `status: "pending"`, and can build classes, months and lessons; publishing
+  a class is 409 `TENANT_NOT_APPROVED`. Public views only show `active` tenants, so nothing leaks.
+- **Review** (`/api/v1/platform/applications`): list (`?status=`), detail, `GET .../document` (inline,
+  `no-store`), `POST .../reveal-account`, `POST .../decision {approve | request_changes | reject, note}`
+  (note required except to approve; approve only from `submitted`). Approve → tenant `active`; reject →
+  tenant `closed`. Every read of the document or account number and every decision writes an audit row.
+- **Frontend:** `/teach/apply` (form, then status: in review with "Open your console" and edit, changes
+  requested with the note and the form, approved, rejected with the note and a new form); the multipart
+  body streams through `/teach/apply/upload/application` (skipped by `proxy.ts`). `/teach` sends people with
+  no workspace to `/teach/apply`; the console shows a draft-mode banner while pending. Admin app:
+  `/applications` (filter chips) and `/applications/[id]` (document via its own streaming route, reveal,
+  decision). Not built: emails to the applicant on a decision (needs the email templates), profile editor
+  live preview.
+
 ---
 
 ## 12. API conventions
@@ -767,7 +801,7 @@ httpOnly cookies.
 2. Identity: Google + email/password, phone verification, new-device OTP, recovery, account-wide sessions (done)
 3. Path tenancy (`/teach/<tenant>` + membership) and the cross-tenant student area (user-scoped RLS reads) (done)
 4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools (done)
-5. Teacher self-registration and approval
+5. Teacher self-registration and approval (done)
 6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment)
 7. Own hls.js video player with signed HLS URLs and progress
 8. Private admin app (separate deploy) and its new screens

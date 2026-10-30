@@ -4,10 +4,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.core.pagination import DEFAULT_LIMIT, MAX_LIMIT
+from app.integrations.private_storage import PrivateStorage, get_private_storage
 from app.integrations.sms import SmsSender, get_sms_sender
 from app.modules.auth.dependencies import user_agent
 from app.modules.auth.schemas import OtpRequest, OtpRequested
-from app.modules.platform import auth, service
+from app.modules.onboarding.schemas import AccountNumber, ApplicationDetail, ApplicationRow, ApplicationStatus, DecisionIn
+from app.modules.platform import applications, auth, service
 from app.modules.platform.auth import Admin, AdminTx, PlatformLogin, PlatformMe, PlatformRefresh, PlatformTokens
 from app.modules.platform.schemas import (
     PayoutCreate,
@@ -90,3 +92,36 @@ async def list_payments(
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = DEFAULT_LIMIT,
 ) -> PlatformPaymentPage:
     return await service.list_payments(session, tenant_id=tenant_id, status=status, cursor=cursor, limit=limit)
+
+
+# --- teacher applications (phase 5) ----------------------------------------------------------
+
+@router.get("/applications", response_model=list[ApplicationRow])
+async def list_applications(actor: Admin, session: AdminTx,
+                            status: ApplicationStatus | None = None) -> list[ApplicationRow]:
+    return await applications.list_applications(session, status)
+
+
+@router.get("/applications/{application_id}", response_model=ApplicationDetail)
+async def get_application(application_id: UUID, actor: Admin, session: AdminTx) -> ApplicationDetail:
+    return await applications.get_application(session, application_id)
+
+
+@router.get("/applications/{application_id}/document")
+async def application_document(application_id: UUID, actor: Admin, session: AdminTx,
+                               storage: Annotated[PrivateStorage, Depends(get_private_storage)]) -> Response:
+    content, content_type, name = await applications.document(session, actor, storage, application_id)
+    # Shown inline (PDF or photo) but never cached anywhere.
+    return Response(content, media_type=content_type, headers={
+        "Content-Disposition": f'inline; filename="{name}"', "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff"})
+
+
+@router.post("/applications/{application_id}/reveal-account", response_model=AccountNumber)
+async def reveal_account(application_id: UUID, actor: Admin, session: AdminTx) -> AccountNumber:
+    return await applications.reveal_account(session, actor, application_id)
+
+
+@router.post("/applications/{application_id}/decision", response_model=ApplicationDetail)
+async def decide(application_id: UUID, body: DecisionIn, actor: Admin, session: AdminTx) -> ApplicationDetail:
+    return await applications.decide(session, actor, application_id, body)

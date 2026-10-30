@@ -1,4 +1,4 @@
-import { Clapperboard, ExternalLink, HandCoins, Inbox, Landmark, LibraryBig, Receipt, UserRound } from "lucide-react";
+import { Clapperboard, ExternalLink, Hourglass, HandCoins, Inbox, Landmark, LibraryBig, Receipt, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -76,6 +76,20 @@ export default async function TeachLayout({ children, params }: LayoutProps<"/te
         </div>
       }
     >
+      {workspace.status === "pending" && (
+        <div className="mb-6 flex flex-col gap-3 rounded-ez-lg border border-gold/40 bg-gold/10 p-4 sm:flex-row sm:items-center">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-900 text-gold">
+            <Hourglass className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{t("draft.title")}</p>
+            <p className="text-sm text-muted">{t("draft.body")}</p>
+          </div>
+          <Link href="/teach/apply" className={buttonStyles("secondary", "sm", "self-start sm:self-center")}>
+            {t("draft.link")}
+          </Link>
+        </div>
+      )}
       {children}
     </ConsoleFrame>
   );

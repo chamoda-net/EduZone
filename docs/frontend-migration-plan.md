@@ -163,7 +163,12 @@ Frontend: `/`, `/classes`, `/<subject>`, `/<subject>/<teacher>`, `/<subject>/<te
 `/institutes[/<slug>]`, static pages; cached + revalidated on change (Cache Components may come back here),
 Open Graph images, sitemap, structured data, ShareSheet (link, WhatsApp, QR).
 
-### Phase 5 — Teacher self-registration and approval **[M]**
+### Phase 5 — Teacher self-registration and approval **[M]** ✅ done
+Built as below (CLAUDE.md, "Teacher onboarding"), with these choices: the profile slug is generated, not
+asked for (teachers change it in the profile editor); the applicant needs a verified phone; private storage
+is a local folder in development and the Bunny storage zone under `_private/` in production; the account
+number is encrypted with an app key and revealed to admins only with an audit row. Not done yet: decision
+emails to the applicant, the profile editor's live preview.
 Backend: `teacher_applications` (individual/institute, profile slug, subjects, document in **private**
 storage, payout bank details, terms version); creating an application creates a `pending` tenant with the
 applicant as owner; publishing and selling refused until approved; admin review endpoints (approve /

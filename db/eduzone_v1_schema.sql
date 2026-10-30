@@ -1051,3 +1051,76 @@ SELECT s.id, s.slug, s.name, s.sort_order,
 FROM subjects s WHERE s.is_active;
 -- ALTER VIEW public_classes, public_class_months, public_lessons, public_teachers, public_institutes,
 -- public_subjects OWNER TO eduzone_admin; REVOKE ALL ... FROM PUBLIC; GRANT SELECT ... TO eduzone_app;
+
+-- =============================================================================
+-- TEACHER APPLICATIONS (migration 0008)
+-- =============================================================================
+-- Platform-level, one per organization a user asks to open. The document lives in private storage (only its
+-- key here); the account number is Fernet ciphertext (app key from the environment) plus a masked copy.
+CREATE TABLE teacher_applications (
+    id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id              uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tenant_id            uuid NOT NULL UNIQUE REFERENCES tenants(id) ON DELETE CASCADE,
+    kind                 text NOT NULL CHECK (kind IN ('individual', 'institute')),
+    org_name             text NOT NULL CHECK (char_length(org_name) BETWEEN 2 AND 120),
+    subject_ids          uuid[] NOT NULL DEFAULT '{}',
+    experience           text CHECK (char_length(experience) <= 2000),
+    document_key         text NOT NULL,
+    document_name        text NOT NULL,
+    document_type        text NOT NULL,
+    payout_bank_name     text NOT NULL CHECK (char_length(payout_bank_name) <= 80),
+    payout_branch        text CHECK (char_length(payout_branch) <= 80),
+    payout_account_name  text NOT NULL CHECK (char_length(payout_account_name) <= 120),
+    payout_account_enc   text NOT NULL,
+    payout_account_masked text NOT NULL,
+    terms_version        text NOT NULL,
+    status               text NOT NULL DEFAULT 'submitted'
+                         CHECK (status IN ('submitted', 'changes_requested', 'approved', 'rejected')),
+    review_note          text CHECK (char_length(review_note) <= 2000),
+    reviewed_by          uuid REFERENCES users(id),
+    reviewed_at          timestamptz,
+    submitted_at         timestamptz NOT NULL DEFAULT now(),
+    created_at           timestamptz NOT NULL DEFAULT now(),
+    updated_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_applications_status ON teacher_applications (status, submitted_at);
+CREATE INDEX idx_applications_user ON teacher_applications (user_id, created_at DESC);
+CREATE TRIGGER trg_teacher_applications_updated BEFORE UPDATE ON teacher_applications
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+ALTER TABLE teacher_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teacher_applications FORCE ROW LEVEL SECURITY;
+CREATE POLICY applicant_own ON teacher_applications
+    USING (user_id = current_user_id()) WITH CHECK (user_id = current_user_id());
+GRANT SELECT, INSERT, UPDATE ON teacher_applications TO eduzone_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON teacher_applications TO eduzone_admin;
+
+-- Owners of pending tenants are staff too (they prepare classes while EduZone reviews).
+CREATE OR REPLACE FUNCTION user_is_staff_anywhere(p_user uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM tenant_members m JOIN tenants t ON t.id = m.tenant_id
+        WHERE m.user_id = p_user AND m.status = 'active'
+          AND m.role IN ('owner','admin','teacher') AND t.status IN ('active', 'pending')
+    )
+$$;
+
+-- The one way the app role creates a tenant: always pending, with the applicant as owner.
+CREATE FUNCTION open_pending_tenant(p_user uuid, p_name text, p_slug text, p_org_type text,
+                                    p_display_name text) RETURNS uuid
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = public, pg_temp AS $$
+DECLARE v_tenant uuid;
+BEGIN
+    IF p_org_type NOT IN ('individual', 'institute') THEN
+        RAISE EXCEPTION 'org type % cannot be opened by an applicant', p_org_type;
+    END IF;
+    INSERT INTO tenants (name, slug, org_type, status) VALUES (p_name, p_slug, p_org_type, 'pending')
+        RETURNING id INTO v_tenant;
+    PERFORM set_config('app.tenant_id', v_tenant::text, true);
+    INSERT INTO tenant_members (tenant_id, user_id, role, display_name)
+        VALUES (v_tenant, p_user, 'owner', p_display_name);
+    RETURN v_tenant;
+END
+$$;
+ALTER FUNCTION user_is_staff_anywhere(uuid), open_pending_tenant(uuid, text, text, text, text) OWNER TO eduzone_admin;
+REVOKE ALL ON FUNCTION open_pending_tenant(uuid, text, text, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION open_pending_tenant(uuid, text, text, text, text) TO eduzone_app;

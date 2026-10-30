@@ -151,6 +151,7 @@ class Workspace(BaseModel):
     slug: str
     name: str
     role: str
+    status: str                  # 'active', or 'pending' while EduZone reviews the application (draft mode)
 
 
 class Me(BaseModel):

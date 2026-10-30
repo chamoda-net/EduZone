@@ -123,6 +123,28 @@ export async function updateTenant(tenantId: string, _: FormState, fd: FormData)
   return { ok: true, at: Date.now() };
 }
 
+// --- teacher applications --------------------------------------------------------------
+
+export async function decideApplication(applicationId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api(`/platform/applications/${applicationId}/decision`, {
+    method: "POST",
+    body: { decision: text(fd, "decision"), note: text(fd, "note") || null },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath(`/applications/${applicationId}`);
+  revalidatePath("/applications");
+  revalidatePath("/");
+  return { ok: true, at: Date.now() };
+}
+
+/** The full payout account number; the API audits every reveal. */
+export async function revealAccount(applicationId: string): Promise<{ number?: string; error?: string }> {
+  const res = await api<{ account_number: string }>(`/platform/applications/${applicationId}/reveal-account`, {
+    method: "POST",
+  });
+  return res.ok ? { number: res.data.account_number } : { error: errorText(t, res.error) };
+}
+
 export async function recordPayout(tenantId: string, _: FormState, fd: FormData): Promise<FormState> {
   const amount = rupeesToCents(text(fd, "amount"));
   if (amount === null || amount <= 0) return { error: t("classForm.invalidAmount") };

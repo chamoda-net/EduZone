@@ -67,6 +67,18 @@ class Settings(BaseSettings):
     email_outbox_path: Path = Path("email-outbox.jsonl")
     email_from: str = "EduZone <no-reply@eduzone.switchops.tech>"
 
+    # --- Teacher applications (CLAUDE.md section 2) -----------------------------------
+    # Version of the teacher terms an applicant accepts (stored on the application).
+    teacher_terms_version: str = "2026-10-draft"
+    # Private documents (ID / business registration): 'local' writes to private_storage_dir
+    # (ENVIRONMENT=local only); 'bunny' uses the Bunny Storage zone under _private/, never signed
+    # for the CDN, read back only through the API.
+    private_storage: Literal["local", "bunny"] = "local"
+    private_storage_dir: Path = Path("private-storage")
+    # Fernet key (urlsafe base64, 32 bytes) for bank account numbers. Required outside
+    # ENVIRONMENT=local; locally a key is derived from JWT_SECRET.
+    payout_encryption_key: str | None = None
+
     # --- Bunny (CLAUDE.md section 9) ---------------------------------------------
     # One Stream library per tenant (tenants.bunny_library_id). Keys per library come from
     # the environment as JSON: {"<library_id>": {"api_key": "...", "token_key": "..."}}.

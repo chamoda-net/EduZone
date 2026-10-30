@@ -1,4 +1,4 @@
-import { Building2, LogOut, Receipt } from "lucide-react";
+import { Building2, ClipboardList, LogOut, Receipt } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -27,6 +27,7 @@ export default async function PlatformConsoleLayout({ children }: LayoutProps<"/
       }
       items={[
         { href: "/", label: t("platform.nav.tenants"), icon: <Building2 />, exact: true },
+        { href: "/applications", label: t("platform.nav.applications"), icon: <ClipboardList /> },
         { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt /> },
       ]}
       footer={

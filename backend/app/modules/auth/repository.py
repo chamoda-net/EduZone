@@ -280,9 +280,9 @@ async def recent_email_verifications(session: AsyncSession, user_id: UUID) -> in
 
 async def workspaces(session: AsyncSession) -> list[Any]:
     return list((await session.execute(text("""
-        SELECT t.slug, t.name, m.role
+        SELECT t.slug, t.name, m.role, t.status
         FROM tenant_members m JOIN tenants t ON t.id = m.tenant_id
-        WHERE m.user_id = current_user_id() AND m.status = 'active' AND t.status = 'active'
+        WHERE m.user_id = current_user_id() AND m.status = 'active' AND t.status IN ('active', 'pending')
           AND m.role IN ('owner', 'admin', 'teacher')
         ORDER BY t.name
     """))).all())

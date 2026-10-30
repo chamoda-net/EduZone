@@ -31,6 +31,8 @@ _SLUG_RE = re.compile(r"^[a-z0-9]([a-z0-9-]{1,38}[a-z0-9])$")
 class TenantContext:
     id: UUID
     slug: str
+    # 'active', or 'pending' on the console of an organization waiting for approval (draft mode).
+    status: str = "active"
 
 
 def parse_slug(host: str, base_domain: str) -> str | None:
@@ -55,15 +57,15 @@ def request_host(request: Request) -> str:
     return forwarded or request.headers.get("host", "")
 
 
-async def _resolve(slug: str) -> TenantContext | None:
+async def _resolve(slug: str, *, allow_pending: bool = False) -> TenantContext | None:
     # resolve_tenant() is SECURITY DEFINER: RLS hides `tenants` until the tenant is known.
     async with AppSession() as session:
         row = (
             await session.execute(text("SELECT id, status FROM resolve_tenant(:slug)"), {"slug": slug})
         ).one_or_none()
-    if row is None or row.status != "active":
+    if row is None or row.status not in (("active", "pending") if allow_pending else ("active",)):
         return None
-    return TenantContext(id=row.id, slug=slug)
+    return TenantContext(id=row.id, slug=slug, status=row.status)
 
 
 def _slug_of(request: Request) -> str | None:
@@ -97,7 +99,10 @@ SiteUrl = Annotated[str, Depends(site_url)]
 
 async def current_tenant(request: Request) -> TenantContext:
     slug = _slug_of(request)
-    tenant = await _resolve(slug) if slug else None
+    # The console (/teach/<slug>, membership-checked) also opens a pending organization in draft mode;
+    # nothing public ever resolves one.
+    in_console = request.path_params.get("tenant_slug") is not None
+    tenant = await _resolve(slug, allow_pending=in_console) if slug else None
     if tenant is None:
         raise ApiError("TENANT_NOT_FOUND", "This organization does not exist.", status_code=404)
     return tenant

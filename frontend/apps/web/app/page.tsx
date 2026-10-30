@@ -66,7 +66,7 @@ export default async function Home() {
                 <h2 className="font-display text-3xl font-semibold sm:text-4xl">{t("market.home.teachTitle")}</h2>
                 <p className="text-brand-100/80">{t("market.home.teachBody")}</p>
               </div>
-              <Link href="/register?next=/teach" className={buttonStyles("gold", "lg")}>
+              <Link href="/teach/apply" className={buttonStyles("gold", "lg")}>
                 <GraduationCap className="size-5" />
                 {t("market.home.teachCta")}
               </Link>

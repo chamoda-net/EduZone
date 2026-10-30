@@ -315,7 +315,48 @@ export type MyRequest = {
   org: OrgRef;
 };
 
-export type Workspace = { slug: string; name: string; role: Role };
+/** A console the user can open. 'pending' = draft mode while EduZone reviews the application. */
+export type Workspace = { slug: string; name: string; role: Role; status: "active" | "pending" };
+
+export type ApplicationStatus = "submitted" | "changes_requested" | "approved" | "rejected";
+export type TeacherApplication = {
+  id: string;
+  status: ApplicationStatus;
+  kind: "individual" | "institute";
+  org_name: string;
+  tenant_slug: string;
+  subjects: { id: string; name: string }[];
+  experience: string | null;
+  document_name: string;
+  payout_bank_name: string;
+  payout_branch: string | null;
+  payout_account_name: string;
+  payout_account_masked: string;
+  review_note: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+};
+export type ApplicationRow = {
+  id: string;
+  status: ApplicationStatus;
+  kind: "individual" | "institute";
+  org_name: string;
+  tenant_id: string;
+  tenant_slug: string;
+  applicant_name: string;
+  applicant_email: string | null;
+  applicant_phone: string | null;
+  submitted_at: string;
+};
+export type ApplicationDetail = TeacherApplication & {
+  tenant_id: string;
+  applicant_name: string;
+  applicant_email: string | null;
+  applicant_phone: string | null;
+  document_type: string;
+  terms_version: string;
+  reviewed_by_name: string | null;
+};
 
 export type GatewayRedirect = { method: "GET" | "POST"; url: string; fields: Record<string, string> };
 export type CheckoutResult = { order: Order; redirect: GatewayRedirect };

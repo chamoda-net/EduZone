@@ -63,7 +63,7 @@ async def test_me_on_the_main_host_lists_workspaces(client: AsyncClient, seed: S
     teacher = await main_login(client, sms, seed.a.teacher_phone)
     me = (await client.get("/api/v1/auth/me", headers=teacher)).json()
     assert me["member_id"] is None and me["role"] is None
-    assert me["workspaces"] == [{"slug": seed.a.slug, "name": seed.a.name, "role": "teacher"}]
+    assert me["workspaces"] == [{"slug": seed.a.slug, "name": seed.a.name, "role": "teacher", "status": "active"}]
     student = await main_login(client, sms, phones())
     assert (await client.get("/api/v1/auth/me", headers=student)).json()["workspaces"] == []
 

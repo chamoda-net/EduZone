@@ -252,7 +252,7 @@ async def member_context(user: UserContext, tenant: TenantContext | None) -> Aut
 
 async def workspaces(user_id: UUID) -> list[Workspace]:
     async with user_transaction(user_id) as session:
-        return [Workspace(slug=r.slug, name=r.name, role=r.role) for r in await repo.workspaces(session)]
+        return [Workspace(slug=r.slug, name=r.name, role=r.role, status=r.status) for r in await repo.workspaces(session)]
 
 
 async def get_me(auth: AuthContext) -> Me:
