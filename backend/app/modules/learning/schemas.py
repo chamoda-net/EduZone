@@ -122,6 +122,8 @@ class StudentResource(BaseModel):
     ready: bool
     views_used: int
     views_allowed: int | None            # NULL = unlimited
+    position_seconds: int                # where they stopped (resume point); 0 if never played
+    completed: bool
 
 
 class StudentLessonDetail(StudentLesson):
@@ -146,6 +148,24 @@ class OpenResourceOut(BaseModel):
     watermark: Watermark
     views_used: int | None = None
     views_allowed: int | None = None
+    playback: str = "file"               # hls (our player) | embed (Bunny's iframe) | file
+    resume_at_seconds: int = 0           # videos: where to start (0 when finished or near the end)
+    duration_seconds: int | None = None
+
+
+class ProgressIn(BaseModel):
+    """Sent by the player about every 15 s while playing, and on pause or leaving."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    position_seconds: int = Field(ge=0, le=24 * 3600)
+    watched_seconds: int = Field(ge=0, le=120)   # played since the last report (capped server-side too)
+
+
+class ProgressOut(BaseModel):
+    position_seconds: int
+    watched_seconds: int
+    completed: bool
 
 
 # --- organization console --------------------------------------------------------------

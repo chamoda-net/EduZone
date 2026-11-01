@@ -47,6 +47,8 @@ class VideoUploadOut(BaseModel):
 class PreviewOut(BaseModel):
     url: str                                   # short-lived, signed
     expires_at: datetime
+    # How to show it: our own HLS player, Bunny's iframe (library without CDN keys), or a file link.
+    playback: Literal["hls", "embed", "file"] = "file"
 
 
 class ResourceCreate(BaseModel):

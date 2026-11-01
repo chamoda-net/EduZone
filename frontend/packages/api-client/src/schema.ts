@@ -454,6 +454,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learn/resources/{resource_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Progress
+         * @description The player reports where the student is, about every 15 s (resume point and completion).
+         */
+        post: operations["save_progress_api_v1_learn_resources__resource_id__progress_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learn/schedule": {
         parameters: {
             query?: never;
@@ -3308,6 +3328,8 @@ export interface components {
         };
         /** OpenResourceOut */
         OpenResourceOut: {
+            /** Duration Seconds */
+            duration_seconds?: number | null;
             /**
              * Expires At
              * Format: date-time
@@ -3315,6 +3337,16 @@ export interface components {
             expires_at: string;
             /** Kind */
             kind: string;
+            /**
+             * Playback
+             * @default file
+             */
+            playback: string;
+            /**
+             * Resume At Seconds
+             * @default 0
+             */
+            resume_at_seconds: number;
             /** Url */
             url: string;
             /** Views Allowed */
@@ -3606,6 +3638,12 @@ export interface components {
              * Format: date-time
              */
             expires_at: string;
+            /**
+             * Playback
+             * @default file
+             * @enum {string}
+             */
+            playback: "hls" | "embed" | "file";
             /** Url */
             url: string;
         };
@@ -3625,6 +3663,25 @@ export interface components {
             public_paths: string[];
             /** Slug */
             slug: string;
+        };
+        /**
+         * ProgressIn
+         * @description Sent by the player about every 15 s while playing, and on pause or leaving.
+         */
+        ProgressIn: {
+            /** Position Seconds */
+            position_seconds: number;
+            /** Watched Seconds */
+            watched_seconds: number;
+        };
+        /** ProgressOut */
+        ProgressOut: {
+            /** Completed */
+            completed: boolean;
+            /** Position Seconds */
+            position_seconds: number;
+            /** Watched Seconds */
+            watched_seconds: number;
         };
         /** PublicClass */
         PublicClass: {
@@ -3938,6 +3995,8 @@ export interface components {
         };
         /** StudentResource */
         StudentResource: {
+            /** Completed */
+            completed: boolean;
             /** Duration Seconds */
             duration_seconds: number | null;
             /**
@@ -3949,6 +4008,8 @@ export interface components {
             is_downloadable: boolean;
             /** Kind */
             kind: string;
+            /** Position Seconds */
+            position_seconds: number;
             /** Ready */
             ready: boolean;
             /** Title */
@@ -5175,6 +5236,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OpenResourceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_progress_api_v1_learn_resources__resource_id__progress_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressOut"];
                 };
             };
             /** @description Validation Error */

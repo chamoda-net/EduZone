@@ -223,17 +223,28 @@ async def preview(session: AsyncSession, actor: Actor, asset_id: UUID) -> Previe
 
 
 async def signed_url(session: AsyncSession, m: MediaAsset) -> PreviewOut:
-    """Signed playback/download URL for a file. Callers do the access check first."""
+    """Signed playback/download URL for a file. Callers do the access check first.
+
+    Videos: a signed HLS playlist for our own player when the library's CDN host and token key are configured
+    (`playback = "hls"`), else Bunny's signed iframe embed (`"embed"`). Locally, `DEV_VIDEO_STREAM_URL` stands
+    in for Bunny."""
     s = get_settings()
     if m.kind == "video":
         if m.status != "ready":
             raise ApiError("MEDIA_NOT_READY", "This video is still processing.", 409)
+        expires = int(time.time()) + s.video_url_ttl_seconds
+        if s.environment == "local" and s.dev_video_stream_url:
+            return PreviewOut(url=s.dev_video_stream_url, expires_at=datetime.fromtimestamp(expires, UTC),
+                              playback="hls")
         library_id = (await repo.tenant_media_settings(session)).bunny_library_id
         keys = s.bunny_stream_libraries.get(str(library_id)) if library_id is not None else None
         if library_id is None or keys is None:
             raise not_configured("Video")
-        expires = int(time.time()) + s.video_url_ttl_seconds
+        if keys.cdn_host and keys.cdn_token_key:
+            url = signing.hls_url(keys.cdn_host, m.external_id, keys.cdn_token_key, expires)
+            return PreviewOut(url=url, expires_at=datetime.fromtimestamp(expires, UTC), playback="hls")
         url = signing.embed_url(s.bunny_stream_embed_base, library_id, m.external_id, keys.token_key, expires)
+        return PreviewOut(url=url, expires_at=datetime.fromtimestamp(expires, UTC), playback="embed")
     else:
         if not (s.bunny_cdn_host and s.bunny_cdn_token_key):
             raise not_configured("File storage")

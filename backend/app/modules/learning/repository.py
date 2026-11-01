@@ -145,7 +145,8 @@ async def insert_grant(session: AsyncSession, *, member_id: UUID, class_id: UUID
 async def lesson_resources(session: AsyncSession, member_id: UUID, lesson_id: UUID) -> list[Any]:
     return list((await session.execute(text("""
         SELECT r.id, COALESCE(r.title, a.original_filename, 'File') AS title, a.kind, a.duration_seconds,
-               r.is_downloadable, a.status = 'ready' AS ready, COALESCE(p.view_count, 0) AS views_used
+               r.is_downloadable, a.status = 'ready' AS ready, COALESCE(p.view_count, 0) AS views_used,
+               COALESCE(p.last_position_sec, 0) AS position_seconds, p.completed_at IS NOT NULL AS completed
         FROM lesson_resources r
         JOIN media_assets a ON a.id = r.media_asset_id
         LEFT JOIN lesson_progress p ON p.lesson_resource_id = r.id AND p.student_member_id = :m
@@ -171,6 +172,32 @@ async def count_view(session: AsyncSession, member_id: UUID, resource_id: UUID, 
          WHERE CAST(:max AS integer) IS NULL OR lesson_progress.view_count < :max
         RETURNING view_count
     """), {"m": member_id, "r": resource_id, "max": max_views})).scalar_one_or_none()
+
+
+async def progress(session: AsyncSession, member_id: UUID, resource_id: UUID) -> Any:
+    return (await session.execute(text("""
+        SELECT last_position_sec, watched_seconds, completed_at FROM lesson_progress
+        WHERE student_member_id = :m AND lesson_resource_id = :r
+    """), {"m": member_id, "r": resource_id})).one_or_none()
+
+
+async def save_progress(session: AsyncSession, member_id: UUID, resource_id: UUID, position: int, watched: int,
+                        duration: int | None) -> Any:
+    """Only an existing play session (opened, so its view was counted) is updated. Watching 90% of the video,
+    or reaching its last 10%, completes it; completion is never undone."""
+    return (await session.execute(text("""
+        UPDATE lesson_progress SET
+            last_position_sec = CAST(:pos AS integer),
+            watched_seconds = watched_seconds + CAST(:watched AS integer),
+            completed_at = COALESCE(completed_at, CASE
+                WHEN CAST(:dur AS integer) > 0
+                     AND (CAST(:pos AS integer) >= CAST(:dur AS integer) * 0.9
+                          OR watched_seconds + CAST(:watched AS integer) >= CAST(:dur AS integer) * 0.9)
+                THEN now() END),
+            last_viewed_at = now()
+        WHERE student_member_id = :m AND lesson_resource_id = :r
+        RETURNING last_position_sec, watched_seconds, completed_at
+    """), {"m": member_id, "r": resource_id, "pos": position, "watched": watched, "dur": duration})).one_or_none()
 
 
 async def member_identity(session: AsyncSession, member_id: UUID) -> Any:

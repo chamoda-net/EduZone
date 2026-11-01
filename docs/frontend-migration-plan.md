@@ -196,7 +196,11 @@ Frontend: `/cart` grouped by teacher, sticky bar, `/checkout/<no>` (sign-in + ph
 return page polling the checkout, receipts per checkout.
 Tests: two teachers in one payment; fee allocation sums exactly; replayed webhook; one tenant failing.
 
-### Phase 7 — Own video player **[M]**
+### Phase 7 — Own video player **[M]** ✅ done
+Built as below (CLAUDE.md section 9, "How it's built (phase 7)"). Choices: libraries without CDN keys keep
+Bunny's iframe, so nothing breaks before the keys are added; completion at 90%; local demos use a public test
+stream. Not done yet: the data-saver cap and reduced-motion handling, verifying the token formula on a real
+Bunny library.
 Backend: play session returns a **signed HLS playlist URL** (Bunny Stream's pull zone with token auth,
 short TTL) instead of the iframe embed; save progress (`lesson_progress.last_position_sec`, every 15 s).
 Frontend: `VideoPlayer` with hls.js (native HLS on iOS), quality, speed, resume, data-saver cap, watermark

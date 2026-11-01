@@ -40,6 +40,40 @@ async def demo_accounts(s: AsyncSession) -> None:
             WHERE phone = :p
         """), {"p": phone, "e": email, "h": hash_password(DEMO_PASSWORD)})
     await demo_student(s)
+    await demo_recording(s)
+
+
+async def demo_recording(s: AsyncSession) -> None:
+    """A recorded lesson in November of the physics class with a ready video, for trying the player locally.
+    It plays from DEV_VIDEO_STREAM_URL (no Bunny account needed); idempotent."""
+    tenant = (await s.execute(text("SELECT id FROM tenants WHERE slug = 'demo'"))).scalar_one()
+    row = (await s.execute(text("""
+        SELECT c.id AS class_id, c.teacher_member_id, m.id AS month_id
+        FROM classes c JOIN class_months m ON m.class_id = c.id AND m.month_start = '2026-11-01'
+        WHERE c.tenant_id = :t AND c.slug = '2027-al-physics-theory'
+    """), {"t": tenant})).one_or_none()
+    if row is None:
+        return
+    asset = (await s.execute(text("""
+        INSERT INTO media_assets (tenant_id, uploaded_by, kind, provider, external_id, original_filename, mime_type,
+                                  size_bytes, duration_seconds, status)
+        VALUES (:t, :by, 'video', 'bunny_stream', 'demo-recording', 'motion-in-one-dimension.mp4', 'video/mp4',
+                52000000, 596, 'ready')
+        ON CONFLICT (provider, external_id) DO UPDATE SET status = 'ready'
+        RETURNING id
+    """), {"t": tenant, "by": row.teacher_member_id})).scalar_one()
+    lesson = (await s.execute(text("""
+        SELECT id FROM lessons WHERE tenant_id = :t AND class_month_id = :m AND title = 'Recording: Motion in one dimension'
+    """), {"t": tenant, "m": row.month_id})).scalar_one_or_none()
+    if lesson is None:
+        lesson = (await s.execute(text("""
+            INSERT INTO lessons (tenant_id, class_id, class_month_id, title, lesson_type, sort_order, is_published)
+            VALUES (:t, :c, :m, 'Recording: Motion in one dimension', 'recorded', 3, true) RETURNING id
+        """), {"t": tenant, "c": row.class_id, "m": row.month_id})).scalar_one()
+    await s.execute(text("""
+        INSERT INTO lesson_resources (tenant_id, lesson_id, media_asset_id, title)
+        VALUES (:t, :l, :a, 'Lesson recording') ON CONFLICT (lesson_id, media_asset_id) DO NOTHING
+    """), {"t": tenant, "l": lesson, "a": asset})
 
 
 async def demo_student(s: AsyncSession) -> None:

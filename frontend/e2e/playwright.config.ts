@@ -32,6 +32,8 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 60_000,
       env: {
+        // Videos play from a local test stream instead of Bunny (local only).
+        DEV_VIDEO_STREAM_URL: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
         SMS_PROVIDER: "file",
         SMS_OUTBOX_PATH: OUTBOX,
         EMAIL_PROVIDER: "file",

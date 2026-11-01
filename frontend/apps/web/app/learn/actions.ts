@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { api } from "@/lib/api";
 import { errorText, t } from "@eduzone/lib/i18n";
-import type { CheckoutResult, GatewayRedirect, OpenResource, Order, OrderStatus } from "@eduzone/lib/types";
+import type { CheckoutResult, GatewayRedirect, OpenResource, Order, OrderStatus, Progress } from "@eduzone/lib/types";
 
 import type { FormState } from "../teach/[tenant]/classes/actions";
 
@@ -42,6 +42,16 @@ export async function openResource(resourceId: string): Promise<OpenResult> {
   const res = await api<OpenResource>(`/learn/resources/${resourceId}/open`, { method: "POST" });
   if (!res.ok) return { ok: false, error: errorText(t, res.error) };
   return { ok: true, data: res.data };
+}
+
+/** The player's position and time watched since the last report (about every 15 s). Never throws: a lost
+ * report only means the resume point is a little older. */
+export async function saveProgress(resourceId: string, positionSeconds: number, watchedSeconds: number): Promise<Progress | null> {
+  const res = await api<Progress>(`/learn/resources/${resourceId}/progress`, {
+    method: "POST",
+    body: { position_seconds: Math.max(0, Math.floor(positionSeconds)), watched_seconds: Math.min(120, Math.max(0, Math.round(watchedSeconds))) },
+  });
+  return res.ok ? res.data : null;
 }
 
 export type StartCheckoutResult = { ok: true; redirect: GatewayRedirect } | { ok: false; error: string; code?: string };

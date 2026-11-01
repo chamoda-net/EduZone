@@ -11,7 +11,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 class BunnyLibraryKeys(BaseModel):
     api_key: str                 # library API key: create/read/delete videos, sign TUS uploads
-    token_key: str               # embed token authentication key: signs playback URLs
+    token_key: str               # embed token authentication key: signs iframe embed URLs (fallback)
+    # The library's CDN (pull zone) host, e.g. vz-1a2b3c4d-e5f.b-cdn.net, and its token authentication key:
+    # with both, students get a signed HLS playlist for our own player instead of Bunny's iframe.
+    cdn_host: str | None = None
+    cdn_token_key: str | None = None
 
 
 class Settings(BaseSettings):
@@ -98,6 +102,9 @@ class Settings(BaseSettings):
 
     upload_signature_ttl_seconds: int = 12 * 3600      # slow connections, big lessons
     video_url_ttl_seconds: int = 4 * 3600              # a long lesson must not expire mid-way
+    # ENVIRONMENT=local only: play every ready video from this HLS URL (no Bunny account needed for demos
+    # and browser tests), e.g. a public test stream.
+    dev_video_stream_url: str | None = None
     document_url_ttl_seconds: int = 10 * 60
     max_video_bytes: int = 10 * 1024**3
     max_document_bytes: int = 50 * 1024**2

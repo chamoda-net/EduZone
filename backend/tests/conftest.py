@@ -229,7 +229,8 @@ async def bunny(seed: Seed) -> AsyncIterator[FakeBunny]:
     settings = get_settings()
     saved = {k: getattr(settings, k) for k in (
         "bunny_stream_libraries", "bunny_webhook_token", "bunny_storage_zone", "bunny_storage_api_key",
-        "bunny_cdn_host", "bunny_cdn_token_key", "bunny_storage_host")}
+        "bunny_cdn_host", "bunny_cdn_token_key", "bunny_storage_host", "dev_video_stream_url")}
+    settings.dev_video_stream_url = None          # tests talk to (fake) Bunny, never the local demo stream
     settings.bunny_stream_libraries = {str(library_id): BunnyLibraryKeys(api_key=f"stream-key-{library_id}",
                                                                           token_key="embed-token-key")}
     settings.bunny_webhook_token = "hook-secret"

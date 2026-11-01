@@ -19,6 +19,8 @@ from app.modules.learning.schemas import (
     PublicClassDetail,
     PublicClassPage,
     PublicLesson,
+    ProgressIn,
+    ProgressOut,
     PublicMonth,
     StudentClassView,
     StudentLesson,
@@ -174,7 +176,8 @@ async def lesson_detail(session: AsyncSession, auth: AuthContext, lesson_id: UUI
         resources=[
             StudentResource(id=r.id, title=r.title, kind=r.kind, duration_seconds=r.duration_seconds,
                             is_downloadable=r.is_downloadable, ready=r.ready, views_used=r.views_used,
-                            views_allowed=lesson.max_video_views if r.kind == "video" else None)
+                            views_allowed=lesson.max_video_views if r.kind == "video" else None,
+                            position_seconds=r.position_seconds, completed=r.completed)
             for r in resources
         ],
     )
@@ -205,8 +208,36 @@ async def open_resource(session: AsyncSession, auth: AuthContext, resource_id: U
             raise ApiError("VIEW_LIMIT_REACHED", "You have used all the views allowed for this video.", 403)
     url = await signed_url(session, asset)
     who = await repo.member_identity(session, auth.member_id)
+    resume = 0
+    if asset.kind == "video":
+        p = await repo.progress(session, auth.member_id, r.id)
+        # Start where they stopped, unless it was (nearly) the end.
+        if p and p.last_position_sec and not (asset.duration_seconds and p.last_position_sec > asset.duration_seconds - 15):
+            resume = p.last_position_sec
     return OpenResourceOut(
         kind=asset.kind, url=url.url, expires_at=url.expires_at,
         watermark=Watermark(name=who.full_name, phone=who.phone),
         views_used=views, views_allowed=lesson.max_video_views if asset.kind == "video" else None,
+        playback=url.playback, resume_at_seconds=resume, duration_seconds=asset.duration_seconds,
     )
+
+
+async def save_progress(session: AsyncSession, auth: AuthContext, resource_id: UUID, body: ProgressIn) -> ProgressOut:
+    """The player's position and time watched, for a video the student may open (checked again here)."""
+    r = await repo.resource(session, resource_id)
+    lesson = await access.lesson_for_student(session, auth.member_id, r.lesson_id) if r else None
+    if r is None or lesson is None or auth.member_id is None:
+        raise _not_found("File")
+    if not lesson.unlocked:
+        raise ApiError("ACCESS_DENIED", "You don't have access to this lesson yet.", status_code=403)
+    asset = await media_repo.get_asset(session, r.media_asset_id)
+    if asset is None or asset.kind != "video":
+        raise _not_found("Video")
+    position = min(body.position_seconds, asset.duration_seconds) if asset.duration_seconds else body.position_seconds
+    # At most the wall-clock time since the last report could have been watched (15 s reports, some slack).
+    watched = min(body.watched_seconds, 60)
+    row = await repo.save_progress(session, auth.member_id, r.id, position, watched, asset.duration_seconds)
+    if row is None:
+        raise ApiError("PLAY_NOT_STARTED", "Start the video first.", status_code=409)
+    return ProgressOut(position_seconds=row.last_position_sec, watched_seconds=row.watched_seconds,
+                       completed=row.completed_at is not None)

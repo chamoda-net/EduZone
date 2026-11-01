@@ -16,6 +16,8 @@ from app.modules.learning.schemas import (
     LateRequestOut,
     MyClass,
     OpenResourceOut,
+    ProgressIn,
+    ProgressOut,
     StudentClassView,
     StudentLessonDetail,
 )
@@ -88,6 +90,13 @@ async def lesson(lesson_id: UUID, user: CurrentUser) -> StudentLessonDetail:
 async def open_resource(resource_id: UUID, user: CurrentUser) -> OpenResourceOut:
     async with service.in_tenant_of("resource", resource_id, user) as (session, auth, _):
         return await learning.open_resource(session, auth, resource_id)
+
+
+@router.post("/resources/{resource_id}/progress", response_model=ProgressOut)
+async def save_progress(resource_id: UUID, body: ProgressIn, user: CurrentUser) -> ProgressOut:
+    """The player reports where the student is, about every 15 s (resume point and completion)."""
+    async with service.in_tenant_of("resource", resource_id, user) as (session, auth, _):
+        return await learning.save_progress(session, auth, resource_id, body)
 
 
 @router.post("/checkout", response_model=CheckoutOut, status_code=201)

@@ -526,6 +526,28 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   **Re-check the signature formulas and video status codes against a real Bunny library before launch.**
 - Not built yet: the daily usage sync into `tenant_usage_daily` and bandwidth warnings (with step 9).
 
+### How it's built (phase 7: our own player)
+- **Playback kinds:** `media.service.signed_url()` returns `playback`: `hls` (a signed playlist,
+  `signing.hls_url()`: a directory token for `/<video_id>/` in the path, so every rendition and segment inherits
+  it; needs `cdn_host` and `cdn_token_key` on the library in `BUNNY_STREAM_LIBRARIES`), else `embed` (Bunny's
+  signed iframe, as before), or `file` (PDFs). **Re-check the HLS token formula against a real library before
+  launch.** Locally, `DEV_VIDEO_STREAM_URL` (ENVIRONMENT=local only) plays every ready video from a test stream;
+  the Bunny test fixture switches it off.
+- **Open** (`POST /learn/resources/{id}/open`): access check and a counted view as before, plus `playback`,
+  `resume_at_seconds` (last position, 0 when within 15 s of the end) and `duration_seconds`.
+- **Progress** (`POST /learn/resources/{id}/progress {position_seconds, watched_seconds}`): access checked again;
+  updates only an existing play session (409 `PLAY_NOT_STARTED` before the first open, so it never creates or
+  counts a view); position clamped to the duration, at most 60 s watched per report; completed (never undone)
+  when the position passes 90% or watched time reaches 90% of the duration. Lesson resources carry
+  `position_seconds` and `completed`.
+- **Player** (`components/video-player.tsx`, hls.js loaded on demand; Safari/iOS play HLS natively): resume
+  with a "Continuing from" chip and Start over, play/pause, ±10 s, mute, speed (0.75–2×), quality (hls levels),
+  full screen of the player box so the watermark stays (iPhone falls back to the video's own full screen, where
+  the watermark can't show), keyboard (Space/K, J/L, arrows, F, M), auto-hiding controls, no download or
+  picture-in-picture, reports every 15 s and on pause, end and leaving the page. A 401/403 from the CDN (expired
+  link) asks for a new URL, which counts a new view. The lesson page shows "Continue at" and a watched tick.
+- Demo: `seed_demo.py` adds a recorded November lesson with a ready video to the physics class.
+
 ---
 
 ## 10. Content protection (v1)
@@ -838,7 +860,7 @@ httpOnly cookies.
 4. Marketplace: subjects, teacher profiles, public read path, subject/teacher/class/institute pages, SEO, share tools (done)
 5. Teacher self-registration and approval (done)
 6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment) (done)
-7. Own hls.js video player with signed HLS URLs and progress
+7. Own hls.js video player with signed HLS URLs and progress (done)
 8. Private admin app (separate deploy) and its new screens
 9. Polish: Sinhala if needed, Playwright at 360 px and desktop, low-end phone pass, accessibility
 

@@ -5,6 +5,7 @@ Formulas follow Bunny's documentation; re-check them against a real library befo
 
 import base64
 import hashlib
+from urllib.parse import quote
 
 
 def tus_signature(library_id: int, api_key: str, expires: int, video_id: str) -> str:
@@ -16,6 +17,20 @@ def embed_url(embed_base: str, library_id: int, video_id: str, token_key: str, e
     """Stream embed URL with token authentication: SHA256_HEX(token_key + video_id + expires)."""
     token = hashlib.sha256(f"{token_key}{video_id}{expires}".encode()).hexdigest()
     return f"{embed_base}/embed/{library_id}/{video_id}?token={token}&expires={expires}"
+
+
+def hls_url(cdn_host: str, video_id: str, token_key: str, expires: int) -> str:
+    """Signed HLS playlist of a Stream video, for our own player (CLAUDE.md section 9).
+
+    A directory token (token_path=/<video_id>/) covers the playlist and every rendition and segment under it.
+    The token sits in the path (bcdn_token=...), so the relative segment URLs in the playlist inherit it.
+    Token: Base64Url(SHA256_RAW(token_key + token_path + expires + "token_path=" + token_path)), no padding.
+    """
+    token_path = f"/{video_id}/"
+    digest = hashlib.sha256(f"{token_key}{token_path}{expires}token_path={token_path}".encode()).digest()
+    token = base64.urlsafe_b64encode(digest).decode().rstrip("=")
+    return (f"https://{cdn_host}/bcdn_token={token}&expires={expires}&token_path={quote(token_path, safe='')}"
+            f"{token_path}playlist.m3u8")
 
 
 def cdn_url(cdn_host: str, path: str, token_key: str, expires: int) -> str:

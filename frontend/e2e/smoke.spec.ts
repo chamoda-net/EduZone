@@ -124,3 +124,19 @@ test("a guest fills a cart from two teachers, signs up and pays once", async ({ 
   await page.goto("/cart");
   await expect(page.getByText("Your cart is empty")).toBeVisible();
 });
+
+test("a student opens a recorded lesson in our own player", async ({ page }) => {
+  await signIn(page, "student.demo@example.com", DEMO_PASSWORD, "+94770000003");
+  await page.goto(CLASS);
+  await page.getByRole("link", { name: "Join or pay" }).click();
+  await page.getByRole("link", { name: /Recording: Motion in one dimension/ }).click();
+  await expect(page).toHaveURL(/\/learn\/lessons\//, { timeout: 30_000 }); // first compile can be slow
+  await expect(page.getByRole("heading", { name: "Recording: Motion in one dimension" })).toBeVisible();
+
+  // Opening counts a view and returns a short-lived stream; the player (not an iframe) shows with the watermark.
+  await page.getByRole("button", { name: /Play|Continue at/ }).click();
+  await expect(page.getByRole("slider", { name: "Seek" })).toBeAttached({ timeout: 20_000 });
+  await expect(page.getByText(/Nimali Perera · \+•+0003/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Full screen" })).toBeVisible();
+  await expect(page.locator("iframe")).toHaveCount(0);
+});

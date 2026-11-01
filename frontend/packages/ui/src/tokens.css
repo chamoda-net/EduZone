@@ -140,6 +140,19 @@ textarea {
 
 /* Helper classes live in the components layer so Tailwind utilities (fixed, sticky…) override them. */
 @layer components {
+  /* The video player seek bar: an invisible range input over drawn bars; only its thumb shows. */
+  .ez-seek::-webkit-slider-thumb {
+    appearance: none; width: 14px; height: 14px; border-radius: 9999px;
+    background: var(--ez-gold-500); box-shadow: 0 0 0 3px rgb(0 0 0 / 0.35);
+  }
+  .ez-seek::-moz-range-thumb {
+    width: 14px; height: 14px; border: 0; border-radius: 9999px;
+    background: var(--ez-gold-500); box-shadow: 0 0 0 3px rgb(0 0 0 / 0.35);
+  }
+  /* Separate rules: a browser drops a whole rule that names another browser's pseudo-element. */
+  .ez-seek::-webkit-slider-runnable-track { background: transparent; height: 1rem; }
+  .ez-seek::-moz-range-track { background: transparent; }
+  .ez-seek { -webkit-appearance: none; appearance: none; background: transparent; }
   /* Display headings: Fraunces with a soft optical size. */
   .font-display {
     font-variation-settings: "SOFT" 50, "WONK" 0;

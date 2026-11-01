@@ -3705,6 +3705,17 @@
       },
       "OpenResourceOut": {
         "properties": {
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
           "expires_at": {
             "format": "date-time",
             "title": "Expires At",
@@ -3713,6 +3724,16 @@
           "kind": {
             "title": "Kind",
             "type": "string"
+          },
+          "playback": {
+            "default": "file",
+            "title": "Playback",
+            "type": "string"
+          },
+          "resume_at_seconds": {
+            "default": 0,
+            "title": "Resume At Seconds",
+            "type": "integer"
           },
           "url": {
             "title": "Url",
@@ -4510,6 +4531,16 @@
             "title": "Expires At",
             "type": "string"
           },
+          "playback": {
+            "default": "file",
+            "enum": [
+              "hls",
+              "embed",
+              "file"
+            ],
+            "title": "Playback",
+            "type": "string"
+          },
           "url": {
             "title": "Url",
             "type": "string"
@@ -4590,6 +4621,53 @@
           "public_paths"
         ],
         "title": "ProfileOut",
+        "type": "object"
+      },
+      "ProgressIn": {
+        "additionalProperties": false,
+        "description": "Sent by the player about every 15 s while playing, and on pause or leaving.",
+        "properties": {
+          "position_seconds": {
+            "maximum": 86400.0,
+            "minimum": 0.0,
+            "title": "Position Seconds",
+            "type": "integer"
+          },
+          "watched_seconds": {
+            "maximum": 120.0,
+            "minimum": 0.0,
+            "title": "Watched Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position_seconds",
+          "watched_seconds"
+        ],
+        "title": "ProgressIn",
+        "type": "object"
+      },
+      "ProgressOut": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "position_seconds": {
+            "title": "Position Seconds",
+            "type": "integer"
+          },
+          "watched_seconds": {
+            "title": "Watched Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position_seconds",
+          "watched_seconds",
+          "completed"
+        ],
+        "title": "ProgressOut",
         "type": "object"
       },
       "PublicClass": {
@@ -5527,6 +5605,10 @@
       },
       "StudentResource": {
         "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "boolean"
+          },
           "duration_seconds": {
             "anyOf": [
               {
@@ -5550,6 +5632,10 @@
           "kind": {
             "title": "Kind",
             "type": "string"
+          },
+          "position_seconds": {
+            "title": "Position Seconds",
+            "type": "integer"
           },
           "ready": {
             "title": "Ready",
@@ -5583,7 +5669,9 @@
           "is_downloadable",
           "ready",
           "views_used",
-          "views_allowed"
+          "views_allowed",
+          "position_seconds",
+          "completed"
         ],
         "title": "StudentResource",
         "type": "object"
@@ -7973,6 +8061,65 @@
           }
         ],
         "summary": "Open Resource",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/resources/{resource_id}/progress": {
+      "post": {
+        "description": "The player reports where the student is, about every 15 s (resume point and completion).",
+        "operationId": "save_progress_api_v1_learn_resources__resource_id__progress_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Resource Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgressIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Progress",
         "tags": [
           "learn"
         ]

@@ -200,6 +200,8 @@ export type StudentResource = {
   ready: boolean;
   views_used: number;
   views_allowed: number | null;
+  position_seconds: number;
+  completed: boolean;
 };
 
 export type StudentLessonDetail = StudentLesson & {
@@ -219,7 +221,12 @@ export type OpenResource = {
   watermark: { name: string; phone: string | null };
   views_used: number | null;
   views_allowed: number | null;
+  /** hls: our own player; embed: Bunny's iframe (library without CDN keys); file: a document link. */
+  playback: "hls" | "embed" | "file";
+  resume_at_seconds: number;
+  duration_seconds: number | null;
 };
+export type Progress = { position_seconds: number; watched_seconds: number; completed: boolean };
 
 // --- organization: students and requests ---------------------------------------------
 
