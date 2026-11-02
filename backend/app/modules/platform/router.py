@@ -9,17 +9,28 @@ from app.integrations.sms import SmsSender, get_sms_sender
 from app.modules.auth.dependencies import user_agent
 from app.modules.auth.schemas import OtpRequest, OtpRequested
 from app.modules.onboarding.schemas import AccountNumber, ApplicationDetail, ApplicationRow, ApplicationStatus, DecisionIn
-from app.modules.platform import applications, auth, service
+from app.modules.platform import applications, audit_log, auth, checkouts, service, subjects, users
 from app.modules.platform.auth import Admin, AdminTx, PlatformLogin, PlatformMe, PlatformRefresh, PlatformTokens
 from app.modules.platform.schemas import (
+    AuditPage,
+    CheckoutStatus,
     PayoutCreate,
     PayoutRow,
+    PlatformCheckoutDetail,
+    PlatformCheckoutPage,
     PlatformPaymentPage,
+    RetryResult,
+    SignedOut,
+    SubjectCreate,
+    SubjectRow,
+    SubjectUpdate,
     TenantCreate,
     TenantCreated,
     TenantRow,
     TenantStatus,
     TenantUpdate,
+    UserDetail,
+    UserRow,
 )
 
 # EduZone staff only. No tenant host; reachable only from PLATFORM_ALLOWED_CIDRS.
@@ -125,3 +136,82 @@ async def reveal_account(application_id: UUID, actor: Admin, session: AdminTx) -
 @router.post("/applications/{application_id}/decision", response_model=ApplicationDetail)
 async def decide(application_id: UUID, body: DecisionIn, actor: Admin, session: AdminTx) -> ApplicationDetail:
     return await applications.decide(session, actor, application_id, body)
+
+
+# --- subjects (phase 8) ----------------------------------------------------------------------
+
+@router.get("/subjects", response_model=list[SubjectRow])
+async def list_subjects(actor: Admin, session: AdminTx) -> list[SubjectRow]:
+    return await subjects.list_subjects(session)
+
+
+@router.post("/subjects", response_model=SubjectRow, status_code=201)
+async def create_subject(body: SubjectCreate, actor: Admin, session: AdminTx) -> SubjectRow:
+    return await subjects.create_subject(session, actor, body)
+
+
+@router.patch("/subjects/{subject_id}", response_model=SubjectRow)
+async def update_subject(subject_id: UUID, body: SubjectUpdate, actor: Admin, session: AdminTx) -> SubjectRow:
+    return await subjects.update_subject(session, actor, subject_id, body)
+
+
+# --- users and devices (phase 8) -------------------------------------------------------------
+
+@router.get("/users", response_model=list[UserRow])
+async def search_users(actor: Admin, session: AdminTx,
+                       q: Annotated[str, Query(min_length=2, max_length=120)]) -> list[UserRow]:
+    return await users.search_users(session, q)
+
+
+@router.get("/users/{user_id}", response_model=UserDetail)
+async def get_user(user_id: UUID, actor: Admin, session: AdminTx) -> UserDetail:
+    return await users.get_user(session, user_id)
+
+
+@router.post("/users/{user_id}/sign-out", response_model=SignedOut)
+async def sign_out_user(user_id: UUID, actor: Admin, session: AdminTx) -> SignedOut:
+    return await users.sign_out_everywhere(session, actor, user_id)
+
+
+@router.delete("/users/{user_id}/devices/{device_id}", response_model=SignedOut)
+async def forget_device(user_id: UUID, device_id: UUID, actor: Admin, session: AdminTx) -> SignedOut:
+    return await users.forget_device(session, actor, user_id, device_id)
+
+
+# --- checkouts (phase 8) ---------------------------------------------------------------------
+
+@router.get("/checkouts", response_model=PlatformCheckoutPage)
+async def list_checkouts(
+    actor: Admin, session: AdminTx,
+    status: CheckoutStatus | None = None,
+    stuck: bool = False,
+    cursor: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = DEFAULT_LIMIT,
+) -> PlatformCheckoutPage:
+    return await checkouts.list_checkouts(session, status=status, stuck=stuck, cursor=cursor, limit=limit)
+
+
+@router.get("/checkouts/{checkout_id}", response_model=PlatformCheckoutDetail)
+async def get_checkout(checkout_id: UUID, actor: Admin, session: AdminTx) -> PlatformCheckoutDetail:
+    return await checkouts.get_checkout(session, checkout_id)
+
+
+@router.post("/checkouts/{checkout_id}/retry", response_model=RetryResult)
+async def retry_checkout(checkout_id: UUID, actor: Admin, session: AdminTx) -> RetryResult:
+    return await checkouts.retry(session, actor, checkout_id)
+
+
+# --- audit log (phase 8) ---------------------------------------------------------------------
+
+@router.get("/audit", response_model=AuditPage)
+async def list_audit(
+    actor: Admin, session: AdminTx,
+    tenant_id: UUID | None = None,
+    action: Annotated[str | None, Query(max_length=80)] = None,
+    actor_id: UUID | None = None,
+    entity_id: UUID | None = None,
+    cursor: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+) -> AuditPage:
+    return await audit_log.list_audit(session, tenant_id=tenant_id, action=action, actor_id=actor_id,
+                                      entity_id=entity_id, cursor=cursor, limit=limit)

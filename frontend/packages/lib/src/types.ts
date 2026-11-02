@@ -448,6 +448,7 @@ export type PlatformTenant = {
   slug: string;
   org_type: "individual" | "institute" | "corporate";
   status: TenantStatus;
+  is_listed: boolean;
   currency: string;
   commission_bps: number;
   gateway_fee_bearer: "tenant" | "platform";

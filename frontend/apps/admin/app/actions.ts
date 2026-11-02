@@ -161,3 +161,73 @@ export async function recordPayout(tenantId: string, _: FormState, fd: FormData)
   revalidatePath(`/tenants/${tenantId}`);
   return { ok: true, at: Date.now() };
 }
+
+// --- phase 8: listing, subjects, users, checkouts ---------------------------------------
+
+export async function setListed(tenantId: string, listed: boolean): Promise<FormState> {
+  const res = await api(`/platform/tenants/${tenantId}`, { method: "PATCH", body: { is_listed: listed } });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath(`/tenants/${tenantId}`);
+  revalidatePath("/");
+  return { ok: true, at: Date.now() };
+}
+
+function sortOrder(fd: FormData): number | null {
+  const v = text(fd, "sort_order");
+  if (!v) return 0;
+  return /^\d{1,5}$/.test(v) ? Number(v) : null;
+}
+
+export async function createSubject(_: FormState, fd: FormData): Promise<FormState> {
+  const order = sortOrder(fd);
+  if (order === null) return { error: t("platform.form.invalidNumber") };
+  const res = await api("/platform/subjects", {
+    method: "POST",
+    body: { name: text(fd, "name"), slug: text(fd, "slug").toLowerCase(), sort_order: order },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/subjects");
+  return { ok: true, at: Date.now() };
+}
+
+export async function updateSubject(subjectId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const order = sortOrder(fd);
+  if (order === null) return { error: t("platform.form.invalidNumber") };
+  const res = await api(`/platform/subjects/${subjectId}`, {
+    method: "PATCH", body: { name: text(fd, "name"), sort_order: order },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/subjects");
+  return { ok: true, at: Date.now() };
+}
+
+export async function setSubjectActive(subjectId: string, active: boolean): Promise<FormState> {
+  const res = await api(`/platform/subjects/${subjectId}`, { method: "PATCH", body: { is_active: active } });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/subjects");
+  return { ok: true, at: Date.now() };
+}
+
+export async function signOutUser(userId: string): Promise<FormState> {
+  const res = await api(`/platform/users/${userId}/sign-out`, { method: "POST" });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath(`/users/${userId}`);
+  return { ok: true, at: Date.now() };
+}
+
+export async function forgetDevice(userId: string, deviceId: string): Promise<FormState> {
+  const res = await api(`/platform/users/${userId}/devices/${deviceId}`, { method: "DELETE" });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath(`/users/${userId}`);
+  return { ok: true, at: Date.now() };
+}
+
+/** Fulfils what is left of a checkout paid at the gateway. Shows the outcome when it doesn't finish. */
+export async function retryCheckout(checkoutId: string): Promise<FormState> {
+  const res = await api<{ outcome: string }>(`/platform/checkouts/${checkoutId}/retry`, { method: "POST" });
+  revalidatePath(`/checkouts/${checkoutId}`);
+  revalidatePath("/checkouts");
+  if (!res.ok) return { error: errorText(t, res.error) };
+  if (res.data.outcome !== "paid") return { error: t("platform.checkouts.retryFailed", { outcome: res.data.outcome }) };
+  return { ok: true, at: Date.now() };
+}

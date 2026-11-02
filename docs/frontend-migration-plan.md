@@ -207,7 +207,11 @@ Frontend: `VideoPlayer` with hls.js (native HLS on iOS), quality, speed, resume,
 inside the fullscreen container (name + last 4 digits), reduced-motion support.
 Needs a real Bunny library to verify.
 
-### Phase 8 — Private admin app **[S]**
+### Phase 8 — Private admin app **[S]** ✅ done
+Built as below (CLAUDE.md section 11, "Platform admin, phase 8"; deploy in `docs/deploy-admin.md`). Added beyond the
+list: checkouts with a retry for a half-fulfilled one (the open item from phase 6) and the audit log. Not done: a
+Docker image was written but not built here (no Docker on the dev machine; the standalone server was built and run
+with Node), the daily Bunny usage sync, refunds.
 Done mostly in phase 1 (move). Add: deploy separately; API admin routes accept only the VPN range
 (`PLATFORM_ALLOWED_CIDRS`, already built); new screens: teacher applications, subjects list, list/unlist,
 users and devices.

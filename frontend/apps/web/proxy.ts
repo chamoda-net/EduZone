@@ -54,7 +54,11 @@ async function refreshSession(request: NextRequest): Promise<CookieChange[]> {
   try {
     res = await fetch(`${API_URL}/api/v1/auth/refresh`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-forwarded-host": request.headers.get("host") ?? "" },
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-host": request.headers.get("host") ?? "",
+        "user-agent": request.headers.get("user-agent") ?? "",
+      },
       body: JSON.stringify({ refresh_token: refresh }),
       cache: "no-store",
     });

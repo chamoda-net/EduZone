@@ -1314,6 +1314,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Audit */
+        get: operations["list_audit_api_v1_platform_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/auth/login": {
         parameters: {
             query?: never;
@@ -1399,6 +1416,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/checkouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Checkouts */
+        get: operations["list_checkouts_api_v1_platform_checkouts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/checkouts/{checkout_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Checkout */
+        get: operations["get_checkout_api_v1_platform_checkouts__checkout_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/checkouts/{checkout_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Checkout */
+        post: operations["retry_checkout_api_v1_platform_checkouts__checkout_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/payments": {
         parameters: {
             query?: never;
@@ -1414,6 +1482,41 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Subjects */
+        get: operations["list_subjects_api_v1_platform_subjects_get"];
+        put?: never;
+        /** Create Subject */
+        post: operations["create_subject_api_v1_platform_subjects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/subjects/{subject_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Subject */
+        patch: operations["update_subject_api_v1_platform_subjects__subject_id__patch"];
         trace?: never;
     };
     "/api/v1/platform/tenants": {
@@ -1464,6 +1567,74 @@ export interface paths {
         put?: never;
         /** Record Payout */
         post: operations["record_payout_api_v1_platform_tenants__tenant_id__payouts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Users */
+        get: operations["search_users_api_v1_platform_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User */
+        get: operations["get_user_api_v1_platform_users__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/users/{user_id}/devices/{device_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Forget Device */
+        delete: operations["forget_device_api_v1_platform_users__user_id__devices__device_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/users/{user_id}/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign Out User */
+        post: operations["sign_out_user_api_v1_platform_users__user_id__sign_out_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2258,6 +2429,43 @@ export interface components {
             /** Tenant Slug */
             tenant_slug: string;
         };
+        /** AuditPage */
+        AuditPage: {
+            /** Items */
+            items: components["schemas"]["AuditRow"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** AuditRow */
+        AuditRow: {
+            /** Action */
+            action: string;
+            /** Actor Name */
+            actor_name: string | null;
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            } | null;
+            /** Entity Id */
+            entity_id: string | null;
+            /** Entity Type */
+            entity_type: string;
+            /** Id */
+            id: number;
+            /** Ip Address */
+            ip_address: string | null;
+            /** Tenant Id */
+            tenant_id: string | null;
+            /** Tenant Name */
+            tenant_name: string | null;
+        };
         /** Body_apply_api_v1_me_teacher_application_post */
         Body_apply_api_v1_me_teacher_application_post: {
             /**
@@ -2438,6 +2646,37 @@ export interface components {
             /** Refunds Cents */
             refunds_cents: number;
         };
+        /** CheckoutAttempt */
+        CheckoutAttempt: {
+            /** Amount Cents */
+            amount_cents: number;
+            /** Card Last4 */
+            card_last4: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Gateway */
+            gateway: string;
+            /** Gateway Fee Cents */
+            gateway_fee_cents: number | null;
+            /** Gateway Payment Ref */
+            gateway_payment_ref: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Method */
+            method: string | null;
+            /** Status */
+            status: string;
+        };
         /**
          * CheckoutCreate
          * @description One item per order in v1: a month of a monthly class, or a one-time class.
@@ -2479,6 +2718,33 @@ export interface components {
             payment_status: string;
             /** Status */
             status: string;
+            /** Total Cents */
+            total_cents: number;
+        };
+        /** CheckoutOrder */
+        CheckoutOrder: {
+            /** Description */
+            description: string;
+            /** Gateway Fee Cents */
+            gateway_fee_cents: number | null;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Order No */
+            order_no: string;
+            /** Paid At */
+            paid_at: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Name */
+            tenant_name: string;
             /** Total Cents */
             total_cents: number;
         };
@@ -3541,6 +3807,101 @@ export interface components {
              */
             phone: string;
         };
+        /** PlatformCheckout */
+        PlatformCheckout: {
+            /** Checkout No */
+            checkout_no: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Orders */
+            orders: number;
+            /** Orders Paid */
+            orders_paid: number;
+            /** Paid At */
+            paid_at: string | null;
+            /** Payment Status */
+            payment_status: string | null;
+            /** Status */
+            status: string;
+            /** Stuck */
+            stuck: boolean;
+            /** Student Email */
+            student_email: string | null;
+            /** Student Name */
+            student_name: string;
+            /** Student Phone */
+            student_phone: string | null;
+            /** Total Cents */
+            total_cents: number;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** PlatformCheckoutDetail */
+        PlatformCheckoutDetail: {
+            /** Attempts */
+            attempts: components["schemas"]["CheckoutAttempt"][];
+            /** Checkout No */
+            checkout_no: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order List */
+            order_list: components["schemas"]["CheckoutOrder"][];
+            /** Orders */
+            orders: number;
+            /** Orders Paid */
+            orders_paid: number;
+            /** Paid At */
+            paid_at: string | null;
+            /** Payment Status */
+            payment_status: string | null;
+            /** Status */
+            status: string;
+            /** Stuck */
+            stuck: boolean;
+            /** Student Email */
+            student_email: string | null;
+            /** Student Name */
+            student_name: string;
+            /** Student Phone */
+            student_phone: string | null;
+            /** Total Cents */
+            total_cents: number;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** PlatformCheckoutPage */
+        PlatformCheckoutPage: {
+            /** Items */
+            items: components["schemas"]["PlatformCheckout"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** PlatformLogin */
         PlatformLogin: {
             /** Code */
@@ -3875,6 +4236,17 @@ export interface components {
             /** Title */
             title: string | null;
         };
+        /** RetryResult */
+        RetryResult: {
+            checkout: components["schemas"]["PlatformCheckoutDetail"];
+            /** Outcome */
+            outcome: string;
+        };
+        /** SignedOut */
+        SignedOut: {
+            /** Sessions Ended */
+            sessions_ended: number;
+        };
         /** SitemapOut */
         SitemapOut: {
             /** Classes */
@@ -4019,6 +4391,18 @@ export interface components {
             /** Views Used */
             views_used: number;
         };
+        /** SubjectCreate */
+        SubjectCreate: {
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+        };
         /** SubjectOut */
         SubjectOut: {
             /** Class Count */
@@ -4042,6 +4426,38 @@ export interface components {
             subject: components["schemas"]["SubjectOut"];
             /** Teachers */
             teachers: components["schemas"]["TeacherOut"][];
+        };
+        /** SubjectRow */
+        SubjectRow: {
+            /** Classes */
+            classes: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Sort Order */
+            sort_order: number;
+        };
+        /** SubjectUpdate */
+        SubjectUpdate: {
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
+            /** Sort Order */
+            sort_order?: number | null;
         };
         /** TeacherCard */
         TeacherCard: {
@@ -4199,6 +4615,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Is Listed */
+            is_listed: boolean;
             /** Logo Url */
             logo_url: string | null;
             /** Members */
@@ -4238,6 +4656,8 @@ export interface components {
             commission_bps?: number | null;
             /** Gateway Fee Bearer */
             gateway_fee_bearer?: ("tenant" | "platform") | null;
+            /** Is Listed */
+            is_listed?: boolean | null;
             /** Logo Url */
             logo_url?: string | null;
             /** Name */
@@ -4328,6 +4748,167 @@ export interface components {
             title: string;
             /** Unlocked */
             unlocked: boolean;
+        };
+        /** UserDetail */
+        UserDetail: {
+            /** Active Sessions */
+            active_sessions: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Devices */
+            devices: components["schemas"]["UserDevice"][];
+            /** Email */
+            email: string | null;
+            /** Email Verified */
+            email_verified: boolean;
+            /** Exam */
+            exam: string | null;
+            /** Exam Year */
+            exam_year: number | null;
+            /** Full Name */
+            full_name: string;
+            /** Google Linked */
+            google_linked: boolean;
+            /** Has Password */
+            has_password: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Platform Admin */
+            is_platform_admin: boolean;
+            /** Last Login At */
+            last_login_at: string | null;
+            /** Member Of */
+            member_of: components["schemas"]["UserMembership"][];
+            /** Memberships */
+            memberships: number;
+            /** Phone */
+            phone: string | null;
+            /** Phone Verified */
+            phone_verified: boolean;
+            /** School */
+            school: string | null;
+            /** Sessions */
+            sessions: components["schemas"]["UserSession"][];
+        };
+        /** UserDevice */
+        UserDevice: {
+            /** Device Id */
+            device_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+            /**
+             * Trusted At
+             * Format: date-time
+             */
+            trusted_at: string;
+            /** User Agent */
+            user_agent: string | null;
+        };
+        /** UserMembership */
+        UserMembership: {
+            /**
+             * Joined At
+             * Format: date-time
+             */
+            joined_at: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Role */
+            role: string;
+            /** Status */
+            status: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Name */
+            tenant_name: string;
+            /** Tenant Slug */
+            tenant_slug: string;
+        };
+        /** UserRow */
+        UserRow: {
+            /** Active Sessions */
+            active_sessions: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string | null;
+            /** Email Verified */
+            email_verified: boolean;
+            /** Full Name */
+            full_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Platform Admin */
+            is_platform_admin: boolean;
+            /** Last Login At */
+            last_login_at: string | null;
+            /** Memberships */
+            memberships: number;
+            /** Phone */
+            phone: string | null;
+            /** Phone Verified */
+            phone_verified: boolean;
+        };
+        /** UserSession */
+        UserSession: {
+            /** Active */
+            active: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Device Id */
+            device_id: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Ip Address */
+            ip_address: string | null;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+            /** Revoke Reason */
+            revoke_reason: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** User Agent */
+            user_agent: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -7126,6 +7707,42 @@ export interface operations {
             };
         };
     };
+    list_audit_api_v1_platform_audit_get: {
+        parameters: {
+            query?: {
+                tenant_id?: string | null;
+                action?: string | null;
+                actor_id?: string | null;
+                entity_id?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_v1_platform_auth_login_post: {
         parameters: {
             query?: never;
@@ -7263,6 +7880,102 @@ export interface operations {
             };
         };
     };
+    list_checkouts_api_v1_platform_checkouts_get: {
+        parameters: {
+            query?: {
+                status?: ("pending" | "paid" | "failed" | "cancelled") | null;
+                stuck?: boolean;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformCheckoutPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_checkout_api_v1_platform_checkouts__checkout_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformCheckoutDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_checkout_api_v1_platform_checkouts__checkout_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_payments_api_v1_platform_payments_get: {
         parameters: {
             query?: {
@@ -7284,6 +7997,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformPaymentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_subjects_api_v1_platform_subjects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectRow"][];
+                };
+            };
+        };
+    };
+    create_subject_api_v1_platform_subjects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubjectCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectRow"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_subject_api_v1_platform_subjects__subject_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subject_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubjectUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectRow"];
                 };
             };
             /** @description Validation Error */
@@ -7480,6 +8281,131 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PayoutRow"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_users_api_v1_platform_users_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_api_v1_platform_users__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    forget_device_api_v1_platform_users__user_id__devices__device_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sign_out_user_api_v1_platform_users__user_id__sign_out_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedOut"];
                 };
             };
             /** @description Validation Error */

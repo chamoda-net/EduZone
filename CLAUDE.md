@@ -476,9 +476,9 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   the next delivery of the same notification finishes it (already-paid orders are skipped). When all are paid:
   checkout `paid` and those items leave the cart. Failed/cancelled: every pending order and the checkout get
   that status; a late failure after success is ignored.
-- **Not built yet:** a retry job or admin button for a checkout left `pending` (today only a repeated
-  notification retries it; check whether PayHere re-sends on a 5xx), fee true-up across a checkout's orders
-  (`settle_fee` works per order payment), checkout views in the admin app (phase 8).
+- **Retry:** a repeated notification, or the admin's "Retry fulfilment" button (phase 8). **Not built yet:** an
+  automatic retry job (check whether PayHere re-sends on a 5xx), fee true-up across a checkout's orders
+  (`settle_fee` works per order payment).
 - **Frontend:** guest cart in the `ez_cart` cookie (`lib/cart-cookie.ts`); `proxy.ts` merges it into the
   account once signed in and drops it. `lib/cart.ts` (`getCart`, `cartCount`, `inCart`), header cart badge,
   `components/add-to-cart.tsx` on the public class page (open month or one-time class) and the student class
@@ -638,6 +638,32 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   cookies (`ez_padmin_*`, `SameSite=Strict`) and token refresh in its `proxy.ts`. Pages: `/login`,
   `/` (organizations), `/tenants/new`, `/tenants/[id]` (figures, record payout, history, edit), `/payments`.
   It calls only `/api/v1/platform/...` and sends no tenant host.
+
+### Platform admin, phase 8 (`app/modules/platform/{subjects,users,checkouts,audit_log}.py`)
+- **Deploy:** on its own inside the private network (`docs/deploy-admin.md`): `frontend/apps/admin/Dockerfile`
+  builds Next's standalone server (`NEXT_OUTPUT=standalone`); `PLATFORM_ALLOWED_CIDRS` names the **admin server's**
+  address (the API never sees the staff member's browser, so audit IPs for platform actions are the admin server's).
+  The app sends `noindex`, `DENY` framing and `no-referrer`.
+- **Listing:** `PATCH /tenants/{id} {is_listed}` hides an active organization and all its classes from the
+  marketplace (the `public_*` views) while its console and students keep working (`platform.tenant.list|unlist`).
+- **Subjects** (`GET/POST /subjects`, `PATCH /subjects/{id}`): name, order, hide/show; the slug is fixed once
+  created (409 `SLUG_TAKEN`, 422 `SLUG_RESERVED` for site routes). Hiding takes the subject page and its classes off
+  the marketplace; nothing is deleted. Rows show the number of published classes.
+- **Users and devices** (`GET /users?q=` by email, phone in any form or its last 4+ digits, or name; at most 50;
+  `GET /users/{id}`: profile, memberships, active sessions plus the 10 most recently ended, trusted devices):
+  `POST /users/{id}/sign-out` ends every session; `DELETE /users/{id}/devices/{device}` forgets a trusted device
+  (its next sign-in asks for an SMS code) and ends its sessions. Revoke reason `platform_admin`. Audit rows carry
+  no tenant.
+- **Checkouts** (`GET /checkouts?status=&stuck=`, cursor; `GET /checkouts/{id}`: orders with their fee share and
+  every gateway attempt): **stuck** = checkout `pending` with a `succeeded` checkout payment. `POST
+  /checkouts/{id}/retry` (409 `CHECKOUT_NOT_STUCK` otherwise) rebuilds the gateway event from the recorded checkout
+  payment and runs `cart.service.apply_checkout_event` again: paid orders are skipped, the ledger still books each
+  order once. The outcome (`paid` or the error) is returned and audited either way.
+- **Audit log** (`GET /audit?tenant_id=&action=<prefix>&actor_id=&entity_id=`, cursor = last row id, newest first):
+  read only. The admin app links to it from an organization, a user ("their activity") and a checkout.
+- **Admin app pages:** `/subjects`, `/users`, `/users/[id]`, `/checkouts` (filter chips, "Needs a retry" count),
+  `/checkouts/[id]` (retry banner), `/audit`; the organization page has a listing card and an audit link, and the
+  list marks unlisted organizations. Types come from `Schema<"...">`. Tests: `tests/test_platform_ops.py`.
 
 ### Teacher onboarding (phase 5: `app/modules/onboarding`, `app/modules/platform/applications.py`)
 - **Apply** (`/api/v1/me/teacher-application`, signed in, **verified phone** else 403 `PHONE_NOT_VERIFIED`):
@@ -861,7 +887,7 @@ httpOnly cookies.
 5. Teacher self-registration and approval (done)
 6. Cart and one payment across teachers (checkouts, fee allocation, per-tenant fulfilment) (done)
 7. Own hls.js video player with signed HLS URLs and progress (done)
-8. Private admin app (separate deploy) and its new screens
+8. Private admin app (separate deploy) and its new screens (done)
 9. Polish: Sinhala if needed, Playwright at 360 px and desktop, low-end phone pass, accessibility
 
 ### Then

@@ -32,12 +32,15 @@ export async function api<T>(path: string, { method = "GET", body, token }: Opti
     path = `/teach/${slug}${path.slice(1)}`;
   }
   const host = await userHost();
+  const userAgent = (await headers()).get("user-agent");
   const accessToken = token === undefined ? (await cookies()).get(ACCESS_COOKIE)?.value : token;
   const requestHeaders: Record<string, string> = {
     accept: "application/json",
     // fetch() can't override Host, so the user's host travels in X-Forwarded-Host.
     "x-forwarded-host": host,
   };
+  // The browser's, so a session and a trusted device are recorded as "Chrome · Android", not as this server.
+  if (userAgent) requestHeaders["user-agent"] = userAgent;
   if (body !== undefined) requestHeaders["content-type"] = "application/json";
   if (accessToken) requestHeaders.authorization = `Bearer ${accessToken}`;
 

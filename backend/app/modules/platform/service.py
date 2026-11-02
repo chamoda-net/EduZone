@@ -27,7 +27,7 @@ from app.modules.platform.schemas import (
 )
 
 _TENANT_SELECT = """
-    SELECT t.id, t.name, t.slug, t.org_type, t.status, t.currency, t.commission_bps, t.gateway_fee_bearer,
+    SELECT t.id, t.name, t.slug, t.org_type, t.status, t.is_listed, t.currency, t.commission_bps, t.gateway_fee_bearer,
            t.primary_color, t.logo_url, t.bunny_library_id, t.payout_bank_name, t.payout_account_masked,
            t.created_at, t.storage_limit_bytes, t.bandwidth_limit_bytes,
            (SELECT count(*) FROM tenant_members m WHERE m.tenant_id = t.id AND m.role <> 'student') AS members,
@@ -124,7 +124,12 @@ async def update_tenant(session: AsyncSession, actor: PlatformActor, tenant_id: 
         except IntegrityError as exc:
             raise ApiError("LIBRARY_IN_USE", "That Bunny library belongs to another organization.", 409) from exc
         await _set_tenant(session, tenant_id)
-        action = "platform.tenant.suspend" if changes.get("status") == "suspended" else "platform.tenant.update"
+        if changes.get("status") == "suspended":
+            action = "platform.tenant.suspend"
+        elif set(changes) == {"is_listed"}:
+            action = "platform.tenant.list" if changes["is_listed"] else "platform.tenant.unlist"
+        else:
+            action = "platform.tenant.update"
         await _audit(session, actor, action, "tenant", tenant_id, {"changes": changes})
     return await get_tenant(session, tenant_id)
 

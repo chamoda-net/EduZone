@@ -1,4 +1,4 @@
-import { Building2, ClipboardList, LogOut, Receipt } from "lucide-react";
+import { BookOpen, Building2, ClipboardList, History, LogOut, Receipt, ShoppingCart, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -28,7 +28,11 @@ export default async function PlatformConsoleLayout({ children }: LayoutProps<"/
       items={[
         { href: "/", label: t("platform.nav.tenants"), icon: <Building2 />, exact: true },
         { href: "/applications", label: t("platform.nav.applications"), icon: <ClipboardList /> },
+        { href: "/subjects", label: t("platform.nav.subjects"), icon: <BookOpen /> },
+        { href: "/users", label: t("platform.nav.users"), icon: <Users /> },
+        { href: "/checkouts", label: t("platform.nav.checkouts"), icon: <ShoppingCart /> },
         { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt /> },
+        { href: "/audit", label: t("platform.nav.audit"), icon: <History /> },
       ]}
       footer={
         <div className="flex flex-col gap-1">

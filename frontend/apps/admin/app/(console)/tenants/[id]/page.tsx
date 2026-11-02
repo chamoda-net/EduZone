@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ActionButton } from "@eduzone/ui/action-button";
 import { Badge, Card, ErrorText, buttonClass } from "@eduzone/ui";
 import { api } from "@/lib/api";
 import { centsToRupeesInput, formatDateTime, formatMoney } from "@eduzone/lib/format";
@@ -8,7 +9,7 @@ import { errorText, t } from "@eduzone/lib/i18n";
 import { tenantTone } from "@/lib/platform";
 import type { Payout, PlatformTenant } from "@eduzone/lib/types";
 
-import { recordPayout, updateTenant } from "../../../actions";
+import { recordPayout, setListed, updateTenant } from "../../../actions";
 import { TenantForm } from "../../tenant-form";
 import { PayoutForm } from "./payout-form";
 
@@ -49,6 +50,22 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
         ))}
       </div>
 
+      <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+            {t("platform.listed.title")}
+            <Badge tone={x.is_listed ? "success" : "warning"}>{t(x.is_listed ? "platform.listed.on" : "platform.listed.off")}</Badge>
+          </h2>
+          <p className="text-sm text-muted">{t(x.is_listed ? "platform.listed.onBody" : "platform.listed.offBody")}</p>
+        </div>
+        <ActionButton
+          action={setListed.bind(null, x.id, !x.is_listed)}
+          label={t(x.is_listed ? "platform.listed.unlist" : "platform.listed.list")}
+          confirm={x.is_listed ? t("platform.listed.confirmUnlist") : undefined}
+          done={t("platform.listed.done")}
+        />
+      </Card>
+
       <Card className="flex flex-col gap-3">
         <div>
           <h2 className="font-display text-xl font-semibold">{t("platform.payout.title")}</h2>
@@ -78,8 +95,9 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
         )}
       </Card>
 
-      <div className="flex">
+      <div className="flex flex-wrap gap-6">
         <Link href={`/payments?tenant_id=${x.id}`} className={buttonClass.link}>{t("platform.nav.payments")} →</Link>
+        <Link href={`/audit?tenant_id=${x.id}`} className={buttonClass.link}>{t("platform.tenants.audit")} →</Link>
       </div>
 
       <Card>

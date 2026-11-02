@@ -31,6 +31,7 @@ export default async function TenantsPage() {
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 font-medium">
                     {x.name} <Badge tone={tenantTone[x.status]}>{t(`platform.status.${x.status}`)}</Badge>
+                    {x.status === "active" && !x.is_listed && <Badge tone="warning">{t("platform.listed.off")}</Badge>}
                   </p>
                   <p className="text-sm text-muted">
                     {x.slug} · {t(`platform.orgType.${x.org_type}`)} · {t("platform.tenants.students")}: {x.students}
