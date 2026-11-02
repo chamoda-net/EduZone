@@ -1,4 +1,4 @@
-import { Clapperboard, ExternalLink, Hourglass, HandCoins, Inbox, Landmark, LibraryBig, Receipt, UserRound } from "lucide-react";
+import { Clapperboard, ExternalLink, GraduationCap, Hourglass, HandCoins, Inbox, Landmark, LibraryBig, Receipt, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -36,6 +36,7 @@ export default async function TeachLayout({ children, params }: LayoutProps<"/te
   const managesAll = workspace.role === "owner" || workspace.role === "admin";
   const items: NavItem[] = [
     { href: `${base}/classes`, label: t("org.nav.classes"), icon: <LibraryBig /> },
+    { href: `${base}/courses`, label: t("org.nav.courses"), icon: <GraduationCap /> },
     { href: `${base}/requests`, label: t("org.nav.requests"), icon: <Inbox /> },
     { href: `${base}/payments`, label: t("org.nav.payments"), icon: <Receipt /> },
     { href: `${base}/earnings`, label: t("org.nav.earnings"), icon: <HandCoins /> },

@@ -28,6 +28,7 @@ from app.integrations.bunny import not_configured, signing, storage_client, stre
 from app.integrations.bunny.stream import video_status
 from app.modules.auth.dependencies import Actor
 from app.modules.catalog.service import load_lesson
+from app.modules.courses.service import refresh_stats as course_stats
 from app.modules.media import repository as repo
 from app.modules.media.models import LessonResource, MediaAsset
 from app.modules.media.schemas import (
@@ -270,8 +271,8 @@ async def add_resource(session: AsyncSession, actor: Actor, lesson_id: UUID, bod
     m = await _load_asset(session, actor, body.media_asset_id)
     if m.status == "failed":
         raise ApiError("MEDIA_FAILED", "This file failed to process. Upload it again.", 409)
-    if m.kind == "video" and lesson.lesson_type == "document":
-        raise ApiError("MEDIA_KIND_INVALID", "A tute lesson can only have PDF files.")
+    if m.kind == "video" and lesson.lesson_type in ("document", "article"):
+        raise ApiError("MEDIA_KIND_INVALID", "A tute or article lesson can only have PDF files.")
     if m.kind not in ("video", "document"):
         raise ApiError("MEDIA_KIND_INVALID", "Only videos and PDFs can be attached to lessons.")
     if await repo.resource_exists(session, lesson.id, m.id):
@@ -283,6 +284,8 @@ async def add_resource(session: AsyncSession, actor: Actor, lesson_id: UUID, bod
     })
     await _audit(session, actor, "lesson_resource.create", "lesson_resource", r.id,
                  {"lesson_id": lesson.id, "media_asset_id": m.id})
+    if lesson.section_id is not None:      # a course lecture: its length counts on the marketplace
+        await course_stats(session, lesson.class_id)
     return _resource_out(r, m)
 
 
@@ -291,9 +294,11 @@ async def remove_resource(session: AsyncSession, actor: Actor, resource_id: UUID
     if r is None:
         raise ApiError("NOT_FOUND", "Lesson file not found.", status_code=404)
     try:
-        await load_lesson(session, actor, r.lesson_id)
+        lesson, _ = await load_lesson(session, actor, r.lesson_id)
     except ApiError:
         raise ApiError("NOT_FOUND", "Lesson file not found.", status_code=404) from None
     await repo.delete_resource(session, r.id)
+    if lesson.section_id is not None:
+        await course_stats(session, lesson.class_id)
     await _audit(session, actor, "lesson_resource.delete", "lesson_resource", r.id,
                  {"lesson_id": r.lesson_id, "media_asset_id": r.media_asset_id})

@@ -109,11 +109,15 @@ async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
     """In the class's tenant transaction. Raises ApiError when it can't be bought now. Read-only, so the
     cart can also use it to show each item's state."""
     c = (await session.execute(text("""
-        SELECT id, slug, title, status, pricing_model, monthly_fee_cents, one_time_price_cents, teacher_member_id
+        SELECT id, slug, title, status, kind, pricing_model, monthly_fee_cents, one_time_price_cents,
+               teacher_member_id
         FROM classes WHERE id = :id
     """), {"id": class_id})).one_or_none()
     if c is None or c.status != "published":
         raise ApiError("NOT_FOUND", "Class not found.", status_code=404)
+    if c.kind == "course":
+        # Courses become buyable with their own checkout rules (docs/COURSES.md, step C3).
+        raise ApiError("UNAVAILABLE", "This course can't be bought yet.", status_code=409)
     tenant = (await session.execute(text(
         "SELECT currency, commission_bps FROM tenants WHERE id = current_tenant_id()"))).one()
 

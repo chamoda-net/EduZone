@@ -201,6 +201,21 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
 10. **Public profile** (`/teach/demo/profile`): edit the teacher page (name, link, headline, bio, highlights,
     photo link) and share it.
 
+### C2. Build a course (teacher or owner): new in step C1
+1. In the console, open **Courses** → **New course**: a title and a category.
+2. The builder has five tabs: **Landing page** (subtitle, description with a word counter, category, level,
+   language, cover image link, promo video), **Intended learners** (what students will learn, requirements, who
+   it is for), **Curriculum** (sections and lectures: video, article or PDF; attach files; move up and down; hide;
+   free preview), **Pricing** (free or a one-time price) and **Messages**.
+3. The **Before you submit** checklist on the right shows what is missing; each item links to the tab that fixes
+   it. Video length counts only processed videos the teacher uploaded themselves (Media), so locally you need Bunny
+   or a test video to reach 30 minutes.
+4. **Submit for review**: the course is locked until EduZone decides. In the admin app, **Course reviews** shows it;
+   **Approve and publish** or **Request changes** (with a note the instructor sees). After approval, edits go live
+   at once; **Unpublish** and **Publish again** need no review. Courses are not on the marketplace or for sale yet
+   (steps C2 and C3).
+5. Admin app → **Course categories**: add top categories and subcategories, rename, reorder, hide.
+
 ### D. Become a teacher (any new account)
 1. Register a new account at `/register` and confirm the phone.
 2. Go to `/teach` → **Apply** (`/teach/apply`): teacher or institute, name, subjects, experience, identity
@@ -301,6 +316,15 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
 - Application form (teacher or institute, subjects, experience, identity document, bank details) → organization
   created in **draft mode** (pending) → build classes meanwhile → EduZone approves / requests changes / rejects.
 - Document kept in private storage (only staff can open it, audited); account number encrypted, shown masked.
+
+### Courses, step C1 (docs/COURSES.md)
+- Course builder in the console: landing page, intended learners, curriculum (sections; video, article and PDF
+  lectures; files; reorder; hide; free preview), pricing (free or one-time), messages.
+- Automatic publish checks with a checklist; first publish reviewed by EduZone (approve or request changes with a
+  note); later edits live at once; unpublish and publish again; withdraw from review.
+- Course categories (two levels) managed in the admin app; applications say classes, courses or both.
+- Not yet: course pages on the marketplace (C2), buying and the course player (C3), reviews and certificates (C4),
+  coupons and wishlist (C5), refunds (C6), analytics and commission changes (C7).
 
 ### Platform admin (step 9, phases 5 and 8)
 - Separate app, private network only (`PLATFORM_ALLOWED_CIDRS`), sign-in with SMS code + authenticator app,

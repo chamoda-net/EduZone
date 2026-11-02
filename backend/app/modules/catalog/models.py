@@ -12,6 +12,7 @@ class ClassModel(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, server_default=FetchedValue())
     tenant_id: Mapped[UUID]
+    kind: Mapped[str] = mapped_column(server_default=FetchedValue())   # tuition | course
     teacher_member_id: Mapped[UUID]
     title: Mapped[str]
     slug: Mapped[str]
@@ -58,6 +59,8 @@ class Lesson(Base):
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     duration_minutes: Mapped[int | None] = mapped_column(SmallInteger)
     zoom_join_url: Mapped[str | None]
+    section_id: Mapped[UUID | None] = mapped_column(server_default=FetchedValue())
+    article_body: Mapped[str | None] = mapped_column(server_default=FetchedValue())
     is_free_preview: Mapped[bool]
     is_published: Mapped[bool]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=FetchedValue())

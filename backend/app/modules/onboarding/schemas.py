@@ -2,9 +2,10 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 ApplicationKind = Literal["individual", "institute"]
+Offers = Literal["classes", "courses", "both"]     # what the applicant wants to sell (docs/COURSES.md)
 ApplicationStatus = Literal["submitted", "changes_requested", "approved", "rejected"]
 Decision = Literal["approve", "request_changes", "reject"]
 
@@ -13,8 +14,9 @@ class ApplicationFields(BaseModel):
     """What the applicant fills in (sent as multipart form fields next to the document)."""
 
     kind: ApplicationKind
+    offers: Offers = "classes"
     org_name: str = Field(min_length=2, max_length=120)
-    subject_ids: list[UUID] = Field(min_length=1, max_length=6)
+    subject_ids: list[UUID] = Field(default_factory=list, max_length=6)   # school subjects; optional for courses only
     experience: str | None = Field(default=None, max_length=2000)
     payout_bank_name: str = Field(min_length=2, max_length=80)
     payout_branch: str | None = Field(default=None, max_length=80)
@@ -43,6 +45,12 @@ class ApplicationFields(BaseModel):
             raise ValueError("use letters and numbers only")
         return digits
 
+    @model_validator(mode="after")
+    def _subjects(self) -> "ApplicationFields":
+        if self.offers != "courses" and not self.subject_ids:
+            raise ValueError("choose at least one subject you teach")
+        return self
+
     @field_validator("accept_terms")
     @classmethod
     def _terms(cls, v: bool) -> bool:
@@ -60,6 +68,7 @@ class ApplicationOut(BaseModel):
     id: UUID
     status: ApplicationStatus
     kind: ApplicationKind
+    offers: Offers
     org_name: str
     tenant_slug: str
     subjects: list[SubjectRef]
@@ -80,6 +89,7 @@ class ApplicationRow(BaseModel):
     id: UUID
     status: ApplicationStatus
     kind: ApplicationKind
+    offers: Offers
     org_name: str
     tenant_id: UUID
     tenant_slug: str

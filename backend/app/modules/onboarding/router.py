@@ -17,14 +17,17 @@ Storage = Annotated[PrivateStorage, Depends(get_private_storage)]
 
 
 def _fields(kind: Annotated[str, Form()], org_name: Annotated[str, Form()],
-            subject_ids: Annotated[list[UUID], Form()], payout_bank_name: Annotated[str, Form()],
+            payout_bank_name: Annotated[str, Form()],
             payout_account_name: Annotated[str, Form()],
             payout_account_number: Annotated[str | None, Form()] = None,
             accept_terms: Annotated[bool, Form()] = False, experience: Annotated[str | None, Form()] = None,
-            payout_branch: Annotated[str | None, Form()] = None) -> ApplicationFields:
+            payout_branch: Annotated[str | None, Form()] = None,
+            subject_ids: Annotated[list[UUID] | None, Form()] = None,
+            offers: Annotated[str, Form()] = "classes") -> ApplicationFields:
     try:
         return ApplicationFields.model_validate({
-            "kind": kind, "org_name": org_name, "subject_ids": subject_ids, "experience": experience,
+            "kind": kind, "offers": offers, "org_name": org_name, "subject_ids": subject_ids or [],
+            "experience": experience,
             "payout_bank_name": payout_bank_name, "payout_branch": payout_branch,
             "payout_account_name": payout_account_name,
             "payout_account_number": payout_account_number or None, "accept_terms": accept_terms})

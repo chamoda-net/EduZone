@@ -116,9 +116,10 @@ export default async function ApplyPage({ searchParams }: PageProps<"/teach/appl
               <DataList
                 items={[
                   [t("apply.kindLabel"), t(`apply.kind.${app.kind}`)],
+                  [t("apply.offersLabel"), t(`apply.offers.${app.offers}`)],
                   [t(`apply.orgName.${app.kind}`), app.org_name],
                   [t("apply.summaryAddress"), `/teach/${app.tenant_slug}`],
-                  [t("apply.subjects"), app.subjects.map((s) => s.name).join(", ")],
+                  [t("apply.subjects"), app.subjects.map((s) => s.name).join(", ") || "—"],
                   [t(`apply.document.${app.kind}`), app.document_name],
                   [t("apply.bank"), [app.payout_bank_name, app.payout_branch].filter(Boolean).join(", ")],
                   [t("apply.accountNumber"), `${app.payout_account_name} · ${app.payout_account_masked}`],

@@ -29,7 +29,9 @@ async def list_classes(
     session: AsyncSession, *, teacher_member_id: UUID | None, status: str | None,
     after: tuple[datetime, UUID] | None, limit: int,
 ) -> list[ClassModel]:
-    q = select(ClassModel).order_by(ClassModel.created_at.desc(), ClassModel.id.desc()).limit(limit)
+    # Courses (kind = 'course') have their own console (app.modules.courses).
+    q = (select(ClassModel).where(ClassModel.kind == "tuition")
+         .order_by(ClassModel.created_at.desc(), ClassModel.id.desc()).limit(limit))
     if teacher_member_id is not None:
         q = q.where(ClassModel.teacher_member_id == teacher_member_id)
     if status is not None:

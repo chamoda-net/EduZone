@@ -40,7 +40,7 @@ export default async function ApplicationsPage({ searchParams }: PageProps<"/app
                     <Badge tone={applicationTone[a.status]}>{t(`apply.status.${a.status}`)}</Badge>
                   </p>
                   <p className="truncate text-sm text-muted">
-                    {a.applicant_name} · {t(`platform.orgType.${a.kind}`)} · {a.applicant_phone ?? a.applicant_email}
+                    {a.applicant_name} · {t(`platform.orgType.${a.kind}`)} · {t(`apply.offers.${a.offers}`)} · {a.applicant_phone ?? a.applicant_email}
                   </p>
                 </div>
                 <p className="shrink-0 text-xs text-muted">{t("platform.apps.submitted", { date: formatDateTime(a.submitted_at) })}</p>

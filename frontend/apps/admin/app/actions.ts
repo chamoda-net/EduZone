@@ -231,3 +231,59 @@ export async function retryCheckout(checkoutId: string): Promise<FormState> {
   if (res.data.outcome !== "paid") return { error: t("platform.checkouts.retryFailed", { outcome: res.data.outcome }) };
   return { ok: true, at: Date.now() };
 }
+
+// --- courses: review queue and categories (docs/COURSES.md, step C1) --------------------
+
+export async function decideCourse(courseId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api(`/platform/courses/${courseId}/decision`, {
+    method: "POST", body: { decision: text(fd, "decision"), note: text(fd, "note") || null },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath(`/courses/${courseId}`);
+  revalidatePath("/courses");
+  return { ok: true, at: Date.now() };
+}
+
+export async function unpublishCourse(courseId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api(`/platform/courses/${courseId}/unpublish`, { method: "POST", body: { note: text(fd, "note") } });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath(`/courses/${courseId}`);
+  revalidatePath("/courses");
+  return { ok: true, at: Date.now() };
+}
+
+export async function createCategory(_: FormState, fd: FormData): Promise<FormState> {
+  const order = sortOrder(fd);
+  if (order === null) return { error: t("platform.form.invalidNumber") };
+  const parent = text(fd, "parent_id");
+  const res = await api("/platform/course-categories", {
+    method: "POST",
+    body: {
+      slug: text(fd, "slug").toLowerCase(), name_en: text(fd, "name_en"), name_si: text(fd, "name_si") || null,
+      name_ta: text(fd, "name_ta") || null, parent_id: parent ? Number(parent) : null, sort_order: order,
+    },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/course-categories");
+  return { ok: true, at: Date.now() };
+}
+
+export async function updateCategory(categoryId: number, _: FormState, fd: FormData): Promise<FormState> {
+  const order = sortOrder(fd);
+  if (order === null) return { error: t("platform.form.invalidNumber") };
+  const res = await api(`/platform/course-categories/${categoryId}`, {
+    method: "PATCH",
+    body: { name_en: text(fd, "name_en"), name_si: text(fd, "name_si") || null, name_ta: text(fd, "name_ta") || null,
+            sort_order: order },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/course-categories");
+  return { ok: true, at: Date.now() };
+}
+
+export async function setCategoryActive(categoryId: number, active: boolean): Promise<FormState> {
+  const res = await api(`/platform/course-categories/${categoryId}`, { method: "PATCH", body: { is_active: active } });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/course-categories");
+  return { ok: true, at: Date.now() };
+}

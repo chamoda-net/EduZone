@@ -72,10 +72,12 @@ def _class_out(c: ClassModel, currency: str) -> ClassOut:
 
 
 async def _load_class(session: AsyncSession, actor: Actor, class_id: UUID, *,
-                      for_update: bool = False) -> ClassModel:
+                      for_update: bool = False, tuition_only: bool = False) -> ClassModel:
     c = await repo.get_class(session, class_id, for_update=for_update)
     if c is None or not (actor.manages_all or c.teacher_member_id == actor.auth.member_id):
         raise _not_found("Class")
+    if tuition_only and c.kind != "tuition":
+        raise _not_found("Class")      # courses are managed through /courses
     return c
 
 
@@ -133,7 +135,8 @@ async def _subject_name(session: AsyncSession, subject_id: UUID) -> str:
 
 
 async def get_class(session: AsyncSession, actor: Actor, class_id: UUID) -> ClassOut:
-    return _class_out(await _load_class(session, actor, class_id), await repo.get_currency(session))
+    return _class_out(await _load_class(session, actor, class_id, tuition_only=True),
+                      await repo.get_currency(session))
 
 
 async def create_class(session: AsyncSession, actor: Actor, body: ClassCreate) -> ClassOut:
@@ -154,7 +157,7 @@ async def create_class(session: AsyncSession, actor: Actor, body: ClassCreate) -
 
 
 async def update_class(session: AsyncSession, actor: Actor, class_id: UUID, body: ClassUpdate) -> ClassOut:
-    c = await _load_class(session, actor, class_id, for_update=True)
+    c = await _load_class(session, actor, class_id, for_update=True, tuition_only=True)
     changes = {k: v for k, v in body.changes().items() if getattr(c, k) != v}
     if not changes:
         return _class_out(c, await repo.get_currency(session))
@@ -192,7 +195,7 @@ async def update_class(session: AsyncSession, actor: Actor, class_id: UUID, body
 
 
 async def delete_class(session: AsyncSession, actor: Actor, class_id: UUID) -> None:
-    c = await _load_class(session, actor, class_id, for_update=True)
+    c = await _load_class(session, actor, class_id, for_update=True, tuition_only=True)
     if c.status != "draft":
         raise ApiError("CLASS_NOT_DRAFT", "Only draft classes can be deleted. Archive it instead.", status_code=409)
     await _delete_or_conflict(session, lambda: repo.delete_class(session, c.id))
@@ -296,12 +299,13 @@ async def load_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID) -> t
     return await _load_lesson(session, actor, lesson_id)
 
 
-async def _load_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID) -> tuple[Lesson, ClassModel]:
+async def _load_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID, *,
+                       tuition_only: bool = False) -> tuple[Lesson, ClassModel]:
     lesson = await repo.get_lesson(session, lesson_id, for_update=True)
     if lesson is None:
         raise _not_found("Lesson")
     try:
-        c = await _load_class(session, actor, lesson.class_id)
+        c = await _load_class(session, actor, lesson.class_id, tuition_only=tuition_only)
     except ApiError:
         raise _not_found("Lesson") from None
     return lesson, c
@@ -309,12 +313,12 @@ async def _load_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID) -> 
 
 async def list_lessons(session: AsyncSession, actor: Actor, class_id: UUID,
                        month_id: UUID | None) -> list[LessonOut]:
-    c = await _load_class(session, actor, class_id)
+    c = await _load_class(session, actor, class_id, tuition_only=True)
     return [LessonOut.model_validate(x) for x in await repo.list_lessons(session, c.id, month_id)]
 
 
 async def create_lesson(session: AsyncSession, actor: Actor, class_id: UUID, body: LessonCreate) -> LessonOut:
-    c = await _load_class(session, actor, class_id, for_update=True)
+    c = await _load_class(session, actor, class_id, for_update=True, tuition_only=True)
     await _check_lesson(session, c, class_month_id=body.class_month_id, lesson_type=body.lesson_type,
                         scheduled_at=body.scheduled_at, zoom_join_url=body.zoom_join_url)
     lesson = await repo.insert_lesson(session, {"class_id": c.id, **body.model_dump()})
@@ -324,7 +328,7 @@ async def create_lesson(session: AsyncSession, actor: Actor, class_id: UUID, bod
 
 
 async def update_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID, body: LessonUpdate) -> LessonOut:
-    lesson, c = await _load_lesson(session, actor, lesson_id)
+    lesson, c = await _load_lesson(session, actor, lesson_id, tuition_only=True)
     changes = {k: v for k, v in body.changes().items() if getattr(lesson, k) != v}
     if not changes:
         return LessonOut.model_validate(lesson)
@@ -338,7 +342,7 @@ async def update_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID, bo
 
 
 async def delete_lesson(session: AsyncSession, actor: Actor, lesson_id: UUID) -> None:
-    lesson, _ = await _load_lesson(session, actor, lesson_id)
+    lesson, _ = await _load_lesson(session, actor, lesson_id, tuition_only=True)
     await _delete_or_conflict(session, lambda: repo.delete_lesson(session, lesson.id))
     await _audit(session, actor, "lesson.delete", "lesson", lesson.id,
                  {"class_id": lesson.class_id, "title": lesson.title})

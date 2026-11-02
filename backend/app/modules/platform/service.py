@@ -59,7 +59,7 @@ async def _set_tenant(session: AsyncSession, tenant_id: UUID | None) -> None:
                           {"t": str(tenant_id) if tenant_id else ""})
 
 
-async def _audit(session: AsyncSession, actor: PlatformActor, action: str, entity_type: str, entity_id: UUID,
+async def _audit(session: AsyncSession, actor: PlatformActor, action: str, entity_type: str, entity_id: UUID | None,
                  details: dict[str, object] | None = None) -> None:
     await write_audit(session, actor_user_id=actor.user_id, action=action, entity_type=entity_type,
                       entity_id=entity_id, details=details, ip=actor.ip)

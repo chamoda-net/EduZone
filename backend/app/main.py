@@ -10,6 +10,7 @@ from app.core.errors import install_error_handlers
 from app.integrations.bunny import close_bunny_http
 from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import org_router as catalog_org_router
+from app.modules.courses import router as courses
 from app.modules.cart import router as cart
 from app.modules.checkout import router as checkout
 from app.modules.onboarding.router import router as onboarding_router
@@ -47,7 +48,8 @@ async def health() -> HealthResponse:
 
 # Staff console. `/teach/{tenant_slug}/...` takes the tenant from the path (migration phase 3);
 # the same routes under `/org/...` take it from the host (pre-migration tenant sites).
-STAFF_ROUTERS = (catalog_org_router, media_org_router, learning.org_router, checkout.org_router, ledger_org_router)
+STAFF_ROUTERS = (catalog_org_router, courses.org_router, media_org_router, learning.org_router, checkout.org_router,
+                 ledger_org_router)
 for staff_router in STAFF_ROUTERS:
     api.include_router(staff_router, prefix="/teach/{tenant_slug}")
     api.include_router(staff_router, prefix="/org")
@@ -56,6 +58,7 @@ api.include_router(tenants_public_router)
 api.include_router(auth_router)
 api.include_router(learn_router)
 api.include_router(market.router)
+api.include_router(courses.public_router)
 api.include_router(market.me_router)
 api.include_router(onboarding_router)
 api.include_router(cart.router)

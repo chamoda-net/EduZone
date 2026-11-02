@@ -1,4 +1,4 @@
-import { BookOpen, Building2, ClipboardList, History, LogOut, Receipt, ShoppingCart, Users } from "lucide-react";
+import { BookOpen, Building2, ClipboardList, FolderTree, GraduationCap, History, LogOut, Receipt, ShoppingCart, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -28,7 +28,9 @@ export default async function PlatformConsoleLayout({ children }: LayoutProps<"/
       items={[
         { href: "/", label: t("platform.nav.tenants"), icon: <Building2 />, exact: true },
         { href: "/applications", label: t("platform.nav.applications"), icon: <ClipboardList /> },
+        { href: "/courses", label: t("platform.nav.courseReviews"), icon: <GraduationCap /> },
         { href: "/subjects", label: t("platform.nav.subjects"), icon: <BookOpen /> },
+        { href: "/course-categories", label: t("platform.nav.courseCategories"), icon: <FolderTree /> },
         { href: "/users", label: t("platform.nav.users"), icon: <Users /> },
         { href: "/checkouts", label: t("platform.nav.checkouts"), icon: <ShoppingCart /> },
         { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt /> },

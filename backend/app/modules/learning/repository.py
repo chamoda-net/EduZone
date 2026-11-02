@@ -26,7 +26,7 @@ async def list_published(session: AsyncSession, *, exam: str | None, after: tupl
                          limit: int) -> list[Any]:
     return list((await session.execute(text(f"""
         SELECT {_PUBLIC_CLASS}, c.created_at {_PUBLIC_FROM}
-        WHERE c.status = 'published'
+        WHERE c.status = 'published' AND c.kind = 'tuition'
           AND (CAST(:exam AS text) IS NULL OR c.exam = :exam)
           AND (CAST(:after_ts AS timestamptz) IS NULL OR (c.created_at, c.id) < (:after_ts, :after_id))
         ORDER BY c.created_at DESC, c.id DESC
@@ -40,7 +40,7 @@ async def class_by_slug(session: AsyncSession, slug: str, *, published_only: boo
     statuses = "('published')" if published_only else "('published', 'archived')"
     return (await session.execute(text(f"""
         SELECT {_PUBLIC_CLASS}, c.allow_late_months, c.status {_PUBLIC_FROM}
-        WHERE c.slug = :slug AND c.status IN {statuses}
+        WHERE c.slug = :slug AND c.kind = 'tuition' AND c.status IN {statuses}
     """), {"slug": slug})).one_or_none()
 
 

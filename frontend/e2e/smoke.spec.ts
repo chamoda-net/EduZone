@@ -140,3 +140,25 @@ test("a student opens a recorded lesson in our own player", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Full screen" })).toBeVisible();
   await expect(page.locator("iframe")).toHaveCount(0);
 });
+
+test("a teacher starts a course in the course builder", async ({ page }) => {
+  await signIn(page, TEACHER_EMAIL, DEMO_PASSWORD, TEACHER_PHONE);
+  await page.goto("/teach/demo/courses/new");
+  await page.getByLabel("Course title").fill(`E2E Course ${Date.now().toString(36)}`);
+  await page.getByLabel("Category").selectOption({ label: "IT & Networking" });
+  await page.getByRole("button", { name: "Create course" }).click();
+  await expect(page).toHaveURL(/\/teach\/demo\/courses\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Before you submit" })).toBeVisible();
+  await expect(page.getByText("A category", { exact: true })).toBeVisible();
+
+  // The curriculum: a section, then an article lecture in it.
+  await page.getByRole("link", { name: "Curriculum" }).click();
+  await page.getByPlaceholder("e.g. Introduction").fill("Getting started");
+  await page.getByRole("button", { name: "Add a section" }).click();
+  await expect(page.getByText("Getting started")).toBeVisible();
+  await page.getByPlaceholder("Lecture title").fill("Read me first");
+  await page.getByLabel("Type").first().selectOption("article");
+  await page.getByRole("button", { name: "Add a lecture" }).click();
+  await expect(page.getByText("Read me first", { exact: true })).toBeVisible();
+  await expect(page.getByText("At least 5 published lectures (1 so far)")).toBeVisible();
+});

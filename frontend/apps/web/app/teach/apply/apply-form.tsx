@@ -1,13 +1,13 @@
 "use client";
 
-import { Building2, FileUp, GraduationCap } from "lucide-react";
+import { Building2, FileUp, GraduationCap, LibraryBig, MonitorPlay, Layers } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useT } from "@eduzone/lib/i18n/client";
 import type { MessageKey } from "@eduzone/lib/i18n";
-import type { TeacherApplication } from "@eduzone/lib/types";
+import type { ApplicationOffers, TeacherApplication } from "@eduzone/lib/types";
 import { Button, Card, CardTitle, Checkbox, ErrorText, Field, Input, Textarea, buttonStyles, cx, toast } from "@eduzone/ui";
 
 type Subject = { id: string; name: string };
@@ -23,6 +23,7 @@ export function ApplyForm({ subjects, current, cancelHref }: {
   const t = useT();
   const router = useRouter();
   const [kind, setKind] = useState<"individual" | "institute">(current?.kind ?? "individual");
+  const [offers, setOffers] = useState<ApplicationOffers>(current?.offers ?? "classes");
   const [picked, setPicked] = useState<string[]>(current?.subjects.map((s) => s.id) ?? []);
   const [fileName, setFileName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -96,6 +97,30 @@ export function ApplyForm({ subjects, current, cancelHref }: {
           {current && <p className="text-xs text-muted">{t("apply.kindLocked")}</p>}
         </fieldset>
 
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-sm font-semibold">{t("apply.offersLabel")}</legend>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {([
+              ["classes", <LibraryBig key="c" className="size-4.5" />],
+              ["courses", <MonitorPlay key="m" className="size-4.5" />],
+              ["both", <Layers key="b" className="size-4.5" />],
+            ] as const).map(([value, icon]) => (
+              <label key={value} className={cx(
+                "flex min-w-0 cursor-pointer items-start gap-2.5 rounded-ez-lg border p-3 transition",
+                offers === value ? "border-brand bg-brand-50/60 ring-1 ring-brand" : "border-border hover:border-border-strong",
+              )}>
+                <input type="radio" name="offers" value={value} checked={offers === value}
+                       onChange={() => setOffers(value)} className="sr-only" />
+                <span className={cx("mt-0.5", offers === value ? "text-brand" : "text-muted")}>{icon}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{t(`apply.offers.${value}`)}</span>
+                  <span className="block text-xs text-muted">{t(`apply.offers.${value}Body`)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <Field label={t(`apply.orgName.${kind}`)} hint={t(`apply.orgName.${kind}Hint`)}>
           <Input name="org_name" required minLength={2} maxLength={120} defaultValue={current?.org_name} />
         </Field>
@@ -126,7 +151,7 @@ export function ApplyForm({ subjects, current, cancelHref }: {
             })}
           </div>
           {picked.map((id) => <input key={id} type="hidden" name="subject_ids" value={id} />)}
-          <p className="text-xs text-muted">{t("apply.subjectsHint")}</p>
+          <p className="text-xs text-muted">{t(offers === "courses" ? "apply.subjectsOptional" : "apply.subjectsHint")}</p>
         </fieldset>
 
         <Field label={t("apply.experience")} hint={t("apply.experienceHint")} optional={t("common.optional")}>

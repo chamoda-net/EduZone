@@ -9,7 +9,17 @@ from app.integrations.sms import SmsSender, get_sms_sender
 from app.modules.auth.dependencies import user_agent
 from app.modules.auth.schemas import OtpRequest, OtpRequested
 from app.modules.onboarding.schemas import AccountNumber, ApplicationDetail, ApplicationRow, ApplicationStatus, DecisionIn
-from app.modules.platform import applications, audit_log, auth, checkouts, service, subjects, users
+from app.modules.courses.schemas import (
+    CategoryCreate,
+    CategoryOut,
+    CategoryUpdate,
+    CourseDetail,
+    CourseStatus,
+    ReviewDecision,
+    ReviewRow,
+    UnpublishIn,
+)
+from app.modules.platform import applications, audit_log, auth, checkouts, courses, service, subjects, users
 from app.modules.platform.auth import Admin, AdminTx, PlatformLogin, PlatformMe, PlatformRefresh, PlatformTokens
 from app.modules.platform.schemas import (
     AuditPage,
@@ -215,3 +225,41 @@ async def list_audit(
 ) -> AuditPage:
     return await audit_log.list_audit(session, tenant_id=tenant_id, action=action, actor_id=actor_id,
                                       entity_id=entity_id, cursor=cursor, limit=limit)
+
+
+# --- courses: categories and the review queue (docs/COURSES.md, step C1) ---------------------
+
+@router.get("/course-categories", response_model=list[CategoryOut])
+async def list_course_categories(actor: Admin, session: AdminTx) -> list[CategoryOut]:
+    return await courses.list_categories(session)
+
+
+@router.post("/course-categories", response_model=CategoryOut, status_code=201)
+async def create_course_category(body: CategoryCreate, actor: Admin, session: AdminTx) -> CategoryOut:
+    return await courses.create_category(session, actor, body)
+
+
+@router.patch("/course-categories/{category_id}", response_model=CategoryOut)
+async def update_course_category(category_id: int, body: CategoryUpdate, actor: Admin,
+                                 session: AdminTx) -> CategoryOut:
+    return await courses.update_category(session, actor, category_id, body)
+
+
+@router.get("/courses", response_model=list[ReviewRow])
+async def list_courses(actor: Admin, session: AdminTx, status: CourseStatus = "in_review") -> list[ReviewRow]:
+    return await courses.list_reviews(session, status)
+
+
+@router.get("/courses/{course_id}", response_model=CourseDetail)
+async def get_course(course_id: UUID, actor: Admin, session: AdminTx) -> CourseDetail:
+    return await courses.get_course(session, course_id)
+
+
+@router.post("/courses/{course_id}/decision", response_model=CourseDetail)
+async def decide_course(course_id: UUID, body: ReviewDecision, actor: Admin, session: AdminTx) -> CourseDetail:
+    return await courses.decide(session, actor, course_id, body)
+
+
+@router.post("/courses/{course_id}/unpublish", response_model=CourseDetail)
+async def unpublish_course(course_id: UUID, body: UnpublishIn, actor: Admin, session: AdminTx) -> CourseDetail:
+    return await courses.unpublish(session, actor, course_id, body)

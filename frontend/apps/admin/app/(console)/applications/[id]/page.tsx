@@ -29,7 +29,7 @@ export default async function ApplicationPage({ params }: PageProps<"/applicatio
           {a.org_name} <Badge tone={applicationTone[a.status]}>{t(`apply.status.${a.status}`)}</Badge>
         </h1>
         <p className="text-sm text-muted">
-          {t(`platform.orgType.${a.kind}`)} · /teach/{a.tenant_slug} · {t("platform.apps.submitted", { date: formatDateTime(a.submitted_at) })}
+          {t(`platform.orgType.${a.kind}`)} · {t(`apply.offers.${a.offers}`)} · /teach/{a.tenant_slug} · {t("platform.apps.submitted", { date: formatDateTime(a.submitted_at) })}
         </p>
       </div>
 

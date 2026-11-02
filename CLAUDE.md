@@ -4,6 +4,8 @@
 > what has been decided, and the rules the code must follow. `FRONTEND.md` is its companion for
 > sites, screens, UX and the design system; backend contracts, money rules and schema live here.
 > The database schema lives in `db/eduzone_v1_schema.sql`, which is authoritative for tables and columns.
+> **`docs/COURSES.md`** adds the second product, self-paced **courses**; where it and this file disagree on
+> courses, COURSES.md wins.
 >
 > **Status (2026-10-30): migrating to the marketplace design.** Build steps 1-9 were built on the
 > earlier one-subdomain-per-organization design. Rules below describe the **target**; paragraphs
@@ -293,6 +295,34 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   commission and net (both **after** refunds), paid out. UI labels must say "after refunds".
 - `v_tenant_balance`: what EduZone owes the tenant now
 - `v_teacher_earnings_monthly`: per-teacher net (for institutes)
+
+### How it's built (courses C1: `app/modules/courses`, `app/modules/platform/courses.py`, migration 0010)
+- **A course is a `classes` row with `kind = 'course'`** (one-time or free, no exam/year, `medium` = language).
+  Tuition code ignores courses: `/classes` lists only `kind = 'tuition'`, class and lesson routes 404 on a course,
+  the public tuition views and the pre-migration tenant pages exclude them, and `price_item()` refuses a course
+  (`UNAVAILABLE`) until step C3 builds course checkout.
+- **Builder** (`/teach/{tenant}/courses`, StaffActor, same owner/admin/teacher rule as classes): `GET/POST /courses`,
+  `GET/PATCH/DELETE /courses/{id}` (landing page, intended learners, pricing, messages; slug platform-wide through
+  `course_slug_taken()`, fixed after the first publish), `POST /courses/{id}/sections`,
+  `PATCH/DELETE /course-sections/{id}` (delete only when empty), `POST /course-sections/{id}/lectures`,
+  `PATCH/DELETE /lectures/{id}` (types recorded | document | article; an article needs `article_body`; a lecture with
+  a video stays a video lecture; it may move to another section of the same course; published lectures of a
+  course that was published are hidden, not deleted). Lecture files are the media module's lesson resources.
+  Every write returns the whole course, with its **checks** (docs/COURSES.md section 7: tenant approved, subtitle,
+  100-word description, cover, category, level, language, 4 objectives, 1 requirement, 1 audience, price, 5
+  published lectures, 30 minutes of ready video, no video still processing, instructor photo and bio).
+- **Status:** draft → `POST submit` → in_review (first publish; locked, `COURSE_IN_REVIEW`; `POST withdraw` back to
+  draft) → EduZone approves → published (`first_published_at`) ⇄ archived (`POST unpublish`, `POST submit` publishes
+  again with no review). `lecture_count` and `total_video_seconds` are recomputed on curriculum and file changes.
+- **Admin** (`/api/v1/platform`): `GET/POST/PATCH /course-categories` (two levels, slug fixed),
+  `GET /courses?status=` (review queue, default in_review), `GET /courses/{id}`, `POST /courses/{id}/decision
+  {approve | request_changes, note}` (approve re-runs the checks; a note is required to send back),
+  `POST /courses/{id}/unpublish {note}`. Public: `GET /market/course-categories`.
+- **Applications** carry `offers` (classes | courses | both); school subjects are optional for courses only.
+- **Frontend:** console `/teach/<slug>/courses` (+ `/new`, `/[id]?tab=landing|learners|curriculum|pricing|messages`
+  with a checklist that links to the tab fixing each item); admin `/courses` (queue), `/courses/[id]` (review),
+  `/course-categories`. Tests: `tests/test_courses.py`. Not built in C1: drag-and-drop (up/down buttons instead),
+  image upload for covers (a link), article preview.
 
 ### Access rule (one function, used everywhere)
 A student can open a lesson if **any** of these is true:

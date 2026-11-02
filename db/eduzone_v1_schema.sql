@@ -956,7 +956,9 @@ CREATE OR REPLACE FUNCTION is_reserved_slug(p_slug text) RETURNS boolean
 LANGUAGE sql IMMUTABLE AS $$ SELECT p_slug = ANY (ARRAY['about','account','admin','api','assets','cart','checkout',
     'classes','contact','design','help','institutes','learn','lessons','login','logout','my','org','payments','privacy',
     'qr','recover','refund-policy','register','robots.txt','search','sitemap.xml','static','teach','teachers','terms',
-    'verify-email','verify-phone']) $$;
+    'verify-email','verify-phone',
+    -- migration 0010: the course routes and the /checkouts page
+    'course','courses','instructor','certificates','wishlist','categories','checkouts']) $$;
 
 CREATE TABLE subjects (                              -- EduZone-managed; the slug is the URL (/physics)
     id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1202,3 +1204,78 @@ GRANT SELECT, INSERT, UPDATE ON checkouts, checkout_payments TO eduzone_admin;
 ALTER FUNCTION resolve_checkout_payment(text, text) OWNER TO eduzone_admin;
 REVOKE ALL ON FUNCTION resolve_checkout_payment(text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION resolve_checkout_payment(text, text) TO eduzone_app;
+
+-- =============================================================================
+-- Courses, step C1 (migration 0010, docs/COURSES.md sections C.1-C.3)
+-- A course is a classes row with kind = 'course'. The public tuition views (public_classes and the views built
+-- on it) add `AND c.kind = 'tuition'`; courses get their own catalogue in step C2.
+-- =============================================================================
+CREATE TABLE course_categories (                     -- EduZone-managed, two levels (service rule)
+    id          smallint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    parent_id   smallint REFERENCES course_categories(id),
+    slug        text NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]([a-z0-9-]{0,38}[a-z0-9])$'),   -- /courses/<slug>
+    name_en     text NOT NULL CHECK (char_length(name_en) BETWEEN 2 AND 60),
+    name_si     text CHECK (char_length(name_si) <= 60),
+    name_ta     text CHECK (char_length(name_ta) <= 60),
+    sort_order  integer NOT NULL DEFAULT 0,
+    is_active   boolean NOT NULL DEFAULT true,
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    CHECK (parent_id IS NULL OR parent_id <> id)
+);
+GRANT SELECT ON course_categories TO eduzone_app;
+GRANT SELECT, INSERT, UPDATE ON course_categories TO eduzone_admin;
+
+ALTER TABLE classes
+    ADD COLUMN kind                text NOT NULL DEFAULT 'tuition' CHECK (kind IN ('tuition','course')),
+    ADD COLUMN subtitle            text CHECK (char_length(subtitle) <= 120),
+    ADD COLUMN category_id         smallint REFERENCES course_categories(id),
+    ADD COLUMN level               text CHECK (level IN ('beginner','intermediate','advanced','all')),
+    ADD COLUMN learning_objectives text[] NOT NULL DEFAULT '{}',
+    ADD COLUMN requirements        text[] NOT NULL DEFAULT '{}',
+    ADD COLUMN target_audience     text[] NOT NULL DEFAULT '{}',
+    ADD COLUMN promo_media_id      uuid,
+    ADD COLUMN welcome_message     text CHECK (char_length(welcome_message) <= 1000),
+    ADD COLUMN completion_message  text CHECK (char_length(completion_message) <= 1000),
+    ADD COLUMN total_video_seconds integer NOT NULL DEFAULT 0,   -- published lectures, ready videos
+    ADD COLUMN lecture_count       integer NOT NULL DEFAULT 0,   -- published lectures
+    ADD COLUMN rating_avg          numeric(3,2),                 -- step C4
+    ADD COLUMN rating_count        integer NOT NULL DEFAULT 0,
+    ADD COLUMN review_note         text CHECK (char_length(review_note) <= 2000),   -- EduZone's note to the instructor
+    ADD COLUMN submitted_at        timestamptz,
+    ADD COLUMN first_published_at  timestamptz,                  -- set when EduZone approves the first publish
+    ADD CONSTRAINT classes_promo_media_fk FOREIGN KEY (tenant_id, promo_media_id) REFERENCES media_assets (tenant_id, id),
+    ADD CONSTRAINT classes_course_pricing CHECK (kind <> 'course' OR pricing_model IN ('one_time','free')),
+    ADD CONSTRAINT classes_course_no_exam CHECK (kind <> 'course' OR (exam IS NULL AND batch_year IS NULL));
+-- classes_status_check becomes: status IN ('draft','in_review','published','archived')
+ALTER TABLE classes ADD CONSTRAINT classes_review_course_only CHECK (status <> 'in_review' OR kind = 'course');
+CREATE UNIQUE INDEX uq_course_slug ON classes (slug) WHERE kind = 'course';   -- /course/<slug>, platform-wide
+CREATE INDEX idx_classes_courses ON classes (category_id, status) WHERE kind = 'course';
+CREATE INDEX idx_classes_in_review ON classes (submitted_at) WHERE status = 'in_review';
+
+CREATE FUNCTION course_slug_taken(p_slug text, p_exclude uuid) RETURNS boolean   -- owned by eduzone_admin
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+    SELECT EXISTS (SELECT 1 FROM classes WHERE kind = 'course' AND slug = p_slug AND id IS DISTINCT FROM p_exclude)
+$$;
+
+CREATE TABLE course_sections (
+    id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id   uuid NOT NULL DEFAULT current_tenant_id(),
+    class_id    uuid NOT NULL,
+    title       text NOT NULL CHECK (char_length(title) BETWEEN 1 AND 200),
+    sort_order  integer NOT NULL DEFAULT 0,
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    updated_at  timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, id),
+    FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id) ON DELETE CASCADE
+);
+-- forced RLS, policy tenant_isolation like every tenant table
+ALTER TABLE lessons
+    ADD COLUMN section_id   uuid,                                -- course lectures; never with class_month_id
+    ADD COLUMN article_body text CHECK (char_length(article_body) <= 50000),   -- Markdown, sanitised on render
+    ADD CONSTRAINT lessons_section_fk FOREIGN KEY (tenant_id, section_id) REFERENCES course_sections (tenant_id, id) ON DELETE CASCADE,
+    ADD CONSTRAINT lessons_section_or_month CHECK (section_id IS NULL OR class_month_id IS NULL),
+    ADD CONSTRAINT lessons_article_body CHECK (lesson_type <> 'article' OR article_body IS NOT NULL);
+-- lessons_lesson_type_check becomes: lesson_type IN ('live','recorded','document','article')
+
+ALTER TABLE teacher_applications ADD COLUMN offers text NOT NULL DEFAULT 'classes'
+    CHECK (offers IN ('classes','courses','both'));

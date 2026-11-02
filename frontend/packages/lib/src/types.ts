@@ -328,10 +328,12 @@ export type MyRequest = {
 export type Workspace = { slug: string; name: string; role: Role; status: "active" | "pending" };
 
 export type ApplicationStatus = "submitted" | "changes_requested" | "approved" | "rejected";
+export type ApplicationOffers = "classes" | "courses" | "both";
 export type TeacherApplication = {
   id: string;
   status: ApplicationStatus;
   kind: "individual" | "institute";
+  offers: ApplicationOffers;
   org_name: string;
   tenant_slug: string;
   subjects: { id: string; name: string }[];
@@ -349,6 +351,7 @@ export type ApplicationRow = {
   id: string;
   status: ApplicationStatus;
   kind: "individual" | "institute";
+  offers: ApplicationOffers;
   org_name: string;
   tenant_id: string;
   tenant_slug: string;

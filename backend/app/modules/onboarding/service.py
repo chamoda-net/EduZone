@@ -69,7 +69,7 @@ def check_document(doc: Document) -> tuple[str, str, str]:
 
 def application_out(r: Any) -> ApplicationOut:
     return ApplicationOut(
-        id=r.id, status=r.status, kind=r.kind, org_name=r.org_name, tenant_slug=r.tenant_slug,
+        id=r.id, status=r.status, kind=r.kind, offers=r.offers, org_name=r.org_name, tenant_slug=r.tenant_slug,
         subjects=[SubjectRef(**s) for s in r.subjects], experience=r.experience, document_name=r.document_name,
         payout_bank_name=r.payout_bank_name, payout_branch=r.payout_branch,
         payout_account_name=r.payout_account_name, payout_account_masked=r.payout_account_masked,
@@ -154,12 +154,13 @@ async def apply(user_id: UUID, fields: ApplicationFields, doc: Document, storage
             "u": user_id, "n": fields.org_name, "s": slug, "k": fields.kind, "d": user.full_name})).scalar_one()
         await profiles.ensure_for_user(session, user_id, user.full_name)
         await session.execute(text("""
-            INSERT INTO teacher_applications (id, user_id, tenant_id, kind, org_name, subject_ids, experience,
+            INSERT INTO teacher_applications (id, user_id, tenant_id, kind, offers, org_name, subject_ids, experience,
                 document_key, document_name, document_type, payout_bank_name, payout_branch, payout_account_name,
                 payout_account_enc, payout_account_masked, terms_version)
-            VALUES (:id, :u, :t, :kind, :org, :subjects, :exp, :key, :dname, :dtype, :bank, :branch, :aname,
+            VALUES (:id, :u, :t, :kind, :offers, :org, :subjects, :exp, :key, :dname, :dtype, :bank, :branch, :aname,
                     :aenc, :amask, :terms)
-        """), {"id": app_id, "u": user_id, "t": tenant_id, "kind": fields.kind, "org": fields.org_name,
+        """), {"id": app_id, "u": user_id, "t": tenant_id, "kind": fields.kind, "offers": fields.offers,
+               "org": fields.org_name,
                "subjects": subject_ids, "exp": fields.experience, "key": key, "dname": doc_name,
                "dtype": content_type, **payout})
         await write_audit(session, actor_user_id=user_id, action="application.submit",
@@ -187,12 +188,12 @@ async def resubmit(user_id: UUID, fields: ApplicationFields, doc: Document | Non
             await storage.put(key, doc.content, content_type)
             doc_values = {"key": key, "dname": doc_name, "dtype": content_type}
         await session.execute(text("""
-            UPDATE teacher_applications SET org_name = :org, subject_ids = :subjects, experience = :exp,
+            UPDATE teacher_applications SET org_name = :org, offers = :offers, subject_ids = :subjects, experience = :exp,
                 document_key = :key, document_name = :dname, document_type = :dtype, payout_bank_name = :bank,
                 payout_branch = :branch, payout_account_name = :aname, payout_account_enc = :aenc,
                 payout_account_masked = :amask, terms_version = :terms, status = 'submitted', submitted_at = now()
             WHERE id = :id AND user_id = :u
-        """), {"id": latest.id, "u": user_id, "org": fields.org_name, "subjects": subject_ids,
+        """), {"id": latest.id, "u": user_id, "org": fields.org_name, "offers": fields.offers, "subjects": subject_ids,
                "exp": fields.experience, **doc_values, **_payout_values(fields, latest)})
         await session.execute(text("SELECT set_config('app.tenant_id', :t, true)"), {"t": str(latest.tenant_id)})
         await write_audit(session, actor_user_id=user_id, action="application.resubmit",
