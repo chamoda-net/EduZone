@@ -30,3 +30,6 @@ sms-outbox.jsonl
 email-outbox.jsonl
 
 private-storage/
+
+# Local dev database (tools/dev-db)
+tools/dev-db/data/

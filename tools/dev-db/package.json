@@ -1,0 +1,13 @@
+{
+  "name": "eduzone-dev-db",
+  "private": true,
+  "description": "Local PostgreSQL 16 for development without Docker (data in ./data).",
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs"
+  },
+  "dependencies": {
+    "embedded-postgres": "^16.14.0-beta.17",
+    "pg": "^8.13.1"
+  }
+}

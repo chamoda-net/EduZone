@@ -180,6 +180,9 @@ cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"
 .venv/Scripts/uvicorn app.main:app --reload
 ```
 (`.venv/bin/` instead of `.venv/Scripts/` on macOS/Linux.)
+Without Docker: `cd tools/dev-db && npm install && npm start` runs PostgreSQL 16 (embedded) on the port and with the
+passwords in `.env`, data in `tools/dev-db/data` (git-ignored). `docs/local-guide.md` is the hands-on guide: starting
+every server, demo accounts, a tour of every built feature.
 
 ---
 
