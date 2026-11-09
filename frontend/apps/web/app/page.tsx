@@ -2,6 +2,8 @@ import { ArrowRight, CalendarCheck, GraduationCap, MonitorPlay, Search, ShieldCh
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import type { Schema } from "@eduzone/api-client";
+import { CourseCard } from "@/components/course-card";
 import { MarketClassCard } from "@/components/market-card";
 import { SiteShell } from "@/components/shell";
 import { SubjectTile } from "@/components/subject-tile";
@@ -19,7 +21,11 @@ export default async function Home() {
     const slug = (await userHost()).split(".")[0];
     redirect(`${await mainOrigin()}/classes?org=${encodeURIComponent(slug)}`);
   }
-  const res = await api<MarketHome>("/market/home", { token: null });
+  const [res, coursesRes] = await Promise.all([
+    api<MarketHome>("/market/home", { token: null }),
+    api<Schema<"CoursesHome">>("/market/courses/home", { token: null }),
+  ]);
+  const courses = coursesRes.ok ? coursesRes.data : null;
 
   return (
     <SiteShell bare>
@@ -58,6 +64,27 @@ export default async function Home() {
             <ClassRow eyebrow={t("market.home.startingEyebrow")} title={t("market.home.starting")} classes={res.data.starting} />
           )}
           <ClassRow eyebrow={t("market.home.popularEyebrow")} title={t("market.home.popular")} classes={res.data.popular} />
+
+          {courses && courses.total > 0 && (
+            <Container className="flex flex-col gap-6 pt-16 sm:pt-20">
+              <SectionHead eyebrow={t("market.home.coursesEyebrow")} title={t("market.home.courses")} href="/courses" />
+              <p className="-mt-3 max-w-2xl text-muted">{t("market.home.coursesBody")}</p>
+              {courses.categories.filter((c) => c.course_count > 0).length > 0 && (
+                <nav aria-label={t("market.home.courseCategories")} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
+                  {courses.categories.filter((c) => c.course_count > 0).map((c) => (
+                    <Link key={c.slug} href={`/courses/${c.slug}`}
+                          className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm font-semibold whitespace-nowrap text-muted transition hover:border-foreground/40 hover:text-foreground">
+                      {c.name_en}
+                      <span className="rounded-full bg-sunken px-1.5 text-xs tabular-nums">{c.course_count}</span>
+                    </Link>
+                  ))}
+                </nav>
+              )}
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {courses.popular.slice(0, 8).map((c, i) => <CourseCard key={c.id} c={c} index={i} />)}
+              </div>
+            </Container>
+          )}
 
           <Container className="py-16 sm:py-20">
             <div className="ez-grain relative flex flex-col items-start gap-5 overflow-hidden rounded-ez-lg bg-brand-900 p-8 text-on-brand sm:flex-row sm:items-center sm:justify-between sm:p-12">

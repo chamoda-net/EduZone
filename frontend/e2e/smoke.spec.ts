@@ -162,3 +162,24 @@ test("a teacher starts a course in the course builder", async ({ page }) => {
   await expect(page.getByText("Read me first", { exact: true })).toBeVisible();
   await expect(page.getByText("At least 5 published lectures (1 so far)")).toBeVisible();
 });
+
+test("anyone can browse courses and watch a free preview", async ({ page }) => {
+  await page.goto("/courses");
+  await expect(page.getByRole("heading", { level: 1, name: "All courses" })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("link", { name: /A\/L Physics: Problem Solving Masterclass/ }).click();
+  await expect(page).toHaveURL(/\/course\/al-physics-problem-solving$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "What you'll learn" })).toBeVisible();
+  await expect(page.getByText("3 sections · 7 lectures · 1 h total length")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Enrolment opens soon" }).first()).toBeDisabled();
+
+  // A free-preview lecture plays for anyone, without an account.
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Course preview" })).toBeVisible();
+  await expect(page.getByRole("dialog").locator("video")).toBeAttached({ timeout: 20_000 });
+
+  // The instructor's page lists the course.
+  await page.keyboard.press("Escape");
+  await page.getByRole("link", { name: "Kasun Perera" }).first().click();
+  await expect(page).toHaveURL(/\/instructor\/kasun-perera$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: /Courses/ })).toBeVisible();
+});

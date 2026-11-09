@@ -77,6 +77,9 @@ export default async function TeacherPageView({ params }: PageProps<"/[subject]/
                 : t("market.teacher.viewClasses")}
             </a>
             <ShareTools url={url} message={t("market.teacher.shareMessage", { name: teacher.display_name, subject: subject?.name ?? "" })} compact />
+            <Link href={`/instructor/${teacher.slug}`} className="text-sm font-semibold text-brand underline-offset-2 hover:underline">
+              {t("market.teacher.allTeaching")}
+            </Link>
           </div>
         </Container>
       </section>

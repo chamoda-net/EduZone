@@ -596,6 +596,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/market/course/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course Detail */
+        get: operations["course_detail_api_v1_market_course__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/course/{slug}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Course Preview */
+        post: operations["course_preview_api_v1_market_course__slug__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Courses */
+        get: operations["search_courses_api_v1_market_courses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/courses/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course Categories */
+        get: operations["course_categories_api_v1_market_courses_categories_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/courses/categories/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course Category */
+        get: operations["course_category_api_v1_market_courses_categories__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/courses/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Courses Home */
+        get: operations["courses_home_api_v1_market_courses_home_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/market/home": {
         parameters: {
             query?: never;
@@ -639,6 +741,23 @@ export interface paths {
         };
         /** Institute Page */
         get: operations["institute_page_api_v1_market_institutes__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/instructors/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Instructor Page */
+        get: operations["instructor_page_api_v1_market_instructors__slug__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3433,6 +3552,30 @@ export interface components {
             /** Title */
             title?: string | null;
         };
+        /** CourseCategoryOut */
+        CourseCategoryOut: {
+            /** Course Count */
+            course_count: number;
+            /** Id */
+            id: number;
+            /** Name En */
+            name_en: string;
+            /** Name Si */
+            name_si: string | null;
+            /** Name Ta */
+            name_ta: string | null;
+            /** Parent Id */
+            parent_id: number | null;
+            /** Slug */
+            slug: string;
+        };
+        /** CourseCategoryPage */
+        CourseCategoryPage: {
+            category: components["schemas"]["CourseCategoryOut"];
+            /** Children */
+            children: components["schemas"]["CourseCategoryOut"][];
+            parent: components["schemas"]["CourseCategoryOut"] | null;
+        };
         /** CourseCreate */
         CourseCreate: {
             /** Category Id */
@@ -3525,6 +3668,43 @@ export interface components {
             /** Welcome Message */
             welcome_message: string | null;
         };
+        /** CourseLectureOut */
+        CourseLectureOut: {
+            /** Can Preview */
+            can_preview: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Free Preview */
+            is_free_preview: boolean;
+            /** Lesson Type */
+            lesson_type: string;
+            /** Title */
+            title: string;
+            /** Video Seconds */
+            video_seconds: number;
+        };
+        /** CoursePreviewIn */
+        CoursePreviewIn: {
+            /** Lecture Id */
+            lecture_id?: string | null;
+        };
+        /** CoursePreviewOut */
+        CoursePreviewOut: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Playback */
+            playback: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
         /** CourseRow */
         CourseRow: {
             /** Category Id */
@@ -3578,6 +3758,20 @@ export interface components {
              */
             updated_at: string;
         };
+        /** CourseSectionOut */
+        CourseSectionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lectures */
+            lectures: components["schemas"]["CourseLectureOut"][];
+            /** Title */
+            title: string;
+            /** Video Seconds */
+            video_seconds: number;
+        };
         /**
          * CourseUpdate
          * @description Landing page, intended learners, pricing and messages. Status changes have their own actions.
@@ -3619,6 +3813,19 @@ export interface components {
             title?: string | null;
             /** Welcome Message */
             welcome_message?: string | null;
+        };
+        /** CoursesHome */
+        CoursesHome: {
+            /** Categories */
+            categories: components["schemas"]["CourseCategoryOut"][];
+            /** Newest */
+            newest: components["schemas"]["MarketCourse"][];
+            /** Popular */
+            popular: components["schemas"]["MarketCourse"][];
+            /** Top Rated */
+            top_rated: components["schemas"]["MarketCourse"][];
+            /** Total */
+            total: number;
         };
         /** DecisionIn */
         DecisionIn: {
@@ -3765,6 +3972,37 @@ export interface components {
             /** Classes */
             classes: components["schemas"]["MarketClass"][];
             institute: components["schemas"]["InstituteOut"];
+        };
+        /** InstructorOut */
+        InstructorOut: {
+            /** Bio */
+            bio: string | null;
+            /** Class Count */
+            class_count: number;
+            /** Course Count */
+            course_count: number;
+            /** Display Name */
+            display_name: string;
+            /** Headline */
+            headline: string | null;
+            /** Highlights */
+            highlights: string[];
+            /** Photo Url */
+            photo_url: string | null;
+            /** Rating Avg */
+            rating_avg: number | null;
+            /** Slug */
+            slug: string;
+            /** Students */
+            students: number;
+        };
+        /** InstructorPage */
+        InstructorPage: {
+            /** Classes */
+            classes: components["schemas"]["MarketClass"][];
+            /** Courses */
+            courses: components["schemas"]["MarketCourse"][];
+            instructor: components["schemas"]["InstructorOut"];
         };
         /** LateRequestCreate */
         LateRequestCreate: {
@@ -4132,6 +4370,98 @@ export interface components {
         MarketClassPage: {
             /** Items */
             items: components["schemas"]["MarketClass"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total */
+            total: number;
+        };
+        /**
+         * MarketCourse
+         * @description A course card on the marketplace: public fields only.
+         */
+        MarketCourse: {
+            /** Category Name */
+            category_name: string;
+            /** Category Slug */
+            category_slug: string;
+            /** Cover Image Url */
+            cover_image_url: string | null;
+            /** Currency */
+            currency: string;
+            /** First Published At */
+            first_published_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Language */
+            language: string | null;
+            /** Lecture Count */
+            lecture_count: number;
+            /** Level */
+            level: string | null;
+            /** One Time Price Cents */
+            one_time_price_cents: number | null;
+            /** Org Name */
+            org_name: string;
+            /** Org Type */
+            org_type: string;
+            /** Parent Category Name */
+            parent_category_name: string | null;
+            /** Parent Category Slug */
+            parent_category_slug: string | null;
+            /** Path */
+            path: string;
+            /** Pricing Model */
+            pricing_model: string;
+            /** Rating Avg */
+            rating_avg: number | null;
+            /** Rating Count */
+            rating_count: number;
+            /** Slug */
+            slug: string;
+            /** Students */
+            students: number;
+            /** Subtitle */
+            subtitle: string | null;
+            /** Teacher Name */
+            teacher_name: string;
+            /** Teacher Photo Url */
+            teacher_photo_url: string | null;
+            /** Teacher Slug */
+            teacher_slug: string;
+            /** Title */
+            title: string;
+            /** Total Video Seconds */
+            total_video_seconds: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** MarketCourseDetail */
+        MarketCourseDetail: {
+            course: components["schemas"]["MarketCourse"];
+            /** Description */
+            description: string | null;
+            /** Has Promo */
+            has_promo: boolean;
+            instructor: components["schemas"]["InstructorOut"];
+            /** Learning Objectives */
+            learning_objectives: string[];
+            /** Requirements */
+            requirements: string[];
+            /** Sections */
+            sections: components["schemas"]["CourseSectionOut"][];
+            /** Target Audience */
+            target_audience: string[];
+        };
+        /** MarketCoursePage */
+        MarketCoursePage: {
+            /** Items */
+            items: components["schemas"]["MarketCourse"][];
             /** Next Cursor */
             next_cursor: string | null;
             /** Total */
@@ -5109,8 +5439,14 @@ export interface components {
         SitemapOut: {
             /** Classes */
             classes: string[];
+            /** Course Categories */
+            course_categories?: string[];
+            /** Courses */
+            courses?: string[];
             /** Institutes */
             institutes: string[];
+            /** Instructors */
+            instructors?: string[];
             /** Subjects */
             subjects: string[];
             /** Teachers */
@@ -6936,6 +7272,184 @@ export interface operations {
             };
         };
     };
+    course_detail_api_v1_market_course__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketCourseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    course_preview_api_v1_market_course__slug__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoursePreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoursePreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_courses_api_v1_market_courses_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                category?: string | null;
+                level?: ("beginner" | "intermediate" | "advanced" | "all") | null;
+                language?: ("si" | "ta" | "en") | null;
+                price?: ("free" | "paid") | null;
+                max_price?: number | null;
+                rating?: number | null;
+                length?: ("short" | "medium" | "long" | "extra") | null;
+                sort?: "popular" | "rating" | "newest" | "price_low" | "price_high";
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketCoursePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    course_categories_api_v1_market_courses_categories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCategoryOut"][];
+                };
+            };
+        };
+    };
+    course_category_api_v1_market_courses_categories__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCategoryPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    courses_home_api_v1_market_courses_home_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoursesHome"];
+                };
+            };
+        };
+    };
     home_api_v1_market_home_get: {
         parameters: {
             query?: never;
@@ -6994,6 +7508,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InstitutePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    instructor_page_api_v1_market_instructors__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstructorPage"];
                 };
             };
             /** @description Validation Error */

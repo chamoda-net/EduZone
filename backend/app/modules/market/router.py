@@ -5,15 +5,27 @@ from fastapi import APIRouter, Query
 
 from app.modules.auth.dependencies import CurrentUser
 from app.modules.catalog.schemas import Exam, Medium
-from app.modules.market import service
+from app.modules.courses.schemas import Level
+from app.modules.market import courses, service
 from app.modules.market.schemas import (
+    CourseCategoryOut,
+    CourseCategoryPage,
+    CourseLength,
+    CoursePreviewIn,
+    CoursePreviewOut,
+    CoursePrice,
+    CoursesHome,
+    CourseSort,
     Format,
     Home,
     InstituteOut,
     InstitutePage,
+    InstructorPage,
     MarketClass,
     MarketClassDetail,
     MarketClassPage,
+    MarketCourseDetail,
+    MarketCoursePage,
     ProfileOut,
     ProfileUpdate,
     SitemapOut,
@@ -93,7 +105,60 @@ async def institute_page(slug: str) -> InstitutePage:
 
 @router.get("/sitemap", response_model=SitemapOut)
 async def sitemap() -> SitemapOut:
-    return await service.sitemap()
+    out = await service.sitemap()
+    out.courses, out.course_categories, out.instructors = await courses.sitemap_paths()
+    return out
+
+
+# --- courses (docs/COURSES.md, step C2) -----------------------------------------------------
+
+@router.get("/courses", response_model=MarketCoursePage)
+async def search_courses(
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    category: Annotated[str | None, Query(max_length=40)] = None,
+    level: Level | None = None,
+    language: Medium | None = None,
+    price: CoursePrice | None = None,
+    max_price: Annotated[int | None, Query(ge=0)] = None,
+    rating: Annotated[float | None, Query(ge=0, le=5)] = None,
+    length: CourseLength | None = None,
+    sort: CourseSort = "popular",
+    cursor: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=60)] = 24,
+) -> MarketCoursePage:
+    return await courses.search_courses(q=q, category=category, level=level, language=language, price=price,
+                                        max_price=max_price, rating=rating, length=length, sort=sort, cursor=cursor,
+                                        limit=limit)
+
+
+@router.get("/courses/home", response_model=CoursesHome)
+async def courses_home() -> CoursesHome:
+    return await courses.home()
+
+
+@router.get("/courses/categories", response_model=list[CourseCategoryOut])
+async def course_categories() -> list[CourseCategoryOut]:
+    return await courses.categories()
+
+
+@router.get("/courses/categories/{slug}", response_model=CourseCategoryPage)
+async def course_category(slug: str) -> CourseCategoryPage:
+    return await courses.category_page(slug)
+
+
+@router.get("/course/{slug}", response_model=MarketCourseDetail)
+async def course_detail(slug: str) -> MarketCourseDetail:
+    return await courses.course_detail(slug)
+
+
+@router.post("/course/{slug}/preview", response_model=CoursePreviewOut)
+async def course_preview(slug: str, body: CoursePreviewIn) -> CoursePreviewOut:
+    return await courses.preview(slug, body.lecture_id)
+
+
+@router.get("/instructors/{slug}", response_model=InstructorPage)
+async def instructor_page(slug: str) -> InstructorPage:
+    return await courses.instructor_page(slug)
 
 
 # The signed-in teacher's own public profile (one per person, edited from any console).

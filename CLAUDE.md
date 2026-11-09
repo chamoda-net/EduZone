@@ -324,6 +324,29 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   `/course-categories`. Tests: `tests/test_courses.py`. Not built in C1: drag-and-drop (up/down buttons instead),
   image upload for covers (a link), article preview.
 
+### How it's built (courses C2: `app/modules/market/courses.py`, migration 0011)
+- **Public read path for courses:** views owned by eduzone_admin, SELECT-only for the app role, like the tuition
+  views. `public_courses` (published courses of active, listed organizations, in an active category whose parent is
+  active too, whose instructor has a profile; landing fields, length, rating, students = active course grants),
+  `public_course_sections`, `public_course_lectures` (published lectures: title, type, order, free-preview flag,
+  ready video length; never article bodies, lecture descriptions or files), `public_course_categories` (with
+  course counts, a top category counting its children) and `public_instructors` (everyone with a public course
+  or class). `tests/test_market_courses.py` checks the columns.
+- **Endpoints** (`/api/v1/market`, no sign-in): `GET /courses` (q, category (a top category includes its
+  subcategories), level, language, price free|paid, max_price, rating, length short|medium|long|extra, sort
+  popular|rating|newest|price_low|price_high, offset cursor), `GET /courses/home` (top categories, popular, newest,
+  top rated), `GET /courses/categories[/{slug}]`, `GET /course/{slug}` (landing page: card, description, learning
+  objectives, requirements, audience, outline with `can_preview`, instructor), `POST /course/{slug}/preview
+  {lecture_id?}` (a signed stream of the promo video or of a free-preview lecture, for anyone; no view counted, no
+  watermark; the course's tenant transaction is opened only to sign it), `GET /instructors/{slug}` (courses and
+  tuition classes). The sitemap adds courses, course categories and instructors.
+- **Web:** `/courses` (catalogue, filters in the URL, category chips), `/courses/<category>[/<sub>]` (one catch-all
+  route; a subcategory only under its parent's address), `/course/<slug>` (dark hero, what you'll learn, curriculum
+  with Preview links, requirements, description, audience, instructor; a price card with "Enrolment opens soon"
+  until step C3), `/instructor/<slug>`, a Courses lane on the home page, "Courses" in the header, and a link from
+  tuition teacher pages to `/instructor/<slug>`. JSON-LD `Course` and `Person`. The player's watermark is optional
+  (previews have none). `seed_market.py` adds two published courses (paid physics, free maths).
+
 ### Access rule (one function, used everywhere)
 A student can open a lesson if **any** of these is true:
 - `lesson.is_free_preview` and the lesson is published

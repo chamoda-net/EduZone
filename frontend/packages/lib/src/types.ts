@@ -582,7 +582,10 @@ export type InstituteOut = {
 export type InstitutePage = { institute: InstituteOut; classes: MarketClass[] };
 export type SubjectPage = { subject: SubjectOut; classes: MarketClass[]; teachers: TeacherOut[] };
 export type MarketHome = { subjects: SubjectOut[]; popular: MarketClass[]; starting: MarketClass[]; classes: number; teachers: number };
-export type Sitemap = { subjects: string[]; teachers: string[]; classes: string[]; institutes: string[] };
+export type Sitemap = {
+  subjects: string[]; teachers: string[]; classes: string[]; institutes: string[];
+  courses?: string[]; course_categories?: string[]; instructors?: string[];
+};
 export type TeacherProfile = {
   slug: string;
   display_name: string;

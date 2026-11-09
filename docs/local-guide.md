@@ -216,6 +216,18 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
    (steps C2 and C3).
 5. Admin app → **Course categories**: add top categories and subcategories, rename, reorder, hide.
 
+### C3. Browse courses (anyone): new in step C2
+1. **Courses** in the header, or http://localhost:3000/courses: search, filters (category, level, language, price,
+   rating, length) and sorting; category chips at the top.
+2. Open **A/L Physics: Problem Solving Masterclass** (`/course/al-physics-problem-solving`): what you'll learn, the
+   curriculum by section, requirements, description, who it's for, the instructor, and a price card.
+3. **Preview this course** (on the cover) or a lecture's **Preview** link plays the promo video and the free-preview
+   lectures without an account (locally a public test stream).
+4. A category page: http://localhost:3000/courses/exam-skills. An instructor page:
+   http://localhost:3000/instructor/kasun-perera (courses and live classes together).
+5. The home page has a **Popular courses** lane. Buying a course arrives with step C3 ("Enrolment opens soon").
+   Re-run `scripts/seed_market.py` if you don't see the two demo courses.
+
 ### D. Become a teacher (any new account)
 1. Register a new account at `/register` and confirm the phone.
 2. Go to `/teach` → **Apply** (`/teach/apply`): teacher or institute, name, subjects, experience, identity
@@ -323,7 +335,9 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
 - Automatic publish checks with a checklist; first publish reviewed by EduZone (approve or request changes with a
   note); later edits live at once; unpublish and publish again; withdraw from review.
 - Course categories (two levels) managed in the admin app; applications say classes, courses or both.
-- Not yet: course pages on the marketplace (C2), buying and the course player (C3), reviews and certificates (C4),
+- Course pages on the marketplace (step C2): catalogue with filters, category pages, landing page with free
+  previews, instructor pages, home lane, sitemap and JSON-LD.
+- Not yet: buying and the course player (C3), reviews and certificates (C4),
   coupons and wishlist (C5), refunds (C6), analytics and commission changes (C7).
 
 ### Platform admin (step 9, phases 5 and 8)

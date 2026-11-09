@@ -1279,3 +1279,15 @@ ALTER TABLE lessons
 
 ALTER TABLE teacher_applications ADD COLUMN offers text NOT NULL DEFAULT 'classes'
     CHECK (offers IN ('classes','courses','both'));
+
+-- =============================================================================
+-- Courses, step C2 (migration 0011): the public read path for courses. Views owned by eduzone_admin,
+-- SELECT-only for eduzone_app (full definitions in backend/migrations/versions/0011_public_courses.py):
+--   public_courses            published courses of active, listed tenants, active category, instructor profile
+--   public_course_sections    their sections
+--   public_course_lectures    published lectures: title, type, order, free preview, ready video length only
+--   public_course_categories  active categories with course counts
+--   public_instructors        teacher profiles with a public course or class
+-- =============================================================================
+CREATE INDEX idx_classes_course_published ON classes (first_published_at DESC)
+    WHERE kind = 'course' AND status = 'published';

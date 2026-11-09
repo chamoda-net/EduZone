@@ -1,4 +1,4 @@
-import { BookOpen, Building2, CalendarDays, Compass, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
+import { BookOpen, Building2, CalendarDays, Compass, GraduationCap, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -20,6 +20,7 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
   // Header (desktop): the marketplace, then the student area and console.
   const items: NavItem[] = [
     { href: "/classes", label: t("nav.browse"), icon: <Compass /> },
+    { href: "/courses", label: t("nav.courses"), icon: <GraduationCap /> },
     { href: "/teachers", label: t("nav.teachers"), icon: <Users /> },
   ];
   if (me) {

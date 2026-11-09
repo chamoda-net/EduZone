@@ -41,7 +41,8 @@ export function VideoPlayer({ src, title, resumeAt, watermark, onProgress, onExp
   src: string;
   title: string;
   resumeAt: number;
-  watermark: { name: string; phone: string | null };
+  /** The student's name and phone over the video; none for public previews. */
+  watermark?: { name: string; phone: string | null };
   onProgress: (positionSeconds: number, watchedSeconds: number) => void;
   /** The signed URL stopped working (expired): ask for a new one. */
   onExpired: () => void;
@@ -269,7 +270,7 @@ export function VideoPlayer({ src, title, resumeAt, watermark, onProgress, onExp
         }}
       />
 
-      <Watermark name={watermark.name} phone={watermark.phone} />
+      {watermark && <Watermark name={watermark.name} phone={watermark.phone} />}
 
       {waiting && !error && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">

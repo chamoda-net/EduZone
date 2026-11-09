@@ -2383,6 +2383,101 @@
         "title": "ClassUpdate",
         "type": "object"
       },
+      "CourseCategoryOut": {
+        "properties": {
+          "course_count": {
+            "title": "Course Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name_en": {
+            "title": "Name En",
+            "type": "string"
+          },
+          "name_si": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Si"
+          },
+          "name_ta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Ta"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "parent_id",
+          "slug",
+          "name_en",
+          "name_si",
+          "name_ta",
+          "course_count"
+        ],
+        "title": "CourseCategoryOut",
+        "type": "object"
+      },
+      "CourseCategoryPage": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/CourseCategoryOut"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/CourseCategoryOut"
+            },
+            "title": "Children",
+            "type": "array"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CourseCategoryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "category",
+          "parent",
+          "children"
+        ],
+        "title": "CourseCategoryPage",
+        "type": "object"
+      },
       "CourseCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2727,6 +2822,93 @@
         "title": "CourseDetail",
         "type": "object"
       },
+      "CourseLectureOut": {
+        "properties": {
+          "can_preview": {
+            "title": "Can Preview",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_free_preview": {
+            "title": "Is Free Preview",
+            "type": "boolean"
+          },
+          "lesson_type": {
+            "title": "Lesson Type",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "video_seconds": {
+            "title": "Video Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "lesson_type",
+          "is_free_preview",
+          "video_seconds",
+          "can_preview"
+        ],
+        "title": "CourseLectureOut",
+        "type": "object"
+      },
+      "CoursePreviewIn": {
+        "additionalProperties": false,
+        "properties": {
+          "lecture_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lecture Id"
+          }
+        },
+        "title": "CoursePreviewIn",
+        "type": "object"
+      },
+      "CoursePreviewOut": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "playback": {
+            "title": "Playback",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expires_at",
+          "playback",
+          "title"
+        ],
+        "title": "CoursePreviewOut",
+        "type": "object"
+      },
       "CourseRow": {
         "properties": {
           "category_id": {
@@ -2883,6 +3065,38 @@
           "updated_at"
         ],
         "title": "CourseRow",
+        "type": "object"
+      },
+      "CourseSectionOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lectures": {
+            "items": {
+              "$ref": "#/components/schemas/CourseLectureOut"
+            },
+            "title": "Lectures",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "video_seconds": {
+            "title": "Video Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "video_seconds",
+          "lectures"
+        ],
+        "title": "CourseSectionOut",
         "type": "object"
       },
       "CourseUpdate": {
@@ -3133,6 +3347,51 @@
           }
         },
         "title": "CourseUpdate",
+        "type": "object"
+      },
+      "CoursesHome": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CourseCategoryOut"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "newest": {
+            "items": {
+              "$ref": "#/components/schemas/MarketCourse"
+            },
+            "title": "Newest",
+            "type": "array"
+          },
+          "popular": {
+            "items": {
+              "$ref": "#/components/schemas/MarketCourse"
+            },
+            "title": "Popular",
+            "type": "array"
+          },
+          "top_rated": {
+            "items": {
+              "$ref": "#/components/schemas/MarketCourse"
+            },
+            "title": "Top Rated",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "categories",
+          "popular",
+          "newest",
+          "top_rated",
+          "total"
+        ],
+        "title": "CoursesHome",
         "type": "object"
       },
       "DecisionIn": {
@@ -3525,6 +3784,123 @@
           "classes"
         ],
         "title": "InstitutePage",
+        "type": "object"
+      },
+      "InstructorOut": {
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "class_count": {
+            "title": "Class Count",
+            "type": "integer"
+          },
+          "course_count": {
+            "title": "Course Count",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "headline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headline"
+          },
+          "highlights": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Highlights",
+            "type": "array"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "rating_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Avg"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "students": {
+            "title": "Students",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "display_name",
+          "headline",
+          "bio",
+          "photo_url",
+          "highlights",
+          "course_count",
+          "class_count",
+          "students",
+          "rating_avg"
+        ],
+        "title": "InstructorOut",
+        "type": "object"
+      },
+      "InstructorPage": {
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/MarketClass"
+            },
+            "title": "Classes",
+            "type": "array"
+          },
+          "courses": {
+            "items": {
+              "$ref": "#/components/schemas/MarketCourse"
+            },
+            "title": "Courses",
+            "type": "array"
+          },
+          "instructor": {
+            "$ref": "#/components/schemas/InstructorOut"
+          }
+        },
+        "required": [
+          "instructor",
+          "courses",
+          "classes"
+        ],
+        "title": "InstructorPage",
         "type": "object"
       },
       "LateRequestCreate": {
@@ -4704,6 +5080,321 @@
           "next_cursor"
         ],
         "title": "MarketClassPage",
+        "type": "object"
+      },
+      "MarketCourse": {
+        "description": "A course card on the marketplace: public fields only.",
+        "properties": {
+          "category_name": {
+            "title": "Category Name",
+            "type": "string"
+          },
+          "category_slug": {
+            "title": "Category Slug",
+            "type": "string"
+          },
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "first_published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Published At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "lecture_count": {
+            "title": "Lecture Count",
+            "type": "integer"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "one_time_price_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "One Time Price Cents"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "org_type": {
+            "title": "Org Type",
+            "type": "string"
+          },
+          "parent_category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Category Name"
+          },
+          "parent_category_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Category Slug"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "pricing_model": {
+            "title": "Pricing Model",
+            "type": "string"
+          },
+          "rating_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Avg"
+          },
+          "rating_count": {
+            "title": "Rating Count",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "students": {
+            "title": "Students",
+            "type": "integer"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle"
+          },
+          "teacher_name": {
+            "title": "Teacher Name",
+            "type": "string"
+          },
+          "teacher_photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Photo Url"
+          },
+          "teacher_slug": {
+            "title": "Teacher Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_video_seconds": {
+            "title": "Total Video Seconds",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "subtitle",
+          "level",
+          "language",
+          "cover_image_url",
+          "pricing_model",
+          "one_time_price_cents",
+          "currency",
+          "total_video_seconds",
+          "lecture_count",
+          "rating_avg",
+          "rating_count",
+          "students",
+          "category_slug",
+          "category_name",
+          "parent_category_slug",
+          "parent_category_name",
+          "teacher_slug",
+          "teacher_name",
+          "teacher_photo_url",
+          "org_name",
+          "org_type",
+          "first_published_at",
+          "updated_at",
+          "path"
+        ],
+        "title": "MarketCourse",
+        "type": "object"
+      },
+      "MarketCourseDetail": {
+        "properties": {
+          "course": {
+            "$ref": "#/components/schemas/MarketCourse"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "has_promo": {
+            "title": "Has Promo",
+            "type": "boolean"
+          },
+          "instructor": {
+            "$ref": "#/components/schemas/InstructorOut"
+          },
+          "learning_objectives": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Learning Objectives",
+            "type": "array"
+          },
+          "requirements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Requirements",
+            "type": "array"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/CourseSectionOut"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "target_audience": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Target Audience",
+            "type": "array"
+          }
+        },
+        "required": [
+          "course",
+          "description",
+          "learning_objectives",
+          "requirements",
+          "target_audience",
+          "has_promo",
+          "sections",
+          "instructor"
+        ],
+        "title": "MarketCourseDetail",
+        "type": "object"
+      },
+      "MarketCoursePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MarketCourse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_cursor"
+        ],
+        "title": "MarketCoursePage",
         "type": "object"
       },
       "MarketLesson": {
@@ -7396,11 +8087,32 @@
             "title": "Classes",
             "type": "array"
           },
+          "course_categories": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Course Categories",
+            "type": "array"
+          },
+          "courses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Courses",
+            "type": "array"
+          },
           "institutes": {
             "items": {
               "type": "string"
             },
             "title": "Institutes",
+            "type": "array"
+          },
+          "instructors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Instructors",
             "type": "array"
           },
           "subjects": {
@@ -11301,6 +12013,420 @@
         ]
       }
     },
+    "/api/v1/market/course/{slug}": {
+      "get": {
+        "operationId": "course_detail_api_v1_market_course__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketCourseDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Course Detail",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/course/{slug}/preview": {
+      "post": {
+        "operationId": "course_preview_api_v1_market_course__slug__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoursePreviewIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoursePreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Course Preview",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/courses": {
+      "get": {
+        "operationId": "search_courses_api_v1_market_courses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "beginner",
+                    "intermediate",
+                    "advanced",
+                    "all"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "si",
+                    "ta",
+                    "en"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "query",
+            "name": "price",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "free",
+                    "paid"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Price"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_price",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Price"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rating",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rating"
+            }
+          },
+          {
+            "in": "query",
+            "name": "length",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "short",
+                    "medium",
+                    "long",
+                    "extra"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Length"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "popular",
+              "enum": [
+                "popular",
+                "rating",
+                "newest",
+                "price_low",
+                "price_high"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "maximum": 60,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketCoursePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Courses",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/courses/categories": {
+      "get": {
+        "operationId": "course_categories_api_v1_market_courses_categories_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CourseCategoryOut"
+                  },
+                  "title": "Response Course Categories Api V1 Market Courses Categories Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Course Categories",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/courses/categories/{slug}": {
+      "get": {
+        "operationId": "course_category_api_v1_market_courses_categories__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseCategoryPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Course Category",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/courses/home": {
+      "get": {
+        "operationId": "courses_home_api_v1_market_courses_home_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoursesHome"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Courses Home",
+        "tags": [
+          "market"
+        ]
+      }
+    },
     "/api/v1/market/home": {
       "get": {
         "operationId": "home_api_v1_market_home_get",
@@ -11384,6 +12510,48 @@
           }
         },
         "summary": "Institute Page",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/instructors/{slug}": {
+      "get": {
+        "operationId": "instructor_page_api_v1_market_instructors__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstructorPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Instructor Page",
         "tags": [
           "market"
         ]

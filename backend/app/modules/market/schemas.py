@@ -139,6 +139,9 @@ class SitemapOut(BaseModel):
     teachers: list[str]                  # /<subject>/<teacher>
     classes: list[str]
     institutes: list[str]
+    courses: list[str] = Field(default_factory=list)              # /course/<slug>
+    course_categories: list[str] = Field(default_factory=list)    # /courses/<category>[/<sub>]
+    instructors: list[str] = Field(default_factory=list)          # /instructor/<slug>
 
 
 Sort = Literal["popular", "newest", "price"]
@@ -179,3 +182,131 @@ class ProfileUpdate(BaseModel):
     @classmethod
     def _lower(cls, v: str) -> str:
         return v.strip().lower()
+
+
+# --- courses (docs/COURSES.md, step C2) -------------------------------------------------
+
+CourseSort = Literal["popular", "rating", "newest", "price_low", "price_high"]
+CourseLength = Literal["short", "medium", "long", "extra"]     # 0-2 h, 2-6 h, 6-17 h, 17 h+
+CoursePrice = Literal["free", "paid"]
+
+
+class MarketCourse(BaseModel):
+    """A course card on the marketplace: public fields only."""
+
+    id: UUID
+    slug: str
+    title: str
+    subtitle: str | None
+    level: str | None
+    language: str | None
+    cover_image_url: str | None
+    pricing_model: str
+    one_time_price_cents: int | None
+    currency: str
+    total_video_seconds: int
+    lecture_count: int
+    rating_avg: float | None
+    rating_count: int
+    students: int
+    category_slug: str
+    category_name: str
+    parent_category_slug: str | None
+    parent_category_name: str | None
+    teacher_slug: str
+    teacher_name: str
+    teacher_photo_url: str | None
+    org_name: str
+    org_type: str
+    first_published_at: datetime | None
+    updated_at: datetime
+    path: str                            # /course/<slug>
+
+
+class MarketCoursePage(BaseModel):
+    items: list[MarketCourse]
+    total: int
+    next_cursor: str | None
+
+
+class CourseLectureOut(BaseModel):
+    id: UUID
+    title: str
+    lesson_type: str
+    is_free_preview: bool
+    video_seconds: int
+    can_preview: bool                    # a free preview with a ready video: anyone can watch it
+
+
+class CourseSectionOut(BaseModel):
+    id: UUID
+    title: str
+    video_seconds: int
+    lectures: list[CourseLectureOut]
+
+
+class InstructorOut(BaseModel):
+    slug: str
+    display_name: str
+    headline: str | None
+    bio: str | None
+    photo_url: str | None
+    highlights: list[str]
+    course_count: int
+    class_count: int
+    students: int
+    rating_avg: float | None
+
+
+class MarketCourseDetail(BaseModel):
+    course: MarketCourse
+    description: str | None
+    learning_objectives: list[str]
+    requirements: list[str]
+    target_audience: list[str]
+    has_promo: bool
+    sections: list[CourseSectionOut]
+    instructor: InstructorOut
+
+
+class CourseCategoryOut(BaseModel):
+    id: int
+    parent_id: int | None
+    slug: str
+    name_en: str
+    name_si: str | None
+    name_ta: str | None
+    course_count: int
+
+
+class CourseCategoryPage(BaseModel):
+    category: CourseCategoryOut
+    parent: CourseCategoryOut | None
+    children: list[CourseCategoryOut]
+
+
+class CoursesHome(BaseModel):
+    categories: list[CourseCategoryOut]  # top level, with courses
+    popular: list[MarketCourse]
+    newest: list[MarketCourse]
+    top_rated: list[MarketCourse]
+    total: int
+
+
+class InstructorPage(BaseModel):
+    instructor: InstructorOut
+    courses: list[MarketCourse]
+    classes: list[MarketClass]
+
+
+class CoursePreviewIn(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    lecture_id: UUID | None = None       # a free-preview lecture; none = the promo video
+
+
+class CoursePreviewOut(BaseModel):
+    url: str
+    expires_at: datetime
+    playback: str                        # hls | embed
+    title: str

@@ -6,7 +6,8 @@
 > The SQL below is written against `db/eduzone_v1_schema.sql`; **check it against the current
 > migrations (0001–0009) before writing the Alembic migration** and adapt names if they have moved on.
 >
-> **Status (2026-11-02): step C1 built** (migration 0010; CLAUDE.md section 6, "How it's built (courses C1)").
+> **Status (2026-11-09): steps C1 and C2 built** (migrations 0010 and 0011; CLAUDE.md section 6, "How it's built
+> (courses C1)" and "(courses C2)").
 > Corrections made while building, which win over the text below:
 > - Certificate numbers use the prefix **`EZCERT-`** (`EZC-` is already the checkout number prefix).
 > - The public catalogue is the `public_*` **views** (migration 0007), not a "catalog function"; course fields go
@@ -489,7 +490,7 @@ Each step includes its console/student/admin screens and tests. Tuition work is 
 | Step | Scope |
 |---|---|
 | **C1** ✅ | Migrations C.1–C.3; categories in admin; course builder (landing page, intended learners, curriculum with sections, article lectures, pricing); automated publish checks; review queue in admin |
-| **C2** | Public catalog for courses: `/courses`, category pages, `/course/<slug>` landing page, `/instructor/<slug>`, home lanes, SEO (JSON-LD `Course`, sitemap) |
+| **C2** ✅ | Public catalog for courses: `/courses`, category pages, `/course/<slug>` landing page, `/instructor/<slug>`, home lanes, SEO (JSON-LD `Course`, sitemap) |
 | **C3** | Cart/checkout for courses; course player; `lesson_completions`; progress; My learning; welcome/completion messages |
 | **C4** | Reviews and ratings (student, instructor reply, staff moderation); certificates (issue, PDF, public verify) |
 | **C5** | Coupons (incl. public sale price) and wishlist |

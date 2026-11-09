@@ -3,7 +3,9 @@
     python scripts/seed_market.py      (after scripts/seed_demo.py)
 
 Adds an individual teacher's organization (`dilini-maths`) with two classes, and a chemistry teacher
-at the demo institute, each with months, a live lesson and a teacher profile. Safe to run again.
+at the demo institute, each with months, a live lesson and a teacher profile; and two published courses
+(docs/COURSES.md) with sections, video lectures, an article, free previews and a promo video (the videos play
+from DEV_VIDEO_STREAM_URL). Safe to run again.
 Runs as eduzone_admin. Never run it against production.
 """
 
@@ -63,6 +65,61 @@ async def _class(s: AsyncSession, tenant: object, teacher: object, *, title: str
         """), {"t": tenant, "c": cls, "m": month_id, "d": month, "preview": status == "closed"})
 
 
+async def _course(s: AsyncSession, tenant: object, teacher: object, *, slug: str, category: str, price: int | None,
+                  title: str, subtitle: str, level: str, language: str, objectives: list[str],
+                  requirements: list[str], audience: list[str],
+                  sections: list[tuple[str, list[tuple[str, str, bool]]]]) -> None:
+    """A published course with its curriculum; every video lecture gets a ready 10-minute video."""
+    if (await s.execute(text("SELECT 1 FROM classes WHERE kind = 'course' AND slug = :s"), {"s": slug})).first():
+        return
+    await s.execute(text("SELECT set_config('app.tenant_id', :t, true)"), {"t": str(tenant)})
+    description = (f"{subtitle}. Short lessons, worked examples and a clear plan, so every hour you spend turns into "
+                   "marks. Watch on your phone, at your pace, as many times as you like. ") * 4
+
+    async def video(name: str) -> object:
+        return await _one(s, """
+            INSERT INTO media_assets (tenant_id, uploaded_by, kind, provider, external_id, original_filename,
+                                      mime_type, size_bytes, duration_seconds, status)
+            VALUES (:t, :m, 'video', 'bunny_stream', :x, :n, 'video/mp4', 60000000, 600, 'ready') RETURNING id""",
+                          t=tenant, m=teacher, x=f"demo-course-{slug}-{name}", n=f"{name}.mp4")
+
+    course = await _one(s, """
+        INSERT INTO classes (tenant_id, kind, teacher_member_id, title, slug, subtitle, description, category_id,
+                             level, medium, pricing_model, one_time_price_cents, allow_late_months,
+                             learning_objectives, requirements, target_audience, promo_media_id, welcome_message,
+                             completion_message, status, first_published_at)
+        VALUES (:t, 'course', :m, :title, :slug, :sub, :d, (SELECT id FROM course_categories WHERE slug = :cat),
+                :lvl, :lang, :pm, :price, false, :obj, :req, :aud, :promo, 'Welcome! Start with the first lecture.',
+                'Well done, you finished the course!', 'published', now())
+        RETURNING id""", t=tenant, m=teacher, title=title, slug=slug, sub=subtitle, d=description, cat=category,
+                        lvl=level, lang=language, pm="one_time" if price else "free", price=price, obj=objectives,
+                        req=requirements, aud=audience, promo=await video("promo"))
+    n = 0
+    for si, (section_title, lectures) in enumerate(sections):
+        section = await _one(s, """INSERT INTO course_sections (tenant_id, class_id, title, sort_order)
+                                   VALUES (:t, :c, :ti, :o) RETURNING id""", t=tenant, c=course, ti=section_title, o=si)
+        for li, (lecture_title, kind, preview) in enumerate(lectures):
+            n += 1
+            body = f"# {lecture_title}\n\nRead this before the next video." if kind == "article" else None
+            lesson = await _one(s, """
+                INSERT INTO lessons (tenant_id, class_id, section_id, title, lesson_type, article_body, sort_order,
+                                     is_free_preview, is_published)
+                VALUES (:t, :c, :sec, :ti, :k, :body, :o, :p, true) RETURNING id""", t=tenant, c=course, sec=section,
+                                ti=lecture_title, k=kind, body=body, o=li, p=preview)
+            if kind == "recorded":
+                await s.execute(text("""INSERT INTO lesson_resources (tenant_id, lesson_id, media_asset_id, title)
+                                        VALUES (:t, :l, :a, :ti)"""),
+                                {"t": tenant, "l": lesson, "a": await video(f"lecture-{n}"), "ti": lecture_title})
+    await s.execute(text("""
+        UPDATE classes c SET
+            lecture_count = (SELECT count(*) FROM lessons l WHERE l.class_id = c.id AND l.is_published),
+            total_video_seconds = (SELECT COALESCE(sum(a.duration_seconds), 0) FROM lessons l
+                                   JOIN lesson_resources r ON r.lesson_id = l.id
+                                   JOIN media_assets a ON a.id = r.media_asset_id
+                                   WHERE l.class_id = c.id AND l.is_published)
+        WHERE c.id = :c"""), {"c": course})
+
+
 async def seed() -> None:
     if get_settings().environment != "local":
         raise SystemExit("seed_market only runs with ENVIRONMENT=local")
@@ -93,7 +150,42 @@ async def seed() -> None:
                      subject="chemistry", exam="al", year=2027, medium="en", fee=220000,
                      description="Theory and practicals for the 2027 A/L in English medium.")
         await s.execute(text("UPDATE tenants SET org_type = 'institute' WHERE id = :t"), {"t": demo})
-    print("marketplace demo: dilini-maths (2 classes), Ruwan Silva at demo (1 class)")
+
+        kasun = await _one(s, """SELECT m.id FROM tenant_members m JOIN users u ON u.id = m.user_id
+                                  WHERE m.tenant_id = :t AND u.phone = '+94770000002'""", t=demo)
+        await s.execute(text("""UPDATE teacher_profiles SET
+                bio = COALESCE(bio, 'Physics teacher for 15 years. I make mechanics and electricity click.'),
+                headline = COALESCE(headline, 'B.Sc Physics · 15 years teaching A/L')
+            WHERE user_id = (SELECT user_id FROM tenant_members WHERE id = :m)"""), {"m": kasun})
+        await _course(s, demo, kasun, slug="al-physics-problem-solving", category="exam-skills", price=300000,
+                      title="A/L Physics: Problem Solving Masterclass",
+                      subtitle="Crack structured and essay questions with a method that works every time",
+                      level="intermediate", language="si",
+                      objectives=["Break any mechanics problem into steps", "Pick the right equation in seconds",
+                                  "Write full-mark answers to structured questions",
+                                  "Avoid the ten most common mistakes"],
+                      requirements=["Grade 12 or 13 physics syllabus"],
+                      audience=["A/L physics students", "Repeat candidates"],
+                      sections=[("Getting started", [("How this course works", "recorded", True),
+                                                     ("Your study plan", "article", False)]),
+                                ("Mechanics", [("Forces without fear", "recorded", False),
+                                               ("Momentum problems", "recorded", False),
+                                               ("Circular motion", "recorded", False)]),
+                                ("Electricity", [("Circuits step by step", "recorded", False),
+                                                 ("Past paper walkthrough", "recorded", False)])])
+        await _course(s, dilini_org, dilini, slug="maths-shortcuts-free", category="exam-skills", price=None,
+                      title="Mental Maths Shortcuts (Free)",
+                      subtitle="Ten tricks that save minutes in every O/L and A/L paper",
+                      level="beginner", language="en",
+                      objectives=["Multiply two-digit numbers in your head", "Check answers in seconds",
+                                  "Estimate before you calculate", "Handle fractions without fear"],
+                      requirements=["No prior experience needed"], audience=["O/L and A/L students"],
+                      sections=[("Shortcuts", [("Multiplying by 11", "recorded", True),
+                                               ("Squaring numbers ending in 5", "recorded", True),
+                                               ("Quick checks", "recorded", False),
+                                               ("Estimation", "recorded", False),
+                                               ("Cheat sheet", "article", False)])])
+    print("marketplace demo: dilini-maths (2 classes), Ruwan Silva at demo (1 class), 2 courses")
 
 
 async def main() -> None:
