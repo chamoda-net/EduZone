@@ -806,9 +806,20 @@
       },
       "Cart": {
         "properties": {
+          "codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Codes",
+            "type": "array"
+          },
           "currency": {
             "title": "Currency",
             "type": "string"
+          },
+          "discount_cents": {
+            "title": "Discount Cents",
+            "type": "integer"
           },
           "items": {
             "items": {
@@ -821,6 +832,10 @@
             "title": "Ready",
             "type": "boolean"
           },
+          "subtotal_cents": {
+            "title": "Subtotal Cents",
+            "type": "integer"
+          },
           "total_cents": {
             "title": "Total Cents",
             "type": "integer"
@@ -828,7 +843,10 @@
         },
         "required": [
           "items",
+          "subtotal_cents",
+          "discount_cents",
           "total_cents",
+          "codes",
           "currency",
           "ready"
         ],
@@ -855,6 +873,18 @@
               }
             ],
             "title": "Class Month Id"
+          },
+          "coupon_code": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9-]{4,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coupon Code"
           }
         },
         "required": [
@@ -893,6 +923,22 @@
             ],
             "title": "Class Month Id"
           },
+          "coupon_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coupon Code"
+          },
+          "coupon_public": {
+            "default": false,
+            "title": "Coupon Public",
+            "type": "boolean"
+          },
           "cover_image_url": {
             "anyOf": [
               {
@@ -908,6 +954,11 @@
             "title": "Currency",
             "type": "string"
           },
+          "discount_cents": {
+            "default": 0,
+            "title": "Discount Cents",
+            "type": "integer"
+          },
           "id": {
             "anyOf": [
               {
@@ -919,6 +970,17 @@
               }
             ],
             "title": "Id"
+          },
+          "list_price_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Price Cents"
           },
           "month_start": {
             "anyOf": [
@@ -987,6 +1049,7 @@
           "cover_image_url",
           "month_start",
           "amount_cents",
+          "list_price_cents",
           "currency",
           "problem"
         ],
@@ -2536,6 +2599,343 @@
         "title": "CompletionOut",
         "type": "object"
       },
+      "CouponCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_cents": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1000000000000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "code": {
+            "pattern": "^[A-Za-z0-9-]{4,20}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "course_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Id"
+          },
+          "discount_type": {
+            "enum": [
+              "percent",
+              "fixed"
+            ],
+            "title": "Discount Type",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "is_public": {
+            "default": false,
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "max_redemptions": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1000000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Redemptions"
+          },
+          "percent_bps": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent Bps"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "code",
+          "discount_type",
+          "ends_at"
+        ],
+        "title": "CouponCreate",
+        "type": "object"
+      },
+      "CouponIn": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[A-Za-z0-9-]{4,20}$",
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "CouponIn",
+        "type": "object"
+      },
+      "CouponOut": {
+        "properties": {
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "course_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Id"
+          },
+          "course_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Title"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "discount_type": {
+            "title": "Discount Type",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_public": {
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "max_redemptions": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Redemptions"
+          },
+          "percent_bps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent Bps"
+          },
+          "redeemed_count": {
+            "title": "Redeemed Count",
+            "type": "integer"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "course_id",
+          "course_title",
+          "discount_type",
+          "percent_bps",
+          "amount_cents",
+          "is_public",
+          "max_redemptions",
+          "redeemed_count",
+          "starts_at",
+          "ends_at",
+          "status",
+          "state",
+          "created_at"
+        ],
+        "title": "CouponOut",
+        "type": "object"
+      },
+      "CouponQuote": {
+        "description": "The course page opened with ?coupon=CODE: what that code does for this course now.",
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "boolean"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "discount_cents": {
+            "title": "Discount Cents",
+            "type": "integer"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "price_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Cents"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "valid",
+          "applied",
+          "price_cents",
+          "discount_cents",
+          "ends_at"
+        ],
+        "title": "CouponQuote",
+        "type": "object"
+      },
+      "CouponUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "max_redemptions": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1000000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Redemptions"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "disabled"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "CouponUpdate",
+        "type": "object"
+      },
       "CourseCategoryOut": {
         "properties": {
           "course_count": {
@@ -2935,6 +3335,11 @@
               }
             ],
             "title": "Welcome Message"
+          },
+          "wishlist_count": {
+            "default": 0,
+            "title": "Wishlist Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -5769,6 +6174,29 @@
             "title": "Rating Count",
             "type": "integer"
           },
+          "sale_ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Ends At"
+          },
+          "sale_price_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Price Cents"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -5848,6 +6276,8 @@
           "org_type",
           "first_published_at",
           "updated_at",
+          "sale_price_cents",
+          "sale_ends_at",
           "path"
         ],
         "title": "MarketCourse",
@@ -5855,6 +6285,16 @@
       },
       "MarketCourseDetail": {
         "properties": {
+          "coupon": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CouponQuote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "course": {
             "$ref": "#/components/schemas/MarketCourse"
           },
@@ -13546,6 +13986,7 @@
     },
     "/api/v1/market/course/{slug}": {
       "get": {
+        "description": "`?coupon=CODE` (a teacher's shared link) adds what that code does for this course now.",
         "operationId": "course_detail_api_v1_market_course__slug__get",
         "parameters": [
           {
@@ -13555,6 +13996,23 @@
             "schema": {
               "title": "Slug",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "coupon",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Coupon"
             }
           }
         ],
@@ -14385,6 +14843,100 @@
         ]
       }
     },
+    "/api/v1/me/cart/coupon": {
+      "post": {
+        "description": "Apply a coupon code to the courses in the cart it is valid for (404 COUPON_INVALID when none).",
+        "operationId": "apply_coupon_api_v1_me_cart_coupon_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Apply Coupon",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/me/cart/coupon/{code}": {
+      "delete": {
+        "operationId": "remove_coupon_api_v1_me_cart_coupon__code__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Coupon",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
     "/api/v1/me/cart/items": {
       "post": {
         "operationId": "add_item_api_v1_me_cart_items_post",
@@ -14527,7 +15079,7 @@
     },
     "/api/v1/me/checkouts": {
       "post": {
-        "description": "Pay for the whole cart: one payment, one order per item in its teacher's organization.",
+        "description": "Pay for the whole cart: one payment, one order per item in its teacher's organization. When coupons make\nthe total 0, the checkout is completed at once without the gateway (redirect straight to its return page).",
         "operationId": "start_checkout_api_v1_me_checkouts_post",
         "parameters": [
           {
@@ -14817,6 +15369,171 @@
         "summary": "Update Profile",
         "tags": [
           "market"
+        ]
+      }
+    },
+    "/api/v1/me/wishlist": {
+      "get": {
+        "operationId": "wishlist_api_v1_me_wishlist_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MarketCourse"
+                  },
+                  "title": "Response Wishlist Api V1 Me Wishlist Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Wishlist",
+        "tags": [
+          "wishlist"
+        ]
+      }
+    },
+    "/api/v1/me/wishlist/ids": {
+      "get": {
+        "operationId": "wishlist_ids_api_v1_me_wishlist_ids_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "title": "Response Wishlist Ids Api V1 Me Wishlist Ids Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Wishlist Ids",
+        "tags": [
+          "wishlist"
+        ]
+      }
+    },
+    "/api/v1/me/wishlist/{course_id}": {
+      "delete": {
+        "operationId": "remove_from_wishlist_api_v1_me_wishlist__course_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "title": "Response Remove From Wishlist Api V1 Me Wishlist  Course Id  Delete",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove From Wishlist",
+        "tags": [
+          "wishlist"
+        ]
+      },
+      "put": {
+        "operationId": "save_to_wishlist_api_v1_me_wishlist__course_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "title": "Response Save To Wishlist Api V1 Me Wishlist  Course Id  Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save To Wishlist",
+        "tags": [
+          "wishlist"
         ]
       }
     },
@@ -15527,6 +16244,138 @@
         "summary": "Class Students",
         "tags": [
           "org: students"
+        ]
+      }
+    },
+    "/api/v1/org/coupons": {
+      "get": {
+        "operationId": "list_coupons_api_v1_org_coupons_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CouponOut"
+                  },
+                  "title": "Response List Coupons Api V1 Org Coupons Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Coupons",
+        "tags": [
+          "org: courses"
+        ]
+      },
+      "post": {
+        "operationId": "create_coupon_api_v1_org_coupons_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Coupon",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
+    "/api/v1/org/coupons/{coupon_id}": {
+      "patch": {
+        "operationId": "update_coupon_api_v1_org_coupons__coupon_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "coupon_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Coupon Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Coupon",
+        "tags": [
+          "org: courses"
         ]
       }
     },
@@ -20657,6 +21506,138 @@
         "summary": "Class Students",
         "tags": [
           "org: students"
+        ]
+      }
+    },
+    "/api/v1/teach/{tenant_slug}/coupons": {
+      "get": {
+        "operationId": "list_coupons_api_v1_teach__tenant_slug__coupons_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CouponOut"
+                  },
+                  "title": "Response List Coupons Api V1 Teach  Tenant Slug  Coupons Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Coupons",
+        "tags": [
+          "org: courses"
+        ]
+      },
+      "post": {
+        "operationId": "create_coupon_api_v1_teach__tenant_slug__coupons_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Coupon",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
+    "/api/v1/teach/{tenant_slug}/coupons/{coupon_id}": {
+      "patch": {
+        "operationId": "update_coupon_api_v1_teach__tenant_slug__coupons__coupon_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "coupon_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Coupon Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Coupon",
+        "tags": [
+          "org: courses"
         ]
       }
     },

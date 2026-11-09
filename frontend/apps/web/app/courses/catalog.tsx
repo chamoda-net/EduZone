@@ -5,6 +5,7 @@ import type { Schema } from "@eduzone/api-client";
 import { CourseCard } from "@/components/course-card";
 import { api } from "@/lib/api";
 import { COURSE_SORTS, LENGTHS, LEVELS } from "@/lib/courses";
+import { getMe } from "@/lib/session";
 import { errorText, t } from "@eduzone/lib/i18n";
 import { Button, Dialog, EmptyState, ErrorText, Field, Input, Select, buttonStyles } from "@eduzone/ui";
 
@@ -38,6 +39,8 @@ export async function CourseCatalog({ basePath, filters, cursor, categories, fix
   if (filters.max_price) query.set("max_price", String(Math.round(Number(filters.max_price) * 100)));
   if (cursor) query.set("cursor", cursor);
   const res = await api<CoursePage>(`/market/courses?${query}`, { token: null });
+  // Signed in: hearts on the cards, filled for courses already saved.
+  const saved = (await getMe()) ? await api<string[]>("/me/wishlist/ids").then((r) => new Set(r.ok ? r.data : [])) : null;
   const active = Object.keys(filters).filter((k) => k !== "sort").length;
   const form = <FilterForm basePath={basePath} filters={filters} categories={categories} fixedCategory={fixedCategory} />;
   const nextHref = res.ok && res.data.next_cursor
@@ -69,7 +72,7 @@ export async function CourseCatalog({ basePath, filters, cursor, categories, fix
           )}
           {res.ok && res.data.items.length > 0 && (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {res.data.items.map((c, i) => <CourseCard key={c.id} c={c} index={i} />)}
+              {res.data.items.map((c, i) => <CourseCard key={c.id} c={c} index={i} saved={saved ? saved.has(c.id) : undefined} />)}
             </div>
           )}
           {nextHref && (

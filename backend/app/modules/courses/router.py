@@ -6,7 +6,9 @@ from fastapi import APIRouter, Query, Request, Response
 from app.core.db import AppSession
 from app.core.tenancy import TenantSession, site_url
 from app.modules.auth.dependencies import CurrentUser, StaffActor
-from app.modules.courses import certificates, reviews, service, student
+from app.modules.courses import certificates, coupons, reviews, service, student
+from app.modules.courses import wishlist as wishlist_service
+from app.modules.market.schemas import MarketCourse
 from app.modules.courses.schemas import (
     CategoryOut,
     CertificateOut,
@@ -215,3 +217,44 @@ async def staff_course_reviews(course_id: UUID, session: TenantSession, actor: S
 @org_router.put("/course-reviews/{review_id}/reply", response_model=StaffReview)
 async def reply(review_id: UUID, body: ReplyIn, session: TenantSession, actor: StaffActor) -> StaffReview:
     return await reviews.reply(session, actor, review_id, body)
+
+
+# --- coupons and the wishlist (step C5) -----------------------------------------------------------
+
+@org_router.get("/coupons", response_model=list[coupons.CouponOut])
+async def list_coupons(session: TenantSession, actor: StaffActor) -> list[coupons.CouponOut]:
+    return await coupons.list_coupons(session, actor)
+
+
+@org_router.post("/coupons", response_model=coupons.CouponOut, status_code=201)
+async def create_coupon(body: coupons.CouponCreate, session: TenantSession, actor: StaffActor) -> coupons.CouponOut:
+    return await coupons.create_coupon(session, actor, body)
+
+
+@org_router.patch("/coupons/{coupon_id}", response_model=coupons.CouponOut)
+async def update_coupon(coupon_id: UUID, body: coupons.CouponUpdate, session: TenantSession,
+                        actor: StaffActor) -> coupons.CouponOut:
+    return await coupons.update_coupon(session, actor, coupon_id, body)
+
+
+me_router = APIRouter(prefix="/me", tags=["wishlist"])
+
+
+@me_router.get("/wishlist", response_model=list[MarketCourse])
+async def wishlist(user: CurrentUser) -> list[MarketCourse]:
+    return await wishlist_service.items(user)
+
+
+@me_router.get("/wishlist/ids", response_model=list[UUID])
+async def wishlist_ids(user: CurrentUser) -> list[UUID]:
+    return await wishlist_service.ids(user)
+
+
+@me_router.put("/wishlist/{course_id}", response_model=list[UUID])
+async def save_to_wishlist(course_id: UUID, user: CurrentUser) -> list[UUID]:
+    return await wishlist_service.add(user, course_id)
+
+
+@me_router.delete("/wishlist/{course_id}", response_model=list[UUID])
+async def remove_from_wishlist(course_id: UUID, user: CurrentUser) -> list[UUID]:
+    return await wishlist_service.remove(user, course_id)

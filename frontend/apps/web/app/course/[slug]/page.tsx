@@ -1,5 +1,5 @@
-import { Award, Check, ChevronRight, Clock, FileText, Infinity as InfinityIcon, MonitorSmartphone, PlayCircle,
-  ScrollText, Star, Users } from "lucide-react";
+import { AlarmClock, Award, Check, ChevronRight, Clock, FileText, Infinity as InfinityIcon, MonitorSmartphone, PlayCircle,
+  ScrollText, Star, Tag, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -10,11 +10,11 @@ import { SiteShell } from "@/components/shell";
 import { TeacherAvatar } from "@/components/teacher-avatar";
 import { api } from "@/lib/api";
 import { getCart, inCart } from "@/lib/cart";
-import { coursePrice, formatLength } from "@/lib/courses";
+import { coursePrice, courseSale, formatLength } from "@/lib/courses";
 import { jsonLd, market } from "@/lib/market";
 import { getMe } from "@/lib/session";
 import { siteOrigin } from "@/lib/site";
-import { formatDateTime } from "@eduzone/lib/format";
+import { formatDateTime, formatMoney } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
 import { ClassCover, Container } from "@eduzone/ui";
 
@@ -23,7 +23,13 @@ import { PreviewDialog } from "./preview";
 
 type Detail = Schema<"MarketCourseDetail">;
 
-const load = async (params: Promise<{ slug: string }>) => market<Detail>(`/course/${(await params).slug}`);
+const CODE = /^[A-Za-z0-9-]{4,20}$/;
+
+/** `?coupon=CODE` (a teacher's shared link) asks the API what that code does for this course now. */
+const load = async (params: Promise<{ slug: string }>, coupon?: string | null) =>
+  market<Detail>(`/course/${(await params).slug}${coupon ? `?coupon=${encodeURIComponent(coupon)}` : ""}`);
+
+const daysLeft = (iso: string) => Math.max(1, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 
 export async function generateMetadata({ params }: PageProps<"/course/[slug]">): Promise<Metadata> {
   const d = await load(params);
@@ -36,8 +42,10 @@ const lectureIcon = { recorded: PlayCircle, document: FileText, article: ScrollT
 
 /** /course/<slug>: the course landing page. Previews play for anyone; a paid course is bought through the cart,
  * a free one is enrolled in, and a student who has it goes straight to the player. */
-export default async function CourseLandingPage({ params }: PageProps<"/course/[slug]">) {
-  const d = await load(params);
+export default async function CourseLandingPage({ params, searchParams }: PageProps<"/course/[slug]">) {
+  const raw = (await searchParams).coupon;
+  const asked = typeof raw === "string" && CODE.test(raw) ? raw.toUpperCase() : null;
+  const d = await load(params, asked);
   const c = d.course;
   const origin = await siteOrigin();
   const url = `${origin}${c.path}`;
@@ -55,6 +63,16 @@ export default async function CourseLandingPage({ params }: PageProps<"/course/[
   const mine = me ? await api<Schema<"LearnCourse">>(`/learn/courses/${c.id}`) : null;
   const owned = !!(mine?.ok && mine.data.has_access);
   const cart = !owned && paid ? await getCart() : null;
+  const saved = me && !owned
+    ? await api<string[]>("/me/wishlist/ids").then((r) => r.ok && r.data.includes(c.id))
+    : false;
+  // The price this visitor gets: a shared code that wins, else the public sale, else the list price.
+  const quote = paid ? d.coupon ?? null : null;
+  const sale = courseSale(c);
+  const offer = quote?.applied && quote.price_cents != null
+    ? { price: quote.price_cents, list: c.one_time_price_cents!, ends: quote.ends_at ?? null, code: quote.code }
+    : sale ? { price: sale.price, list: sale.list, ends: c.sale_ends_at ?? null, code: null }
+    : null;
   const reviews = await market<Schema<"PublicReviewPage">>(`/course/${c.slug}/reviews?limit=10`);
   const sum = reviews.summary;
 
@@ -86,8 +104,36 @@ export default async function CourseLandingPage({ params }: PageProps<"/course/[
         <ClassCover title={c.title} subject={c.category_name} imageUrl={c.cover_image_url} />
       )}
       <div className="flex flex-col gap-4 p-5">
-        <p className="font-display text-3xl font-semibold tabular-nums">{coursePrice(t, c)}</p>
+        {offer ? (
+          <div className="flex flex-col gap-1.5">
+            <p className="flex flex-wrap items-baseline gap-x-3">
+              <span className="font-display text-3xl font-semibold tabular-nums">
+                {offer.price === 0 ? t("market.courses.card.free") : formatMoney(offer.price, c.currency)}
+              </span>
+              <span className="text-lg text-muted line-through tabular-nums">{formatMoney(offer.list, c.currency)}</span>
+              <span className="text-sm font-semibold">{t("market.courses.card.off", { percent: Math.round((1 - offer.price / offer.list) * 100) })}</span>
+            </p>
+            {offer.ends && (
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-danger">
+                <AlarmClock className="size-4" />{t("market.course.saleEnds", { days: daysLeft(offer.ends) })}
+              </p>
+            )}
+            {offer.code && (
+              <p className="inline-flex items-center gap-1.5 self-start rounded-full bg-success-bg px-2.5 py-1 text-xs font-semibold text-success">
+                <Tag className="size-3.5" />{t("market.course.codeApplied", { code: offer.code })}
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="font-display text-3xl font-semibold tabular-nums">{coursePrice(t, c)}</p>
+        )}
+        {quote && !quote.applied && (
+          <p className="rounded-ez bg-sunken px-3 py-2 text-sm text-muted">
+            {quote.valid ? t("market.course.codeBeaten", { code: quote.code }) : t("market.course.codeInvalid", { code: quote.code })}
+          </p>
+        )}
         <CourseActions courseId={c.id} slug={c.slug} free={!paid} owned={owned}
+                       couponCode={offer?.code ?? null} saved={!!saved}
                        inCart={!!cart && inCart(cart, c.id, null)}
                        started={!!(mine?.ok && mine.data.progress.completed > 0)} />
         <div>

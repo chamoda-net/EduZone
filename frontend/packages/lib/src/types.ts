@@ -386,11 +386,23 @@ export type CartItem = {
   org: OrgRef;
   cover_image_url: string | null;
   month_start: string | null;
-  amount_cents: number | null;
+  amount_cents: number | null;      // after any coupon
+  list_price_cents: number | null;  // before it
+  discount_cents: number;
+  coupon_code: string | null;       // the coupon giving the discount (typed, or the course's sale)
+  coupon_public: boolean;           // an automatic sale
   currency: string;
   problem: string | null;
 };
-export type Cart = { items: CartItem[]; total_cents: number; currency: string; ready: boolean };
+export type Cart = {
+  items: CartItem[];
+  subtotal_cents: number;
+  discount_cents: number;
+  total_cents: number;
+  codes: string[];                  // codes the student applied that discount something
+  currency: string;
+  ready: boolean;
+};
 export type CheckoutDetail = {
   id: string;
   checkout_no: string;

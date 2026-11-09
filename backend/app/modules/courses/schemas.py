@@ -129,6 +129,7 @@ class CourseDetail(CourseRow):
     checks: list[Check]
     ready_to_submit: bool
     needs_review: bool                           # true until EduZone approves the first publish
+    wishlist_count: int = 0                      # students who saved it (step C5; never who)
     tenant_name: str | None = None               # set in the platform admin's view
 
 

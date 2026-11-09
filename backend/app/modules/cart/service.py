@@ -11,6 +11,7 @@
 
 import logging
 import secrets
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -36,11 +37,15 @@ from app.modules.cart.schemas import (
 )
 from app.modules.checkout import service as checkout
 from app.modules.checkout.schemas import OrderItemOut, OrderOut, Redirect
+from app.modules.courses import coupons
 from app.modules.learn.service import in_tenant_of
 from app.modules.learning.schemas import OrgRef
 from app.modules.ledger import posting
 
 log = logging.getLogger("eduzone.cart")
+
+# The "gateway" of a checkout that coupons made free: nothing is sent anywhere.
+FREE_GATEWAY = "free"
 
 # Problems that mean the item can never be bought as it is (refused when adding).
 _STRUCTURAL = {"UNAVAILABLE", "NOT_FOUND", "FREE_CLASS", "MONTH_REQUIRED", "MONTH_INVALID", "NOTHING_TO_PAY"}
@@ -89,39 +94,61 @@ def _public_problem(r: Any, month_id: UUID | None) -> str | None:
     return "MONTH_INVALID" if month_id is not None else None
 
 
+@dataclass(frozen=True, slots=True)
+class _Price:
+    amount: int
+    list_price: int
+    discount: int = 0
+    code: str | None = None
+    public: bool = False
+
+
 def _item_out(item_id: UUID | None, class_id: UUID, month_id: UUID | None, r: Any,
-              amount: int | None, problem: str | None) -> CartItemOut:
+              price: _Price | None, problem: str | None) -> CartItemOut:
     if r is None:
         return CartItemOut(id=item_id, class_id=class_id, class_month_id=month_id, title="", path="/classes",
                            subject_name="", teacher_name="", teacher_photo_url=None, org=OrgRef(slug="", name=""),
-                           cover_image_url=None, month_start=None, amount_cents=None, currency="LKR",
-                           problem="UNAVAILABLE")
+                           cover_image_url=None, month_start=None, amount_cents=None, list_price_cents=None,
+                           currency="LKR", problem="UNAVAILABLE")
     return CartItemOut(
         id=item_id, class_id=class_id, class_month_id=month_id, title=r.title,
         path=r.path, subject_name=r.subject_name,
         teacher_name=r.teacher_name, teacher_photo_url=r.teacher_photo_url, org=OrgRef(slug=r.org_slug, name=r.org_name),
-        cover_image_url=r.cover_image_url, month_start=r.month_start, amount_cents=amount, currency=r.currency,
-        problem=problem)
+        cover_image_url=r.cover_image_url, month_start=r.month_start,
+        amount_cents=price.amount if price else None, list_price_cents=price.list_price if price else None,
+        discount_cents=price.discount if price else 0, coupon_code=price.code if price else None,
+        coupon_public=price.public if price else False, currency=r.currency, problem=problem)
 
 
-def _guest_amount(r: Any) -> int | None:
-    return r.month_fee_cents if r.pricing_model == "monthly" else r.one_time_price_cents
+async def _guest_price(r: Any, code: str | None) -> _Price | None:
+    if r.pricing_model == "monthly":
+        return _Price(r.month_fee_cents, r.month_fee_cents) if r.month_fee_cents is not None else None
+    if r.one_time_price_cents is None:
+        return None
+    found = await coupons.public_discount(r.id, code) if r.path.startswith("/course/") else None
+    if found is None or found[1] is None:
+        return _Price(r.one_time_price_cents, r.one_time_price_cents)
+    d = found[1]
+    return _Price(r.one_time_price_cents - d.cents, r.one_time_price_cents, d.cents, d.code, d.is_public)
 
 
-async def _for_user(user: UserContext, class_id: UUID, month_id: UUID | None) -> tuple[int | None, str | None]:
+async def _for_user(user: UserContext, class_id: UUID, month_id: UUID | None,
+                    code: str | None) -> tuple[_Price | None, str | None]:
     """(price, problem) for this student, decided in the class's tenant by the same rules as paying."""
     try:
         async with in_tenant_of("class", class_id, user) as (session, auth, _):
-            priced = await checkout.price_item(session, auth, class_id, month_id)
-        return priced.amount_cents, None
+            p = await checkout.price_item(session, auth, class_id, month_id, code)
+        return _Price(p.amount_cents, p.list_price_cents, p.discount_cents, p.coupon_code, p.coupon_public), None
     except ApiError as exc:
         return None, "UNAVAILABLE" if exc.code == "NOT_FOUND" else exc.code
 
 
 def _cart(items: list[CartItemOut]) -> Cart:
     ok = [i for i in items if i.problem is None and i.amount_cents is not None]
-    return Cart(items=items, total_cents=sum(i.amount_cents or 0 for i in ok),
-                currency=ok[0].currency if ok else "LKR",
+    codes = sorted({i.coupon_code for i in ok if i.coupon_code and not i.coupon_public})
+    return Cart(items=items, subtotal_cents=sum(i.list_price_cents or 0 for i in ok),
+                discount_cents=sum(i.discount_cents for i in ok), total_cents=sum(i.amount_cents or 0 for i in ok),
+                codes=codes, currency=ok[0].currency if ok else "LKR",
                 ready=bool(items) and len(ok) == len(items))
 
 
@@ -130,7 +157,8 @@ def _cart(items: list[CartItemOut]) -> Cart:
 async def _rows(user_id: UUID) -> list[Any]:
     async with user_transaction(user_id) as session:
         return list((await session.execute(text(
-            "SELECT id, class_id, class_month_id FROM cart_items ORDER BY created_at, id"))).all())
+            "SELECT id, class_id, class_month_id, coupon_code::text AS coupon_code FROM cart_items "
+            "ORDER BY created_at, id"))).all())
 
 
 async def get_cart(user: UserContext) -> Cart:
@@ -141,8 +169,8 @@ async def get_cart(user: UserContext) -> Cart:
         if r is None:
             items.append(_item_out(row.id, row.class_id, row.class_month_id, None, None, "UNAVAILABLE"))
             continue
-        amount, problem = await _for_user(user, row.class_id, row.class_month_id)
-        items.append(_item_out(row.id, row.class_id, row.class_month_id, r, amount, problem))
+        price, problem = await _for_user(user, row.class_id, row.class_month_id, row.coupon_code)
+        items.append(_item_out(row.id, row.class_id, row.class_month_id, r, price, problem))
     return _cart(items)
 
 
@@ -153,8 +181,8 @@ async def preview(items: list[CartItemIn]) -> Cart:
         for it in items[:MAX_CART_ITEMS]:
             r = await _public(session, it.class_id, it.class_month_id)
             problem = _public_problem(r, it.class_month_id) if r else "UNAVAILABLE"
-            amount = _guest_amount(r) if r and problem is None else None
-            out.append(_item_out(None, it.class_id, it.class_month_id, r, amount, problem))
+            price = await _guest_price(r, it.coupon_code) if r and problem is None else None
+            out.append(_item_out(None, it.class_id, it.class_month_id, r, price, problem))
     return _cart(out)
 
 
@@ -165,13 +193,19 @@ async def _insert(user_id: UUID, it: CartItemIn) -> None:
             SELECT 1 FROM cart_items WHERE class_id = :c AND class_month_id IS NOT DISTINCT FROM CAST(:mo AS uuid)
         """), {"c": it.class_id, "mo": it.class_month_id})).first()
         if exists:
+            if it.coupon_code:
+                await session.execute(text("""
+                    UPDATE cart_items SET coupon_code = :code
+                    WHERE class_id = :c AND class_month_id IS NOT DISTINCT FROM CAST(:mo AS uuid)
+                """), {"c": it.class_id, "mo": it.class_month_id, "code": it.coupon_code})
             return
         if count >= MAX_CART_ITEMS:
             raise ApiError("CART_FULL", f"Your cart can hold up to {MAX_CART_ITEMS} items.", status_code=409)
         await session.execute(text("""
-            INSERT INTO cart_items (user_id, class_id, class_month_id) VALUES (current_user_id(), :c, :mo)
+            INSERT INTO cart_items (user_id, class_id, class_month_id, coupon_code)
+            VALUES (current_user_id(), :c, :mo, :code)
             ON CONFLICT DO NOTHING
-        """), {"c": it.class_id, "mo": it.class_month_id})
+        """), {"c": it.class_id, "mo": it.class_month_id, "code": it.coupon_code})
 
 
 async def add_item(user: UserContext, it: CartItemIn) -> Cart:
@@ -182,10 +216,41 @@ async def add_item(user: UserContext, it: CartItemIn) -> Cart:
     try:
         async with in_tenant_of("class", it.class_id, user) as (session, auth, _):
             await checkout.price_item(session, auth, it.class_id, it.class_month_id)
+            # A code from the course page's link: kept only if it is valid for this course now.
+            if it.coupon_code and not await coupons.code_applies(session, it.class_id, it.coupon_code):
+                it = it.model_copy(update={"coupon_code": None})
     except ApiError as exc:
         # Same message as paying would give (already have it, ask the teacher first, not open yet, ...).
         raise ApiError(exc.code, exc.message, status_code=exc.status_code if exc.status_code != 404 else 409) from exc
     await _insert(user.user_id, it)
+    return await get_cart(user)
+
+
+async def apply_coupon(user: UserContext, code: str) -> Cart:
+    """A code belongs to one organization: it is set on every course in the cart it is valid for now."""
+    code = code.strip().upper()
+    matched: list[UUID] = []
+    for row in await _rows(user.user_id):
+        if row.class_month_id is not None:
+            continue
+        try:
+            async with in_tenant_of("class", row.class_id, user) as (session, _auth, _):
+                if await coupons.code_applies(session, row.class_id, code):
+                    matched.append(row.id)
+        except ApiError:
+            continue
+    if not matched:
+        raise ApiError("COUPON_INVALID", "This code isn't valid for anything in your cart.", status_code=404)
+    async with user_transaction(user.user_id) as session:
+        await session.execute(text("UPDATE cart_items SET coupon_code = :code WHERE id = ANY(:ids)"),
+                              {"code": code, "ids": matched})
+    return await get_cart(user)
+
+
+async def remove_coupon(user: UserContext, code: str) -> Cart:
+    async with user_transaction(user.user_id) as session:
+        await session.execute(text("UPDATE cart_items SET coupon_code = NULL WHERE coupon_code = CAST(:c AS citext)"),
+                              {"c": code.strip()})
     return await get_cart(user)
 
 
@@ -228,13 +293,17 @@ async def start_checkout(user: UserContext, site_host: str, gateway: Gateway) ->
     for row in rows:
         try:
             async with in_tenant_of("class", row.class_id, user) as (session, auth, _):
-                priced.append(await checkout.price_item(session, auth, row.class_id, row.class_month_id))
+                priced.append(await checkout.price_item(session, auth, row.class_id, row.class_month_id,
+                                                        row.coupon_code))
         except ApiError as exc:
             raise ApiError("CART_HAS_PROBLEMS", "Some items in your cart can't be paid for now.", 409) from exc
     if len({p.currency for p in priced}) > 1:
         raise ApiError("CURRENCY_MIXED", "Items in different currencies can't be paid together.", 409)
     total = sum(p.amount_cents for p in priced)
     currency = priced[0].currency
+    codes = {p.class_id: row.coupon_code for p, row in zip(priced, rows, strict=True)}
+    # Coupons made everything free: completed here, without the gateway (no money moves, nothing is booked).
+    gateway_name = gateway.name if total > 0 else FREE_GATEWAY
 
     # 2. The checkout and its one gateway attempt (platform-level, the user's own rows).
     key = secrets.token_hex(16)
@@ -254,7 +323,7 @@ async def start_checkout(user: UserContext, site_host: str, gateway: Gateway) ->
         cp_id: UUID = (await session.execute(text("""
             INSERT INTO checkout_payments (checkout_id, gateway, idempotency_key, amount_cents)
             VALUES (:c, :g, :k, :amt) RETURNING id
-        """), {"c": checkout_id, "g": gateway.name, "k": key, "amt": total})).scalar_one()
+        """), {"c": checkout_id, "g": gateway_name, "k": key, "amt": total})).scalar_one()
 
     # 3. One pending order per item, each in its own tenant. Prices are checked again inside the transaction
     #    that creates the order; if anything changed meanwhile, the whole checkout is abandoned.
@@ -262,10 +331,10 @@ async def start_checkout(user: UserContext, site_host: str, gateway: Gateway) ->
         for p in priced:
             async with in_tenant_of("class", p.class_id, user) as (session, auth, _):
                 auth = await ensure_student_member(session, auth)
-                again = await checkout.price_item(session, auth, p.class_id, p.class_month_id)
+                again = await checkout.price_item(session, auth, p.class_id, p.class_month_id, codes[p.class_id])
                 if again.amount_cents != p.amount_cents:
                     raise ApiError("CART_CHANGED", "A price in your cart just changed. Please check it again.", 409)
-                await checkout.create_order(session, auth, again, gateway=gateway.name,
+                await checkout.create_order(session, auth, again, gateway=gateway_name,
                                             payment_key=secrets.token_hex(16), checkout_id=checkout_id,
                                             checkout_payment_id=cp_id)
     except ApiError as exc:
@@ -274,9 +343,17 @@ async def start_checkout(user: UserContext, site_host: str, gateway: Gateway) ->
             raise
         raise ApiError("CART_HAS_PROBLEMS", "Some items in your cart can't be paid for now.", 409) from exc
 
+    back = f"{s.site_scheme}://{site_host}/checkouts/{checkout_id}"
+    if total == 0:
+        event = GatewayEvent(gateway=FREE_GATEWAY, event_ref=key, payment_key=key, status="succeeded", amount_cents=0,
+                             currency=currency, gateway_payment_ref=None, method="coupon", card_last4=None,
+                             signature_ok=True, raw={})
+        await apply_checkout_event(event, cp_id, checkout_id, user.user_id)
+        return CheckoutStarted(checkout=await get_checkout(user.user_id, checkout_id),
+                               redirect=Redirect(method="GET", url=back, fields={}))
+
     async with AppSession() as session:
         first, last, email, phone = await checkout.payer(session, user.user_id)
-    back = f"{s.site_scheme}://{site_host}/checkouts/{checkout_id}"
     description = priced[0].description if len(priced) == 1 else f"EduZone: {len(priced)} classes"
     redirect = gateway.create_checkout(CheckoutRequest(
         payment_key=key, amount_cents=total, currency=currency, description=description,
@@ -399,7 +476,8 @@ async def apply_checkout_event(event: GatewayEvent, cp_id: UUID, checkout_id: UU
         return event.status
 
     # Succeeded: each order with its share of the fee, in its own tenant. One failure doesn't stop the others.
-    shares = posting.allocate(fee, [o.total_cents for o in orders])
+    weights = [o.total_cents for o in orders]
+    shares = posting.allocate(fee, weights) if sum(weights) > 0 else [0] * len(orders)
     failed: list[UUID] = []
     for o, share in zip(orders, shares, strict=True):
         try:
@@ -428,5 +506,9 @@ async def apply_checkout_event(event: GatewayEvent, cp_id: UUID, checkout_id: UU
             DELETE FROM cart_items ci USING order_items i
             WHERE i.order_id = ANY(:orders) AND ci.class_id = i.class_id
               AND ci.class_month_id IS NOT DISTINCT FROM i.class_month_id
+        """), {"orders": paid})
+        # ... and leaves the wishlist (courses).
+        await session.execute(text("""
+            DELETE FROM wishlist_items w USING order_items i WHERE i.order_id = ANY(:orders) AND w.class_id = i.class_id
         """), {"orders": paid})
     return "paid"

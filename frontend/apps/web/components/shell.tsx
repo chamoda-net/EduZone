@@ -1,4 +1,4 @@
-import { BookOpen, Building2, CalendarDays, Compass, GraduationCap, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
+import { BookOpen, Building2, CalendarDays, Compass, GraduationCap, Heart, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -49,6 +49,12 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
           </Link>
           <HeaderNav items={items} />
           <div className="flex shrink-0 items-center gap-2">
+            {me && (
+              <Link href="/learn/wishlist" aria-label={t("wishlist.title")} title={t("wishlist.title")}
+                    className="hidden size-10 place-items-center rounded-full text-foreground hover:bg-sunken sm:grid">
+                <Heart className="size-5" />
+              </Link>
+            )}
             <Link
               href="/cart"
               aria-label={`${t("nav.cart")} (${count})`}

@@ -17,6 +17,17 @@ export function coursePrice(t: Translate, c: { pricing_model: string; one_time_p
     : formatMoney(c.one_time_price_cents, c.currency);
 }
 
+type Priced = { pricing_model: string; one_time_price_cents: number | null; currency: string;
+  sale_price_cents?: number | null };
+
+/** The sale (best public coupon) of a paid course right now: the price, the list price and the percent off. */
+export function courseSale(c: Priced): { price: number; list: number; percent: number } | null {
+  if (c.pricing_model === "free" || !c.one_time_price_cents || c.sale_price_cents == null) return null;
+  if (c.sale_price_cents >= c.one_time_price_cents) return null;
+  const percent = Math.round((1 - c.sale_price_cents / c.one_time_price_cents) * 100);
+  return { price: c.sale_price_cents, list: c.one_time_price_cents, percent };
+}
+
 /** A published course is "new" for its first 30 days. */
 export function isNew(firstPublishedAt: string | null): boolean {
   return !!firstPublishedAt && Date.now() - new Date(firstPublishedAt).getTime() < 30 * 24 * 3600 * 1000;

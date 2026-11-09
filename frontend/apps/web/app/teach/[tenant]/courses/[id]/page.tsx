@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, CheckCircle2, Circle, Clock, Eye, EyeOff, FileText, Globe2,
+import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, CheckCircle2, Circle, Clock, Eye, EyeOff, FileText, Globe2, Heart,
   PlayCircle, ScrollText } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -99,7 +99,14 @@ export default async function CourseBuilderPage({ params, searchParams }: PagePr
               </span>
             </div>
             <h1 className="mt-1 font-display text-3xl leading-tight font-semibold">{c.title}</h1>
-            <p className="font-mono text-xs text-muted">/course/{c.slug}</p>
+            <p className="flex flex-wrap items-center gap-x-3 font-mono text-xs text-muted">
+              /course/{c.slug}
+              {c.wishlist_count > 0 && (
+                <span className="inline-flex items-center gap-1 font-sans font-semibold text-foreground">
+                  <Heart className="size-3.5 fill-danger text-danger" />{t("courses.savedBy", { count: c.wishlist_count })}
+                </span>
+              )}
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap items-start gap-2">

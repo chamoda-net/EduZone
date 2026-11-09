@@ -29,6 +29,7 @@ from app.core.tenancy import tenant_transaction
 from app.integrations.gateways import Gateway, get_gateway
 from app.integrations.gateways.base import CheckoutRequest, GatewayEvent
 from app.modules.auth.dependencies import Actor, AuthContext, ensure_student_member
+from app.modules.courses import coupons
 from app.modules.learning import access
 from app.modules.learning import repository as learning_repo
 from app.modules.ledger import posting
@@ -92,9 +93,14 @@ class PricedItem:
     teacher_member_id: UUID
     late_request_id: UUID | None
     description: str
-    amount_cents: int
+    amount_cents: int                    # what the student pays (after any coupon); commission is charged on it
     currency: str
     commission_bps: int
+    list_price_cents: int = 0            # before the coupon
+    discount_cents: int = 0
+    coupon_id: UUID | None = None
+    coupon_code: str | None = None
+    coupon_public: bool = False          # an automatic sale rather than a typed code
 
 
 async def require_verified_phone(session: AsyncSession, user_id: UUID) -> None:
@@ -106,9 +112,10 @@ async def require_verified_phone(session: AsyncSession, user_id: UUID) -> None:
 
 
 async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
-                     class_month_id: UUID | None) -> PricedItem:
+                     class_month_id: UUID | None, coupon_code: str | None = None) -> PricedItem:
     """In the class's tenant transaction. Raises ApiError when it can't be bought now. Read-only, so the
-    cart can also use it to show each item's state."""
+    cart can also use it to show each item's state. A course takes the best coupon (a public sale or the typed
+    code; app.modules.courses.coupons): the price may drop to 0, which is a free checkout, not "nothing to pay"."""
     c = (await session.execute(text("""
         SELECT id, slug, title, status, kind, pricing_model, monthly_fee_cents, one_time_price_cents,
                teacher_member_id
@@ -148,9 +155,15 @@ async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
         raise ApiError("NOTHING_TO_PAY", "There is nothing to pay for this.", status_code=409)
     if auth.member_id and await access.active_grant_for(session, auth.member_id, c.id, class_month_id) is not None:
         raise ApiError("ALREADY_HAS_ACCESS", "You already have access.", status_code=409)
+    discount = await coupons.best_discount(session, c.id, amount, coupon_code) if c.kind == "course" else None
     return PricedItem(class_id=c.id, class_month_id=class_month_id, teacher_member_id=c.teacher_member_id,
-                      late_request_id=late_request_id, description=description, amount_cents=amount,
-                      currency=tenant.currency, commission_bps=tenant.commission_bps)
+                      late_request_id=late_request_id, description=description,
+                      amount_cents=amount - (discount.cents if discount else 0),
+                      currency=tenant.currency, commission_bps=tenant.commission_bps, list_price_cents=amount,
+                      discount_cents=discount.cents if discount else 0,
+                      coupon_id=discount.coupon_id if discount else None,
+                      coupon_code=discount.code if discount else None,
+                      coupon_public=discount.is_public if discount else False)
 
 
 async def create_order(session: AsyncSession, auth: AuthContext, item: PricedItem, *, gateway: str,
@@ -159,16 +172,19 @@ async def create_order(session: AsyncSession, auth: AuthContext, item: PricedIte
     """Pending order + its one item (commission and teacher snapshotted) + an initiated payment."""
     await learning_repo.upsert_enrollment(session, auth.member_id, item.class_id)
     order_id: UUID = (await session.execute(text("""
-        INSERT INTO orders (tenant_id, student_member_id, order_no, currency, subtotal_cents, total_cents, checkout_id)
-        VALUES (current_tenant_id(), :m, :no, :cur, :amt, :amt, :co) RETURNING id
+        INSERT INTO orders (tenant_id, student_member_id, order_no, currency, subtotal_cents, discount_cents,
+                            total_cents, checkout_id)
+        VALUES (current_tenant_id(), :m, :no, :cur, :list, :disc, :amt, :co) RETURNING id
     """), {"m": auth.member_id, "no": await _new_order_no(session), "cur": item.currency, "amt": item.amount_cents,
+           "list": item.list_price_cents or item.amount_cents, "disc": item.discount_cents,
            "co": checkout_id})).scalar_one()
     await session.execute(text("""
         INSERT INTO order_items (tenant_id, order_id, class_id, class_month_id, teacher_member_id, late_request_id,
-                                 description, amount_cents, commission_bps)
-        VALUES (current_tenant_id(), :o, :c, :mo, :t, :lr, :d, :amt, :bps)
+                                 description, amount_cents, commission_bps, list_price_cents, discount_cents, coupon_id)
+        VALUES (current_tenant_id(), :o, :c, :mo, :t, :lr, :d, :amt, :bps, :list, :disc, :coupon)
     """), {"o": order_id, "c": item.class_id, "mo": item.class_month_id, "t": item.teacher_member_id,
-           "lr": item.late_request_id, "d": item.description, "amt": item.amount_cents, "bps": item.commission_bps})
+           "lr": item.late_request_id, "d": item.description, "amt": item.amount_cents, "bps": item.commission_bps,
+           "list": item.list_price_cents or item.amount_cents, "disc": item.discount_cents, "coupon": item.coupon_id})
     await session.execute(text("""
         INSERT INTO payments (tenant_id, order_id, gateway, idempotency_key, amount_cents, checkout_payment_id)
         VALUES (current_tenant_id(), :o, :g, :k, :amt, :cp)
@@ -191,6 +207,9 @@ async def create_checkout(session: AsyncSession, auth: AuthContext, site_host: s
     # Paying makes the student a member of this organization (if they aren't yet).
     auth = await ensure_student_member(session, auth)
     item = await price_item(session, auth, body.class_id, body.class_month_id)
+    if item.amount_cents == 0:
+        # A coupon made it free: the cart's free checkout handles that (no gateway).
+        raise ApiError("USE_CART", "Add this to your cart to get it with the coupon.", status_code=409)
     key = secrets.token_hex(16)
     order_id = await create_order(session, auth, item, gateway=gateway.name, payment_key=key)
 
@@ -374,7 +393,8 @@ async def fulfil_order(session: AsyncSession, p: Any, event: GatewayEvent, *, fe
                           {"id": p.order_id})
 
     items = (await session.execute(text("""
-        SELECT id, class_id, class_month_id, teacher_member_id, late_request_id, amount_cents, commission_bps
+        SELECT id, class_id, class_month_id, teacher_member_id, late_request_id, amount_cents, commission_bps,
+               coupon_id
         FROM order_items WHERE order_id = :o
     """), {"o": p.order_id})).all()
     entries: list[posting.Entry] = []
@@ -389,6 +409,10 @@ async def fulfil_order(session: AsyncSession, p: Any, event: GatewayEvent, *, fe
         if item.late_request_id is not None:
             await session.execute(text("UPDATE late_month_requests SET status = 'fulfilled' WHERE id = :id"),
                                   {"id": item.late_request_id})
+        if item.coupon_id is not None:
+            await coupons.redeem(session, item.coupon_id)
+        if item.amount_cents == 0:
+            continue                             # free with a coupon: no money moved, nothing to book
         entries += posting.sale_entries(gross=item.amount_cents, fee=fee, commission_bps=item.commission_bps,
                                         fee_bearer=tenant.gateway_fee_bearer, order_item_id=item.id,
                                         teacher_member_id=item.teacher_member_id)

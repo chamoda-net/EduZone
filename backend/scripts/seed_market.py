@@ -185,7 +185,20 @@ async def seed() -> None:
                                                ("Quick checks", "recorded", False),
                                                ("Estimation", "recorded", False),
                                                ("Cheat sheet", "article", False)])])
-    print("marketplace demo: dilini-maths (2 classes), Ruwan Silva at demo (1 class), 2 courses")
+        # Coupons (step C5) on the physics course: a public launch sale and a code to share. Running the script
+        # again moves their dates forward, so the demo always has live ones.
+        await s.execute(text("SELECT set_config('app.tenant_id', :t, true)"), {"t": str(demo)})
+        for code, bps, public, limit in (("LAUNCH-25", 2500, True, None), ("PHYSICS50", 5000, False, 100)):
+            await s.execute(text("""
+                INSERT INTO coupons (tenant_id, class_id, code, discount_type, percent_bps, is_public, max_redemptions,
+                                     starts_at, ends_at, created_by)
+                SELECT :t, c.id, :code, 'percent', :bps, :public, :lim, now(), now() + interval '14 days',
+                       c.teacher_member_id
+                FROM classes c WHERE c.kind = 'course' AND c.slug = 'al-physics-problem-solving'
+                ON CONFLICT (tenant_id, code) DO UPDATE
+                    SET starts_at = now(), ends_at = now() + interval '14 days', status = 'active'
+            """), {"t": demo, "code": code, "bps": bps, "public": public, "lim": limit})
+    print("marketplace demo: dilini-maths (2 classes), Ruwan Silva at demo (1 class), 2 courses, 2 coupons")
 
 
 async def main() -> None:

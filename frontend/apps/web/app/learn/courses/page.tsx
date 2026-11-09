@@ -1,4 +1,4 @@
-import { Award, GraduationCap } from "lucide-react";
+import { Award, GraduationCap, Heart } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -17,7 +17,10 @@ export default async function MyCoursesPage() {
   return (
     <SiteShell>
       <PageHeader eyebrow={t("learn.eyebrow")} title={t("learnCourses.title")} description={t("learnCourses.lead")}
-                  actions={<Link href="/learn/certificates" className={buttonStyles("secondary")}><Award className="size-4.5" />{t("nav.certificates")}</Link>} />
+                  actions={<>
+                    <Link href="/learn/wishlist" className={buttonStyles("secondary")}><Heart className="size-4.5" />{t("wishlist.title")}</Link>
+                    <Link href="/learn/certificates" className={buttonStyles("secondary")}><Award className="size-4.5" />{t("nav.certificates")}</Link>
+                  </>} />
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
       {res.ok && res.data.length === 0 && (
         <EmptyState icon={<GraduationCap />} title={t("learnCourses.empty")} body={t("learnCourses.emptyBody")}

@@ -5,8 +5,9 @@ const PREFIX = process.env.NODE_ENV === "production" ? "__Host-" : "";
 export const CART_COOKIE = `${PREFIX}ez_cart`;
 export const MAX_GUEST_ITEMS = 20;
 
-export type GuestItem = { class_id: string; class_month_id: string | null };
+export type GuestItem = { class_id: string; class_month_id: string | null; coupon_code?: string | null };
 
+const CODE = /^[A-Za-z0-9-]{4,20}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /** Never throws: anything malformed is dropped. */
@@ -16,17 +17,19 @@ export function parseGuestCart(value: string | undefined): GuestItem[] {
     const raw: unknown = JSON.parse(value);
     if (!Array.isArray(raw)) return [];
     return raw
-      .filter((x): x is [string, string | null] =>
+      .filter((x): x is [string, string | null, string?] =>
         Array.isArray(x) && UUID.test(String(x[0])) && (x[1] === null || UUID.test(String(x[1]))))
       .slice(0, MAX_GUEST_ITEMS)
-      .map(([c, m]) => ({ class_id: c, class_month_id: m }));
+      .map(([c, m, code]) => ({ class_id: c, class_month_id: m,
+                                ...(typeof code === "string" && CODE.test(code) ? { coupon_code: code } : {}) }));
   } catch {
     return [];
   }
 }
 
 export function serializeGuestCart(items: GuestItem[]): string {
-  return JSON.stringify(items.slice(0, MAX_GUEST_ITEMS).map((i) => [i.class_id, i.class_month_id]));
+  return JSON.stringify(items.slice(0, MAX_GUEST_ITEMS).map((i) =>
+    i.coupon_code ? [i.class_id, i.class_month_id, i.coupon_code] : [i.class_id, i.class_month_id]));
 }
 
 export const cartCookie = () => ({

@@ -203,3 +203,44 @@ test("a student enrols in a free course and completes a lecture", async ({ page 
   await expect(page.getByText("Mental Maths Shortcuts (Free)")).toBeVisible();
   await expect(page.getByText("20% complete")).toBeVisible();
 });
+
+test("a student saves a course, buys it with a shared coupon code", async ({ page }) => {
+  await registerStudent(page, newStudentEmail(), newStudentPhone());
+  // A teacher's link with a code (seed_market.py: PHYSICS50 = 50% off, LAUNCH-25 = a public 25% sale).
+  await page.goto("/course/al-physics-problem-solving?coupon=physics50");
+  await expect(page.getByText("PHYSICS50 is applied").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Rs. 1,500.00").first()).toBeVisible();
+  await page.getByRole("button", { name: "Save to wishlist" }).first().click();
+  await expect(page.getByRole("button", { name: "Remove from wishlist" }).first()).toBeVisible();
+  await page.goto("/learn/wishlist");
+  await expect(page.getByText("A/L Physics: Problem Solving Masterclass")).toBeVisible();
+
+  // Buy now carries the code into the cart; without it the public sale still applies.
+  await page.goto("/course/al-physics-problem-solving?coupon=physics50");
+  await page.getByRole("button", { name: "Buy now" }).first().click();
+  await expect(page).toHaveURL(/\/cart$/, { timeout: 30_000 });
+  await expect(page.getByText("PHYSICS50 applied")).toBeVisible();
+  await page.getByRole("button", { name: "Remove the code PHYSICS50" }).click();
+  await expect(page.getByRole("button", { name: "Pay Rs. 2,250.00" })).toBeVisible();
+  await page.getByPlaceholder("Enter a code").fill("physics50");
+  await page.getByRole("button", { name: "Apply" }).click();
+  await page.getByRole("button", { name: "Pay Rs. 1,500.00" }).click();
+  await page.getByRole("button", { name: "Pay", exact: true }).click();
+  await expect(page.getByText("Payment received")).toBeVisible({ timeout: 20_000 });
+
+  // Bought: it leaves the wishlist.
+  await page.goto("/learn/wishlist");
+  await expect(page.getByText("Nothing saved yet")).toBeVisible();
+});
+
+test("a teacher creates a coupon in the console", async ({ page }) => {
+  await signIn(page, TEACHER_EMAIL, DEMO_PASSWORD, TEACHER_PHONE);
+  await page.goto("/teach/demo/coupons");
+  await expect(page.getByRole("heading", { level: 1, name: "Coupons" })).toBeVisible({ timeout: 30_000 });
+  const code = `E2E-${Date.now().toString(36).toUpperCase()}`;
+  await page.getByLabel("Code", { exact: true }).fill(code);
+  await page.getByRole("textbox", { name: "Discount" }).fill("15");
+  await page.getByRole("button", { name: "Create coupon" }).click();
+  await expect(page.getByText(code, { exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("15% off").first()).toBeVisible();
+});

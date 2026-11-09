@@ -12,6 +12,7 @@ from app.core.db import AppSession
 from app.core.errors import ApiError
 from app.core.tenancy import tenant_transaction
 from app.modules.market.schemas import (
+    CouponQuote,
     CourseCategoryOut,
     CourseCategoryPage,
     CourseLectureOut,
@@ -27,6 +28,7 @@ from app.modules.market.schemas import (
     MarketCourseDetail,
     MarketCoursePage,
 )
+from app.modules.courses import coupons
 from app.modules.market.service import _decode_offset, _encode_offset, _not_found, _tsquery, search_classes
 from app.modules.media import repository as media_repo
 from app.modules.media.service import signed_url
@@ -41,8 +43,8 @@ _ORDER = {
     "popular": "pc.students DESC, pc.rating_avg DESC NULLS LAST, pc.first_published_at DESC",
     "rating": "pc.rating_avg DESC NULLS LAST, pc.rating_count DESC, pc.students DESC",
     "newest": "pc.first_published_at DESC NULLS LAST",
-    "price_low": "COALESCE(pc.one_time_price_cents, 0) ASC, pc.students DESC",
-    "price_high": "COALESCE(pc.one_time_price_cents, 0) DESC, pc.students DESC",
+    "price_low": "COALESCE(pc.sale_price_cents, pc.one_time_price_cents, 0) ASC, pc.students DESC",
+    "price_high": "COALESCE(pc.sale_price_cents, pc.one_time_price_cents, 0) DESC, pc.students DESC",
 }
 
 
@@ -90,7 +92,7 @@ async def search_courses(
     elif price == "paid":
         where.append("pc.pricing_model = 'one_time'")
     if max_price is not None:
-        where.append("COALESCE(pc.one_time_price_cents, 0) <= :max_price")
+        where.append("COALESCE(pc.sale_price_cents, pc.one_time_price_cents, 0) <= :max_price")
         params["max_price"] = max_price
     if rating is not None:
         where.append("pc.rating_avg >= :rating")
@@ -157,7 +159,26 @@ async def _instructor_row(session: Any, slug: str) -> Any:
     return (await session.execute(text("SELECT * FROM public_instructors WHERE slug = :s"), {"s": slug})).one_or_none()
 
 
-async def course_detail(slug: str) -> MarketCourseDetail:
+async def coupon_quote(course: MarketCourse, code: str) -> CouponQuote:
+    code = code.strip().upper()[:20]
+    found = await coupons.public_discount(course.id, code)
+    if found is None:
+        return CouponQuote(code=code, valid=False, applied=False, price_cents=None, discount_cents=0, ends_at=None)
+    price, best = found
+    applied = best is not None and best.code == code and not best.is_public
+    valid = applied
+    if not applied:
+        async with AppSession() as s:
+            tenant = (await s.execute(text("SELECT tenant_id FROM public_courses WHERE id = :c"),
+                                      {"c": course.id})).scalar_one()
+        async with tenant_transaction(tenant) as session:
+            valid = await coupons.code_applies(session, course.id, code)
+    return CouponQuote(code=code, valid=valid, applied=applied,
+                       price_cents=price - best.cents if best else price, discount_cents=best.cents if best else 0,
+                       ends_at=best.ends_at if best else None)
+
+
+async def course_detail(slug: str, coupon: str | None = None) -> MarketCourseDetail:
     async with AppSession() as session:
         r = (await session.execute(text(f"""
             SELECT {_CARD}, pc.description, pc.learning_objectives, pc.requirements, pc.target_audience, pc.has_promo
@@ -181,8 +202,10 @@ async def course_detail(slug: str) -> MarketCourseDetail:
     outline = [CourseSectionOut(id=s.id, title=s.title, lectures=by_section[s.id],
                                 video_seconds=sum(x.video_seconds for x in by_section[s.id]))
                for s in sections if by_section[s.id]]
+    card = _card(r)
     return MarketCourseDetail(
-        course=_card(r), description=r.description, learning_objectives=list(r.learning_objectives),
+        course=card, coupon=await coupon_quote(card, coupon) if coupon and card.pricing_model == "one_time" else None,
+        description=r.description, learning_objectives=list(r.learning_objectives),
         requirements=list(r.requirements), target_audience=list(r.target_audience), has_promo=r.has_promo,
         sections=outline, instructor=_instructor(instructor),
     )

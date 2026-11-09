@@ -21,8 +21,8 @@ export async function enrollCourse(courseId: string, slug: string): Promise<Resu
 }
 
 /** "Buy now": into the cart (the guest cart for visitors), then the cart page. */
-export async function buyNow(courseId: string): Promise<Result> {
-  const added = await addToCart(courseId, null);
+export async function buyNow(courseId: string, couponCode: string | null = null): Promise<Result> {
+  const added = await addToCart(courseId, null, couponCode);
   if (!added.ok && added.error) return { ok: false, error: added.error };
   redirect("/cart");
 }

@@ -1356,3 +1356,49 @@ CREATE TABLE certificates (
 CREATE UNIQUE INDEX uq_certificate_active ON certificates (class_id, student_member_id) WHERE revoked_at IS NULL;
 -- public_course_reviews (view, eduzone_admin): visible reviews of public courses, reviewer = first name + initial.
 -- verify_certificate(p_no) (SECURITY DEFINER): snapshot fields, organization name, issued/revoked only.
+
+-- =============================================================================
+-- Courses, step C5 (migration 0014): coupons and the wishlist (docs/COURSES.md C.7, C.8)
+-- =============================================================================
+CREATE TABLE coupons (                      -- tenant RLS (tenant_isolation); app: SELECT, INSERT, UPDATE
+    id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id           uuid NOT NULL DEFAULT current_tenant_id() REFERENCES tenants(id) ON DELETE CASCADE,
+    class_id            uuid,                -- NULL = every course of the organization
+    code                citext NOT NULL CHECK (code ~* '^[A-Z0-9-]{4,20}$'),
+    discount_type       text NOT NULL CHECK (discount_type IN ('percent','fixed')),
+    percent_bps         integer CHECK (percent_bps BETWEEN 1 AND 10000),
+    amount_cents        bigint CHECK (amount_cents > 0),
+    is_public           boolean NOT NULL DEFAULT false,   -- an automatic sale price
+    max_redemptions     integer CHECK (max_redemptions > 0),
+    redeemed_count      integer NOT NULL DEFAULT 0 CHECK (redeemed_count >= 0),
+    starts_at           timestamptz NOT NULL DEFAULT now(),
+    ends_at             timestamptz NOT NULL,             -- at most 90 days (service rule)
+    status              text NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
+    created_by          uuid NOT NULL,
+    created_at          timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, code),
+    UNIQUE (tenant_id, id),
+    FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, created_by) REFERENCES tenant_members (tenant_id, id),
+    CHECK ((discount_type = 'percent' AND percent_bps IS NOT NULL AND amount_cents IS NULL)
+        OR (discount_type = 'fixed' AND amount_cents IS NOT NULL AND percent_bps IS NULL)),
+    CHECK (ends_at > starts_at)
+);
+ALTER TABLE order_items
+    ADD COLUMN list_price_cents bigint CHECK (list_price_cents >= 0),       -- before the coupon
+    ADD COLUMN discount_cents   bigint NOT NULL DEFAULT 0 CHECK (discount_cents >= 0),
+    ADD COLUMN coupon_id        uuid,                                       -- (tenant_id, coupon_id) -> coupons
+    ADD CONSTRAINT order_items_coupon_fk FOREIGN KEY (tenant_id, coupon_id) REFERENCES coupons (tenant_id, id);
+ALTER TABLE cart_items ADD COLUMN coupon_code citext CHECK (coupon_code ~* '^[A-Z0-9-]{4,20}$');
+-- checkouts.total_cents and checkout_payments.amount_cents: CHECK (>= 0) (a coupon can make a cart free).
+-- public_courses gains sale_price_cents and sale_ends_at (the best public coupon now).
+CREATE TABLE wishlist_items (               -- platform-level; policy wishlist_own (user_id = current_user_id())
+    id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tenant_id   uuid NOT NULL,
+    class_id    uuid NOT NULL,
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (user_id, class_id),
+    FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id) ON DELETE CASCADE
+);
+-- wishlist_count(p_class) (SECURITY DEFINER): how many saved a course, never who.

@@ -10,9 +10,10 @@ import { useT } from "@eduzone/lib/i18n/client";
 import { Button, ErrorText, buttonStyles, cx, toast } from "@eduzone/ui";
 
 /** Adds a month (or a one-time class) to the cart, for guests too; then offers the way to the cart. */
-export function AddToCartButton({ classId, monthId, label, inCart = false, small = false, block = false }: {
+export function AddToCartButton({ classId, monthId, label, inCart = false, small = false, block = false, couponCode = null }: {
   classId: string;
   monthId: string | null;
+  couponCode?: string | null;
   label?: string;
   inCart?: boolean;
   small?: boolean;
@@ -36,7 +37,7 @@ export function AddToCartButton({ classId, monthId, label, inCart = false, small
   function add() {
     setError(null);
     start(async () => {
-      const res = await addToCart(classId, monthId);
+      const res = await addToCart(classId, monthId, couponCode);
       if (!res.ok) {
         setError(res.error);
         return;

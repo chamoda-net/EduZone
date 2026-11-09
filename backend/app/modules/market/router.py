@@ -147,8 +147,9 @@ async def course_category(slug: str) -> CourseCategoryPage:
 
 
 @router.get("/course/{slug}", response_model=MarketCourseDetail)
-async def course_detail(slug: str) -> MarketCourseDetail:
-    return await courses.course_detail(slug)
+async def course_detail(slug: str, coupon: Annotated[str | None, Query(max_length=40)] = None) -> MarketCourseDetail:
+    """`?coupon=CODE` (a teacher's shared link) adds what that code does for this course now."""
+    return await courses.course_detail(slug, coupon)
 
 
 @router.post("/course/{slug}/preview", response_model=CoursePreviewOut)

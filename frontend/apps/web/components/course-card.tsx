@@ -3,15 +3,19 @@ import Link from "next/link";
 
 import type { Schema } from "@eduzone/api-client";
 import { TeacherAvatar } from "@/components/teacher-avatar";
-import { coursePrice, formatLength, isNew } from "@/lib/courses";
+import { WishlistButton } from "@/components/wishlist-button";
+import { coursePrice, courseSale, formatLength, isNew } from "@/lib/courses";
+import { formatMoney } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
 import { Badge, ClassCover } from "@eduzone/ui";
 
 type MarketCourse = Schema<"MarketCourse">;
 
-/** A course on the marketplace: cover, title, instructor, rating, length, price. */
-export function CourseCard({ c, index = 0 }: { c: MarketCourse; index?: number }) {
+/** A course on the marketplace: cover, title, instructor, rating, length, price (with its sale). `saved` shows the
+ * wishlist heart (signed-in pages that know the student's wishlist). */
+export function CourseCard({ c, index = 0, saved }: { c: MarketCourse; index?: number; saved?: boolean }) {
   const free = c.pricing_model === "free" || !c.one_time_price_cents;
+  const sale = courseSale(c);
   return (
     <Link
       href={c.path}
@@ -25,7 +29,11 @@ export function CourseCard({ c, index = 0 }: { c: MarketCourse; index?: number }
         <div className="absolute bottom-3 left-3 flex gap-1.5">
           {isNew(c.first_published_at ?? null) && <Badge tone="gold" className="shadow-ez-sm">{t("market.courses.card.new")}</Badge>}
           {free && <Badge tone="success" className="shadow-ez-sm">{t("market.courses.card.free")}</Badge>}
+          {sale && <Badge tone="danger" className="shadow-ez-sm">{t("market.courses.card.off", { percent: sale.percent })}</Badge>}
         </div>
+        {saved !== undefined && (
+          <div className="absolute top-3 left-3"><WishlistButton courseId={c.id} saved={saved} variant="overlay" /></div>
+        )}
         <span className="absolute top-3 right-3 grid size-9 translate-y-1 place-items-center rounded-full bg-surface/95 text-brand opacity-0 shadow-ez transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
           <ArrowUpRight className="size-4.5" />
         </span>
@@ -52,7 +60,14 @@ export function CourseCard({ c, index = 0 }: { c: MarketCourse; index?: number }
           <span className="inline-flex items-center gap-1"><PlayCircle className="size-3.5" aria-hidden />{t("market.courses.card.lectures", { count: c.lecture_count })}</span>
         </div>
         <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-4">
-          <span className="font-display text-2xl font-semibold whitespace-nowrap tabular-nums">{coursePrice(t, c)}</span>
+          {sale ? (
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-display text-2xl font-semibold whitespace-nowrap text-danger tabular-nums">{formatMoney(sale.price, c.currency)}</span>
+              <span className="text-sm whitespace-nowrap text-muted line-through tabular-nums">{formatMoney(sale.list, c.currency)}</span>
+            </span>
+          ) : (
+            <span className="font-display text-2xl font-semibold whitespace-nowrap tabular-nums">{coursePrice(t, c)}</span>
+          )}
           {c.students > 0 && (
             <span className="text-xs font-medium whitespace-nowrap text-muted">{t("market.courses.card.students", { count: c.students })}</span>
           )}

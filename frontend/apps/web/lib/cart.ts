@@ -8,7 +8,7 @@ import { CART_COOKIE, parseGuestCart } from "@/lib/cart-cookie";
 import { getMe } from "@/lib/session";
 import type { Cart } from "@eduzone/lib/types";
 
-const EMPTY: Cart = { items: [], total_cents: 0, currency: "LKR", ready: false };
+const EMPTY: Cart = { items: [], subtotal_cents: 0, discount_cents: 0, total_cents: 0, codes: [], currency: "LKR", ready: false };
 
 /** The cart of this request: the account's when signed in, else the guest cookie priced from public data. */
 export const getCart = cache(async (): Promise<Cart> => {

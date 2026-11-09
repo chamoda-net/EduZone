@@ -220,6 +220,8 @@ class MarketCourse(BaseModel):
     org_type: str
     first_published_at: datetime | None
     updated_at: datetime
+    sale_price_cents: int | None         # the best public coupon right now (step C5), else None
+    sale_ends_at: datetime | None
     path: str                            # /course/<slug>
 
 
@@ -258,8 +260,20 @@ class InstructorOut(BaseModel):
     rating_avg: float | None
 
 
+class CouponQuote(BaseModel):
+    """The course page opened with ?coupon=CODE: what that code does for this course now."""
+
+    code: str
+    valid: bool                          # usable for this course now
+    applied: bool                        # it gives the best price (a public sale may already be better)
+    price_cents: int | None              # the price with the best discount, when valid
+    discount_cents: int
+    ends_at: datetime | None
+
+
 class MarketCourseDetail(BaseModel):
     course: MarketCourse
+    coupon: CouponQuote | None = None
     description: str | None
     learning_objectives: list[str]
     requirements: list[str]

@@ -5,19 +5,22 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { AddToCartButton } from "@/components/add-to-cart";
+import { WishlistButton } from "@/components/wishlist-button";
 import { useT } from "@eduzone/lib/i18n/client";
 import { Button, ErrorText, buttonStyles } from "@eduzone/ui";
 
 import { buyNow, enrollCourse } from "@/app/learn/courses/actions";
 
 /** The course card's actions: open the course you have, enrol in a free one, or buy a paid one. */
-export function CourseActions({ courseId, slug, free, owned, inCart, started }: {
+export function CourseActions({ courseId, slug, free, owned, inCart, started, couponCode = null, saved = false }: {
   courseId: string;
   slug: string;
   free: boolean;
   owned: boolean;
   inCart: boolean;
   started: boolean;
+  couponCode?: string | null;     // a shared code that gives the best price: carried into the cart
+  saved?: boolean;
 }) {
   const t = useT();
   const [pending, run] = useTransition();
@@ -53,10 +56,16 @@ export function CourseActions({ courseId, slug, free, owned, inCart, started }: 
       ) : (
         <>
           <Button size="lg" className="w-full" loading={pending} icon={<Zap className="size-4.5" />}
-                  onClick={() => act(() => buyNow(courseId))}>
+                  onClick={() => act(() => buyNow(courseId, couponCode))}>
             {t("market.course.buyNow")}
           </Button>
-          <AddToCartButton block classId={courseId} monthId={null} inCart={inCart} label={t("market.course.addToCart")} />
+          <div className="flex gap-2">
+            <div className="min-w-0 flex-1">
+              <AddToCartButton block classId={courseId} monthId={null} inCart={inCart} couponCode={couponCode}
+                               label={t("market.course.addToCart")} />
+            </div>
+            <WishlistButton courseId={courseId} saved={saved} />
+          </div>
         </>
       )}
       {error && <ErrorText>{error}</ErrorText>}

@@ -394,6 +394,39 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   (download, view, copy link); the public `/certificates/<no>` page and `/certificates/<no>/pdf` (a route that
   streams the API's PDF); a Reviews tab in the console's course builder; admin `/course-reviews` (moderation).
 
+### How it's built (courses C5: `app/modules/courses/{coupons,wishlist}.py`, migration 0014)
+- **Coupons** (`coupons`, tenant RLS): a code (4-20 letters, digits, dashes; unique per organization, stored upper
+  case) for one course or every course of the organization (owners and admins only), percent (basis points) or a
+  fixed amount, optional limit, at most 90 days, on/off. **Public** = an automatic sale shown on the course
+  (`public_courses.sale_price_cents`/`sale_ends_at`; the catalogue's price sort and max-price filter use it).
+  Console: `GET/POST/PATCH /teach/{t}/coupons` (state active | scheduled | expired | used_up | disabled, audited).
+- **Pricing:** `price_item(..., coupon_code)` gives each course the single best discount (the public sale or the
+  typed code; no stacking; a code only discounts its own organization's courses). `PricedItem` and `order_items`
+  carry `list_price_cents`, `discount_cents`, `coupon_id`; `amount_cents` stays what is paid and commission is
+  charged on it. The order's `subtotal/discount/total` match. `redeemed_count` goes up in the fulfilment
+  transaction (a paid order is honoured past the limit). Coupons only apply to courses; the single Pay button
+  refuses a price of 0 (`USE_CART`).
+- **Cart:** `cart_items.coupon_code`; `POST /me/cart/coupon {code}` sets it on every course it is valid for (404
+  `COUPON_INVALID` when none), `DELETE /me/cart/coupon/{code}`; `POST /me/cart/items` accepts `coupon_code` (kept only
+  when valid; the course page's `?coupon=` link). Cart items show list price, discount and coupon; the cart shows
+  subtotal, discount and the codes applied. Guests: codes travel in the `ez_cart` cookie (third element) and the
+  preview prices them (`coupons.public_discount`).
+- **Free checkout:** when coupons make the total 0, `start_checkout` records the checkout payment with gateway
+  `free`, fulfils every order at once through `apply_checkout_event` (fee shares 0, nothing booked in the ledger for
+  0 items) and returns a GET redirect to `/checkouts/<id>`. Totals of checkouts and checkout payments may be 0.
+- **Course page:** `GET /market/course/{slug}?coupon=CODE` adds `coupon {code, valid, applied, price_cents,
+  discount_cents, ends_at}`.
+- **Wishlist** (`wishlist_items`, platform-level, user policy): `GET /me/wishlist` (public course cards, newest
+  first), `GET /me/wishlist/ids`, `PUT/DELETE /me/wishlist/{course_id}` (public courses only, up to 200). Buying a
+  course removes it. Instructors see `CourseDetail.wishlist_count` (`wishlist_count()`, SECURITY DEFINER), never who.
+- **Web:** sale badge and price on course cards; the course page's price card (sale or code price, list price, %
+  off, days left, "code applied", or why a code doesn't apply), Buy now / Add to cart carry the code; a heart on
+  the course page and catalogue cards (signed in), a header heart, `/learn/wishlist`; the cart's coupon box,
+  subtotal and savings lines, "Get it for free"; the console's Coupons page (create with a generated code, list
+  with usage bars, copy the course link with the code, turn off/on) and "Saved by N students" in the builder.
+  `seed_market.py` adds LAUNCH-25 (public 25% sale) and PHYSICS50 (50%, 100 uses) on the physics course. Tests:
+  `tests/test_coupons.py`, two e2e checks.
+
 ### Access rule (one function, used everywhere)
 A student can open a lesson if **any** of these is true:
 - `lesson.is_free_preview` and the lesson is published

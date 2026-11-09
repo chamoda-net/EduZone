@@ -246,6 +246,19 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
    **Certificates** lists them; **Download PDF** gives an A4 certificate with a QR code; the public page
    `/certificates/<number>` lets anyone check it. Free courses and courses given by the teacher earn none.
 
+### C6. Coupons and the wishlist: new in step C5
+1. The physics course has a public **launch sale** (LAUNCH-25, 25% off): its card and page show the sale price,
+   the list price crossed out and the days left.
+2. Open `/course/al-physics-problem-solving?coupon=PHYSICS50`: the page shows the code's price (50% off).
+   **Buy now** carries the code into the cart. In the cart, **Have a coupon?** applies or removes codes; the
+   summary shows the subtotal and the coupon savings. A 100% code makes the cart free: **Get it for free**
+   completes it without the gateway.
+3. Tap the **heart** on a course page (or on a card in the catalogue) to save it; the header heart opens
+   **Wishlist** (`/learn/wishlist`). Buying a course takes it off the list.
+4. Teachers: console → **Coupons**: create a code (or **Generate** one), choose the course, percent or amount, the
+   end date (90 days at most), a limit, and whether it shows as a public sale. Each coupon shows its usage; copy
+   the course link with the code to share on WhatsApp. The course builder shows how many students saved a course.
+
 ### D. Become a teacher (any new account)
 1. Register a new account at `/register` and confirm the phone.
 2. Go to `/teach` → **Apply** (`/teach/apply`): teacher or institute, name, subjects, experience, identity
@@ -359,7 +372,9 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
   sidebar, lecture completion and progress, My courses, welcome and congratulations messages.
 - Reviews and certificates (step C4): ratings with instructor replies and staff moderation, certificates for
   completed paid courses with a PDF and a public verify page.
-- Not yet: coupons and wishlist (C5), refunds (C6), analytics and commission changes (C7).
+- Coupons and the wishlist (step C5): codes and public sales, a coupon box in the cart, free checkouts, saved
+  courses, the console's Coupons page.
+- Not yet: refunds (C6), analytics and commission changes (C7).
 
 ### Platform admin (step 9, phases 5 and 8)
 - Separate app, private network only (`PLATFORM_ALLOWED_CIDRS`), sign-in with SMS code + authenticator app,

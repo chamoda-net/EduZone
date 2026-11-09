@@ -190,9 +190,10 @@ async def detail_of(session: AsyncSession, c: Any) -> CourseDetail:
     sections = await _curriculum(session, c.id)
     checks = await run_checks(session, c, sections)
     base = {k: getattr(c, k) for k in CourseDetail.model_fields
-            if k not in ("sections", "checks", "ready_to_submit", "needs_review", "tenant_name")}
+            if k not in ("sections", "checks", "ready_to_submit", "needs_review", "tenant_name", "wishlist_count")}
+    saved = (await session.execute(text("SELECT wishlist_count(:c)"), {"c": c.id})).scalar_one()
     return CourseDetail(**base, sections=sections, checks=checks, ready_to_submit=all(x.ok for x in checks),
-                        needs_review=c.first_published_at is None)
+                        needs_review=c.first_published_at is None, wishlist_count=saved)
 
 
 async def get_course(session: AsyncSession, actor: Actor, course_id: UUID) -> CourseDetail:

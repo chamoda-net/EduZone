@@ -759,7 +759,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Course Detail */
+        /**
+         * Course Detail
+         * @description `?coupon=CODE` (a teacher's shared link) adds what that code does for this course now.
+         */
         get: operations["course_detail_api_v1_market_course__slug__get"];
         put?: never;
         post?: never;
@@ -1041,6 +1044,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/cart/coupon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Coupon
+         * @description Apply a coupon code to the courses in the cart it is valid for (404 COUPON_INVALID when none).
+         */
+        post: operations["apply_coupon_api_v1_me_cart_coupon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cart/coupon/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Coupon */
+        delete: operations["remove_coupon_api_v1_me_cart_coupon__code__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/cart/items": {
         parameters: {
             query?: never;
@@ -1103,7 +1143,8 @@ export interface paths {
         put?: never;
         /**
          * Start Checkout
-         * @description Pay for the whole cart: one payment, one order per item in its teacher's organization.
+         * @description Pay for the whole cart: one payment, one order per item in its teacher's organization. When coupons make
+         *     the total 0, the checkout is completed at once without the gateway (redirect straight to its return page).
          */
         post: operations["start_checkout_api_v1_me_checkouts_post"];
         delete?: never;
@@ -1161,6 +1202,58 @@ export interface paths {
         put: operations["update_profile_api_v1_me_teacher_profile_put"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/wishlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wishlist */
+        get: operations["wishlist_api_v1_me_wishlist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/wishlist/ids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wishlist Ids */
+        get: operations["wishlist_ids_api_v1_me_wishlist_ids_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/wishlist/{course_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save To Wishlist */
+        put: operations["save_to_wishlist_api_v1_me_wishlist__course_id__put"];
+        post?: never;
+        /** Remove From Wishlist */
+        delete: operations["remove_from_wishlist_api_v1_me_wishlist__course_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1291,6 +1384,41 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/org/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Coupons */
+        get: operations["list_coupons_api_v1_org_coupons_get"];
+        put?: never;
+        /** Create Coupon */
+        post: operations["create_coupon_api_v1_org_coupons_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/org/coupons/{coupon_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Coupon */
+        patch: operations["update_coupon_api_v1_org_coupons__coupon_id__patch"];
         trace?: never;
     };
     "/api/v1/org/course-reviews/{review_id}/reply": {
@@ -2631,6 +2759,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teach/{tenant_slug}/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Coupons */
+        get: operations["list_coupons_api_v1_teach__tenant_slug__coupons_get"];
+        put?: never;
+        /** Create Coupon */
+        post: operations["create_coupon_api_v1_teach__tenant_slug__coupons_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teach/{tenant_slug}/coupons/{coupon_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Coupon */
+        patch: operations["update_coupon_api_v1_teach__tenant_slug__coupons__coupon_id__patch"];
+        trace?: never;
+    };
     "/api/v1/teach/{tenant_slug}/course-reviews/{review_id}/reply": {
         parameters: {
             query?: never;
@@ -3402,12 +3565,18 @@ export interface components {
         };
         /** Cart */
         Cart: {
+            /** Codes */
+            codes: string[];
             /** Currency */
             currency: string;
+            /** Discount Cents */
+            discount_cents: number;
             /** Items */
             items: components["schemas"]["CartItemOut"][];
             /** Ready */
             ready: boolean;
+            /** Subtotal Cents */
+            subtotal_cents: number;
             /** Total Cents */
             total_cents: number;
         };
@@ -3423,6 +3592,8 @@ export interface components {
             class_id: string;
             /** Class Month Id */
             class_month_id?: string | null;
+            /** Coupon Code */
+            coupon_code?: string | null;
         };
         /** CartItemOut */
         CartItemOut: {
@@ -3435,12 +3606,26 @@ export interface components {
             class_id: string;
             /** Class Month Id */
             class_month_id: string | null;
+            /** Coupon Code */
+            coupon_code?: string | null;
+            /**
+             * Coupon Public
+             * @default false
+             */
+            coupon_public: boolean;
             /** Cover Image Url */
             cover_image_url: string | null;
             /** Currency */
             currency: string;
+            /**
+             * Discount Cents
+             * @default 0
+             */
+            discount_cents: number;
             /** Id */
             id: string | null;
+            /** List Price Cents */
+            list_price_cents: number | null;
             /** Month Start */
             month_start: string | null;
             org: components["schemas"]["OrgRef"];
@@ -3908,6 +4093,113 @@ export interface components {
             lecture_id: string;
             progress: components["schemas"]["CourseProgress"];
         };
+        /** CouponCreate */
+        CouponCreate: {
+            /** Amount Cents */
+            amount_cents?: number | null;
+            /** Code */
+            code: string;
+            /** Course Id */
+            course_id?: string | null;
+            /**
+             * Discount Type
+             * @enum {string}
+             */
+            discount_type: "percent" | "fixed";
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /**
+             * Is Public
+             * @default false
+             */
+            is_public: boolean;
+            /** Max Redemptions */
+            max_redemptions?: number | null;
+            /** Percent Bps */
+            percent_bps?: number | null;
+            /** Starts At */
+            starts_at?: string | null;
+        };
+        /** CouponIn */
+        CouponIn: {
+            /** Code */
+            code: string;
+        };
+        /** CouponOut */
+        CouponOut: {
+            /** Amount Cents */
+            amount_cents: number | null;
+            /** Code */
+            code: string;
+            /** Course Id */
+            course_id: string | null;
+            /** Course Title */
+            course_title: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Discount Type */
+            discount_type: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Public */
+            is_public: boolean;
+            /** Max Redemptions */
+            max_redemptions: number | null;
+            /** Percent Bps */
+            percent_bps: number | null;
+            /** Redeemed Count */
+            redeemed_count: number;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** State */
+            state: string;
+            /** Status */
+            status: string;
+        };
+        /**
+         * CouponQuote
+         * @description The course page opened with ?coupon=CODE: what that code does for this course now.
+         */
+        CouponQuote: {
+            /** Applied */
+            applied: boolean;
+            /** Code */
+            code: string;
+            /** Discount Cents */
+            discount_cents: number;
+            /** Ends At */
+            ends_at: string | null;
+            /** Price Cents */
+            price_cents: number | null;
+            /** Valid */
+            valid: boolean;
+        };
+        /** CouponUpdate */
+        CouponUpdate: {
+            /** Ends At */
+            ends_at?: string | null;
+            /** Max Redemptions */
+            max_redemptions?: number | null;
+            /** Status */
+            status?: ("active" | "disabled") | null;
+        };
         /** CourseCategoryOut */
         CourseCategoryOut: {
             /** Course Count */
@@ -4023,6 +4315,11 @@ export interface components {
             updated_at: string;
             /** Welcome Message */
             welcome_message: string | null;
+            /**
+             * Wishlist Count
+             * @default 0
+             */
+            wishlist_count: number;
         };
         /** CourseLectureOut */
         CourseLectureOut: {
@@ -4905,6 +5202,10 @@ export interface components {
             rating_avg: number | null;
             /** Rating Count */
             rating_count: number;
+            /** Sale Ends At */
+            sale_ends_at: string | null;
+            /** Sale Price Cents */
+            sale_price_cents: number | null;
             /** Slug */
             slug: string;
             /** Students */
@@ -4929,6 +5230,7 @@ export interface components {
         };
         /** MarketCourseDetail */
         MarketCourseDetail: {
+            coupon?: components["schemas"]["CouponQuote"] | null;
             course: components["schemas"]["MarketCourse"];
             /** Description */
             description: string | null;
@@ -8266,7 +8568,9 @@ export interface operations {
     };
     course_detail_api_v1_market_course__slug__get: {
         parameters: {
-            query?: never;
+            query?: {
+                coupon?: string | null;
+            };
             header?: never;
             path: {
                 slug: string;
@@ -8733,6 +9037,70 @@ export interface operations {
             };
         };
     };
+    apply_coupon_api_v1_me_cart_coupon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouponIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_coupon_api_v1_me_cart_coupon__code__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     add_item_api_v1_me_cart_items_post: {
         parameters: {
             query?: never;
@@ -9018,6 +9386,108 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wishlist_api_v1_me_wishlist_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketCourse"][];
+                };
+            };
+        };
+    };
+    wishlist_ids_api_v1_me_wishlist_ids_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    save_to_wishlist_api_v1_me_wishlist__course_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_from_wishlist_api_v1_me_wishlist__course_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
                 };
             };
             /** @description Validation Error */
@@ -9413,6 +9883,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClassStudent"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_coupons_api_v1_org_coupons_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouponOut"][];
+                };
+            };
+        };
+    };
+    create_coupon_api_v1_org_coupons_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouponCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouponOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_coupon_api_v1_org_coupons__coupon_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                coupon_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouponUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouponOut"];
                 };
             };
             /** @description Validation Error */
@@ -12460,6 +13018,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClassStudent"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_coupons_api_v1_teach__tenant_slug__coupons_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouponOut"][];
+                };
+            };
+        };
+    };
+    create_coupon_api_v1_teach__tenant_slug__coupons_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouponCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouponOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_coupon_api_v1_teach__tenant_slug__coupons__coupon_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                coupon_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouponUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouponOut"];
                 };
             };
             /** @description Validation Error */
