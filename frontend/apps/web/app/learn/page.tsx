@@ -1,8 +1,10 @@
-import { BookOpen, CalendarDays, CalendarX2, CircleCheck, Hourglass } from "lucide-react";
+import { BookOpen, CalendarDays, CalendarX2, CircleCheck, GraduationCap, Hourglass } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import type { Schema } from "@eduzone/api-client";
 import { LessonSlot } from "@/components/lesson-slot";
+import { MyCourseCard } from "@/components/my-course-card";
 import { PayButton } from "@/components/pay-button";
 import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
@@ -16,7 +18,11 @@ import { Badge, CardTitle, EmptyState, ErrorText, PageHeader, buttonStyles } fro
 export default async function TodayPage() {
   const me = await getMe();
   if (!me) redirect("/login?next=/learn");
-  const res = await api<Today>("/learn/today");
+  const [res, coursesRes] = await Promise.all([
+    api<Today>("/learn/today"),
+    api<Schema<"MyCourse">[]>("/learn/courses"),
+  ]);
+  const courses = coursesRes.ok ? coursesRes.data : [];
   const first = me.full_name.split(/\s+/)[0];
 
   return (
@@ -26,14 +32,30 @@ export default async function TodayPage() {
         title={t("learn.today.greeting", { name: first })}
         description={t("learn.today.subtitle")}
         actions={
-          <Link href="/learn/classes" className={buttonStyles("secondary")}>
-            <BookOpen className="size-4.5" />
-            {res.ok ? t("learn.today.classes", { count: res.data.classes }) : t("nav.myClasses")}
-          </Link>
+          <>
+            <Link href="/learn/courses" className={buttonStyles("secondary")}>
+              <GraduationCap className="size-4.5" />
+              {t("nav.myCourses")}
+            </Link>
+            <Link href="/learn/classes" className={buttonStyles("secondary")}>
+              <BookOpen className="size-4.5" />
+              {res.ok ? t("learn.today.classes", { count: res.data.classes }) : t("nav.myClasses")}
+            </Link>
+          </>
         }
       />
+      {courses.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <CardTitle action={<Link href="/learn/courses" className="text-sm font-semibold text-brand hover:underline">{t("learnCourses.seeAll")}</Link>}>
+            {t("learnCourses.continueLane")}
+          </CardTitle>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {courses.slice(0, 4).map((c, i) => <MyCourseCard key={c.id} c={c} index={i} />)}
+          </div>
+        </section>
+      )}
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
-      {res.ok && res.data.classes === 0 && (
+      {res.ok && res.data.classes === 0 && courses.length === 0 && (
         <EmptyState icon={<BookOpen />} title={t("my.empty")} body={t("my.emptyBody")} />
       )}
       {res.ok && res.data.classes > 0 && (

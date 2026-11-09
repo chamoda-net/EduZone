@@ -299,8 +299,8 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
 ### How it's built (courses C1: `app/modules/courses`, `app/modules/platform/courses.py`, migration 0010)
 - **A course is a `classes` row with `kind = 'course'`** (one-time or free, no exam/year, `medium` = language).
   Tuition code ignores courses: `/classes` lists only `kind = 'tuition'`, class and lesson routes 404 on a course,
-  the public tuition views and the pre-migration tenant pages exclude them, and `price_item()` refuses a course
-  (`UNAVAILABLE`) until step C3 builds course checkout.
+  the public tuition views, the pre-migration tenant pages and "My classes" exclude them. Since step C3 a course is
+  bought like a one-time class (`price_item()`), see "How it's built (courses C3)".
 - **Builder** (`/teach/{tenant}/courses`, StaffActor, same owner/admin/teacher rule as classes): `GET/POST /courses`,
   `GET/PATCH/DELETE /courses/{id}` (landing page, intended learners, pricing, messages; slug platform-wide through
   `course_slug_taken()`, fixed after the first publish), `POST /courses/{id}/sections`,
@@ -346,6 +346,31 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   until step C3), `/instructor/<slug>`, a Courses lane on the home page, "Courses" in the header, and a link from
   tuition teacher pages to `/instructor/<slug>`. JSON-LD `Course` and `Person`. The player's watermark is optional
   (previews have none). `seed_market.py` adds two published courses (paid physics, free maths).
+
+### How it's built (courses C3: `app/modules/courses/student.py`, migration 0012)
+- **Buying:** a course goes in the cart and checkout like a one-time class (one item, commission snapshot,
+  fulfilment gives a class-level grant with no expiry = lifetime access). A free course is not sold: `POST
+  /learn/courses/{id}/enroll` gives a `free` grant (409 `NOT_FREE` for a paid one; the cart refuses a free one with
+  `FREE_CLASS`). Already owned: `ALREADY_HAS_ACCESS`. The cart reads a course's card from `public_courses`.
+- **The access rule** is unchanged and covers course lectures (class-level grant); a course `in_review` is closed
+  like a draft, free previews included.
+- **lesson_completions** (migration 0012, tenant RLS + the user SELECT policy): video lectures complete
+  automatically when `save_progress` completes their video (90%); articles and PDFs by `POST/DELETE
+  /learn/lectures/{id}/complete` (only students with access). Progress = completed published lectures / published
+  lectures, percent rounded down. `class_kinds(ids)` (SECURITY DEFINER) tells receipts read in a user transaction
+  whether an item is a course (`OrderItemOut.kind`; receipts link to `/learn/courses/<id>`).
+- **Student API** (`/api/v1/learn`, any host, in the course's tenant): `GET /courses` (mine across tenants, with
+  progress and where to continue), `GET /courses/{id}` (sections and lectures with `unlocked` and `completed`,
+  progress, welcome message for students with access, completion message at 100%, `next_lecture_id`; an archived
+  course stays open to students who have it), `GET /lectures/{id}` (article body, description and files only when
+  unlocked; previous and next), the complete endpoints above.
+- **Web:** the course page's card offers Buy now (adds to the cart, opens it), Add to cart, Enrol for free (sign-in
+  first), or Go to course / Continue learning when owned. `/learn/courses` (My courses with progress bars),
+  "Continue learning" on Today, and the player `/learn/courses/<id>?lecture=<id>`: video (our player, watermark),
+  article (`components/markdown.tsx`, a safe Markdown subset rendered as React elements, links http/https only),
+  PDFs, Mark as complete, previous/next, a curriculum sidebar with ticks and section counts, welcome and
+  congratulations banners. Tests: `tests/test_learn_courses.py` and an e2e check. COURSES.md's player URL used the
+  slug; it uses the id, like every `/learn` route.
 
 ### Access rule (one function, used everywhere)
 A student can open a lesson if **any** of these is true:

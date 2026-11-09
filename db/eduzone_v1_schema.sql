@@ -1291,3 +1291,25 @@ ALTER TABLE teacher_applications ADD COLUMN offers text NOT NULL DEFAULT 'classe
 -- =============================================================================
 CREATE INDEX idx_classes_course_published ON classes (first_published_at DESC)
     WHERE kind = 'course' AND status = 'published';
+
+-- =============================================================================
+-- Courses, step C3 (migration 0012): lecture completion (docs/COURSES.md C.4)
+-- =============================================================================
+CREATE TABLE lesson_completions (
+    id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id           uuid NOT NULL DEFAULT current_tenant_id(),
+    student_member_id   uuid NOT NULL,
+    lesson_id           uuid NOT NULL,
+    source              text NOT NULL CHECK (source IN ('auto','manual')),   -- auto = its video passed 90%
+    completed_at        timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (student_member_id, lesson_id),
+    FOREIGN KEY (tenant_id, student_member_id) REFERENCES tenant_members (tenant_id, id),
+    FOREIGN KEY (tenant_id, lesson_id) REFERENCES lessons (tenant_id, id) ON DELETE CASCADE
+);
+-- forced RLS (tenant_isolation) + user_own_rows FOR SELECT (the student's own rows across tenants)
+GRANT SELECT, INSERT, DELETE ON lesson_completions TO eduzone_app;
+
+CREATE FUNCTION class_kinds(p_ids uuid[]) RETURNS TABLE (id uuid, kind text)   -- owned by eduzone_admin
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
+    SELECT c.id, c.kind FROM classes c WHERE c.id = ANY (p_ids)
+$$;

@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from app.modules.catalog.schemas import Cents, HttpsUrl, Medium, Slug, _Patch
+from app.modules.learning.schemas import StudentResource
 
 Level = Literal["beginner", "intermediate", "advanced", "all"]
 CoursePricing = Literal["one_time", "free"]
@@ -235,3 +236,85 @@ class CategoryUpdate(_Patch):
     name_ta: str | None = Field(default=None, max_length=60)
     sort_order: int | None = Field(default=None, ge=0, le=10000)
     is_active: bool | None = None
+
+
+# --- the student side (step C3: buying, the player, progress) ----------------------------------
+
+class CourseProgress(BaseModel):
+    completed: int
+    total: int                                   # published lectures
+    percent: int                                 # 0-100, rounded down (100 only when all are done)
+
+
+class LearnLecture(BaseModel):
+    id: UUID
+    title: str
+    lesson_type: str
+    video_seconds: int
+    is_free_preview: bool
+    unlocked: bool
+    completed: bool
+
+
+class LearnSection(BaseModel):
+    id: UUID
+    title: str
+    lectures: list[LearnLecture]
+    completed: int
+    total: int
+
+
+class LearnCourse(BaseModel):
+    id: UUID
+    slug: str
+    title: str
+    subtitle: str | None
+    cover_image_url: str | None
+    status: str
+    path: str                                    # the marketplace page, /course/<slug>
+    teacher_name: str
+    teacher_slug: str | None
+    org_name: str
+    pricing_model: str
+    one_time_price_cents: int | None
+    currency: str
+    has_access: bool                             # bought, enrolled for free, or given by the teacher
+    welcome_message: str | None                  # shown to students who have access
+    completion_message: str | None               # shown once the course is complete
+    progress: CourseProgress
+    sections: list[LearnSection]
+    next_lecture_id: UUID | None                 # where "Continue" goes: the first lecture not done yet
+
+
+class LectureDetail(BaseModel):
+    id: UUID
+    course_id: UUID
+    section_title: str
+    title: str
+    lesson_type: str
+    description: str | None                      # only when unlocked
+    article_body: str | None                     # Markdown, only when unlocked
+    unlocked: bool
+    completed: bool
+    resources: list[StudentResource]
+    prev_id: UUID | None
+    next_id: UUID | None
+
+
+class CompletionOut(BaseModel):
+    lecture_id: UUID
+    completed: bool
+    progress: CourseProgress
+
+
+class MyCourse(BaseModel):
+    id: UUID
+    slug: str
+    title: str
+    cover_image_url: str | None
+    teacher_name: str
+    org_name: str
+    progress: CourseProgress
+    next_lecture_id: UUID | None
+    started_at: datetime                         # when access began
+    last_activity_at: datetime | None

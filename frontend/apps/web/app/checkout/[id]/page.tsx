@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { getMe } from "@/lib/session";
 import { formatMoney } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
+import { learnHref } from "@eduzone/lib/orders";
 import type { Order } from "@eduzone/lib/types";
 import { ErrorText, Spinner, buttonStyles, cx } from "@eduzone/ui";
 
@@ -23,7 +24,7 @@ export default async function CheckoutReturnPage({ params }: PageProps<"/checkou
     return <SiteShell width="sm"><ErrorText>{errorText(t, res.error)}</ErrorText></SiteShell>;
   }
   const o = res.data;
-  const classUrl = `/learn/classes/${o.item.class_id}`;
+  const classUrl = learnHref(o.item);
   const failed = o.status === "failed" || o.status === "cancelled";
 
   return (

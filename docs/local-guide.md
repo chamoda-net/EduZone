@@ -225,8 +225,17 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
    lectures without an account (locally a public test stream).
 4. A category page: http://localhost:3000/courses/exam-skills. An instructor page:
    http://localhost:3000/instructor/kasun-perera (courses and live classes together).
-5. The home page has a **Popular courses** lane. Buying a course arrives with step C3 ("Enrolment opens soon").
-   Re-run `scripts/seed_market.py` if you don't see the two demo courses.
+5. The home page has a **Popular courses** lane. Re-run `scripts/seed_market.py` if you don't see the two demo
+   courses.
+
+### C4. Take a course (student): new in step C3
+1. On **Mental Maths Shortcuts (Free)** press **Enrol for free** (sign in first): the player opens.
+2. On **A/L Physics: Problem Solving Masterclass** press **Buy now** (or **Add to cart**), pay with the fake gateway;
+   the receipt's **Open course** goes to the player.
+3. The player (`/learn/courses/<id>`): video lectures play in our player and tick themselves off once you've watched
+   most of them; articles and PDFs have **Mark as complete**. The sidebar shows every section with ticks; the top
+   bar shows your progress. A welcome message shows at the start and a congratulations message at 100%.
+4. **My learning** → **My courses** (or "Continue learning" on Today) lists your courses with progress bars.
 
 ### D. Become a teacher (any new account)
 1. Register a new account at `/register` and confirm the phone.
@@ -337,7 +346,9 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
 - Course categories (two levels) managed in the admin app; applications say classes, courses or both.
 - Course pages on the marketplace (step C2): catalogue with filters, category pages, landing page with free
   previews, instructor pages, home lane, sitemap and JSON-LD.
-- Not yet: buying and the course player (C3), reviews and certificates (C4),
+- Buying and taking courses (step C3): cart and checkout, free enrolment, the course player with a curriculum
+  sidebar, lecture completion and progress, My courses, welcome and congratulations messages.
+- Not yet: reviews and certificates (C4),
   coupons and wishlist (C5), refunds (C6), analytics and commission changes (C7).
 
 ### Platform admin (step 9, phases 5 and 8)

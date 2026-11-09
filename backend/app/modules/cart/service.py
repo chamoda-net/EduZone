@@ -49,8 +49,10 @@ _STRUCTURAL = {"UNAVAILABLE", "NOT_FOUND", "FREE_CLASS", "MONTH_REQUIRED", "MONT
 # --- what an item is (public read path) ---------------------------------------------------
 
 async def _public(session: AsyncSession, class_id: UUID, month_id: UUID | None) -> Any:
-    return (await session.execute(text("""
-        SELECT pc.id, pc.slug, pc.title, pc.subject_slug, pc.subject_name, pc.teacher_slug, pc.teacher_name,
+    """The item's public card: a tuition class (with the month asked for) or a course."""
+    found = (await session.execute(text("""
+        SELECT pc.id, pc.slug, pc.title, pc.subject_name, pc.teacher_name,
+               '/' || pc.subject_slug || '/' || pc.teacher_slug || '/' || pc.slug AS path,
                pc.teacher_photo_url, pc.org_slug, pc.org_name, pc.cover_image_url, pc.pricing_model,
                pc.one_time_price_cents, pc.currency,
                m.id AS month_id, m.month_start, m.status AS month_status, m.fee_cents AS month_fee_cents
@@ -58,6 +60,16 @@ async def _public(session: AsyncSession, class_id: UUID, month_id: UUID | None) 
         LEFT JOIN public_class_months m ON m.class_id = pc.id AND m.id = CAST(:mo AS uuid)
         WHERE pc.id = :c
     """), {"c": class_id, "mo": month_id})).one_or_none()
+    if found is not None:
+        return found
+    return (await session.execute(text("""
+        SELECT pc.id, pc.slug, pc.title, pc.category_name AS subject_name, pc.teacher_name,
+               '/course/' || pc.slug AS path, pc.teacher_photo_url, pc.org_slug, pc.org_name, pc.cover_image_url,
+               pc.pricing_model, pc.one_time_price_cents, pc.currency,
+               CAST(NULL AS uuid) AS month_id, CAST(NULL AS date) AS month_start, CAST(NULL AS text) AS month_status,
+               CAST(NULL AS bigint) AS month_fee_cents
+        FROM public_courses pc WHERE pc.id = :c
+    """), {"c": class_id})).one_or_none()
 
 
 def _public_problem(r: Any, month_id: UUID | None) -> str | None:
@@ -86,7 +98,7 @@ def _item_out(item_id: UUID | None, class_id: UUID, month_id: UUID | None, r: An
                            problem="UNAVAILABLE")
     return CartItemOut(
         id=item_id, class_id=class_id, class_month_id=month_id, title=r.title,
-        path=f"/{r.subject_slug}/{r.teacher_slug}/{r.slug}", subject_name=r.subject_name,
+        path=r.path, subject_name=r.subject_name,
         teacher_name=r.teacher_name, teacher_photo_url=r.teacher_photo_url, org=OrgRef(slug=r.org_slug, name=r.org_name),
         cover_image_url=r.cover_image_url, month_start=r.month_start, amount_cents=amount, currency=r.currency,
         problem=problem)
@@ -285,6 +297,14 @@ async def _close(user_id: UUID, checkout_id: UUID, cp_id: UUID, status: str, rea
                               {"st": status, "id": checkout_id})
 
 
+async def class_kinds(session: AsyncSession, ids: list[UUID]) -> dict[UUID, str]:
+    """tuition | course for each class (a user transaction can't read classes; migration 0012)."""
+    if not ids:
+        return {}
+    rows = (await session.execute(text("SELECT id, kind FROM class_kinds(:ids)"), {"ids": ids})).all()
+    return {r.id: r.kind for r in rows}
+
+
 async def get_checkout(user_id: UUID, checkout_id: UUID) -> CheckoutDetail:
     """Polled by the return page; only the gateway's notification ever marks anything paid."""
     async with user_transaction(user_id) as session:
@@ -308,6 +328,7 @@ async def get_checkout(user_id: UUID, checkout_id: UUID) -> CheckoutDetail:
             WHERE o.checkout_id = :id
             ORDER BY o.created_at, o.id
         """), {"id": checkout_id})).all()
+        kinds = await class_kinds(session, [r.class_id for r in rows])
     return CheckoutDetail(
         id=c.id, checkout_no=c.checkout_no, status=c.status, payment_status=c.payment_status, currency=c.currency,
         total_cents=c.total_cents, created_at=c.created_at, paid_at=c.paid_at, method=c.method,
@@ -317,7 +338,8 @@ async def get_checkout(user_id: UUID, checkout_id: UUID) -> CheckoutDetail:
             created_at=r.created_at, paid_at=r.paid_at, method=c.method, card_last4=c.card_last4,
             checkout_id=r.checkout_id, org=OrgRef(slug=r.org_slug, name=r.org_name),
             item=OrderItemOut(id=r.item_id, class_id=r.class_id, class_slug=None, class_month_id=r.class_month_id,
-                              description=r.description, amount_cents=r.amount_cents),
+                              description=r.description, amount_cents=r.amount_cents,
+                              kind=kinds.get(r.class_id, "tuition")),
         ) for r in rows],
     )
 

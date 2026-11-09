@@ -239,7 +239,7 @@ async def test_pending_tenant_cannot_submit(client: AsyncClient, seed: Seed, tea
             await s.execute(text("UPDATE tenants SET status = 'active' WHERE id = :t"), {"t": seed.a.id})
 
 
-# --- courses stay out of tuition screens and checkout (until C3) ---------------------------------
+# --- courses stay out of the tuition screens (and, since C3, are bought through the cart) -----------
 
 async def test_courses_are_not_classes(client: AsyncClient, sms: FakeSms, seed: Seed, teacher: Headers,
                                        ph: Headers, phones: Any) -> None:  # noqa: F811
@@ -263,7 +263,7 @@ async def test_courses_are_not_classes(client: AsyncClient, sms: FakeSms, seed: 
 
     student = await main_login(client, sms, phones())
     added = await client.post("/api/v1/me/cart/items", headers=student, json={"class_id": course["id"]})
-    assert added.status_code in (404, 409)      # not on the marketplace and not buyable until C3
+    assert added.status_code == 201, added.text      # bought like a one-time class (step C3)
 
 
 # --- slugs, permissions, isolation ----------------------------------------------------------------

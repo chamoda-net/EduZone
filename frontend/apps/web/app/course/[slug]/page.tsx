@@ -1,4 +1,4 @@
-import { Award, Check, ChevronRight, Clock, FileText, Infinity as InfinityIcon, Lock, MonitorSmartphone, PlayCircle,
+import { Award, Check, ChevronRight, Clock, FileText, Infinity as InfinityIcon, MonitorSmartphone, PlayCircle,
   ScrollText, Star, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -7,13 +7,17 @@ import type { Schema } from "@eduzone/api-client";
 import { ShareTools } from "@/components/share-tools";
 import { SiteShell } from "@/components/shell";
 import { TeacherAvatar } from "@/components/teacher-avatar";
+import { api } from "@/lib/api";
+import { getCart, inCart } from "@/lib/cart";
 import { coursePrice, formatLength } from "@/lib/courses";
 import { jsonLd, market } from "@/lib/market";
+import { getMe } from "@/lib/session";
 import { siteOrigin } from "@/lib/site";
 import { formatDateTime } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
-import { Button, ClassCover, Container, cx } from "@eduzone/ui";
+import { ClassCover, Container, cx } from "@eduzone/ui";
 
+import { CourseActions } from "./buy";
 import { PreviewDialog } from "./preview";
 
 type Detail = Schema<"MarketCourseDetail">;
@@ -39,7 +43,8 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-/** /course/<slug>: the course landing page. Previews play for anyone; buying arrives with step C3. */
+/** /course/<slug>: the course landing page. Previews play for anyone; a paid course is bought through the cart,
+ * a free one is enrolled in, and a student who has it goes straight to the player. */
 export default async function CourseLandingPage({ params }: PageProps<"/course/[slug]">) {
   const d = await load(params);
   const c = d.course;
@@ -54,6 +59,11 @@ export default async function CourseLandingPage({ params }: PageProps<"/course/[
   const paid = c.pricing_model === "one_time" && !!c.one_time_price_cents;
   const instructorHref = `/instructor/${d.instructor.slug}`;
   const rating = c.rating_avg != null && c.rating_count > 0 ? c.rating_avg : null;
+  // What the card offers this visitor: their course, a free enrolment, or buying it.
+  const me = await getMe();
+  const mine = me ? await api<Schema<"LearnCourse">>(`/learn/courses/${c.id}`) : null;
+  const owned = !!(mine?.ok && mine.data.has_access);
+  const cart = !owned && paid ? await getCart() : null;
 
   const includes = [
     { icon: <PlayCircle />, text: t("market.course.includesVideo", { length: formatLength(t, c.total_video_seconds) }) },
@@ -84,8 +94,9 @@ export default async function CourseLandingPage({ params }: PageProps<"/course/[
       )}
       <div className="flex flex-col gap-4 p-5">
         <p className="font-display text-3xl font-semibold tabular-nums">{coursePrice(t, c)}</p>
-        <Button size="lg" className="w-full" disabled icon={<Lock className="size-4" />}>{t("market.course.comingSoon")}</Button>
-        <p className="-mt-2 text-center text-xs text-muted">{t("market.course.comingSoonBody")}</p>
+        <CourseActions courseId={c.id} slug={c.slug} free={!paid} owned={owned}
+                       inCart={!!cart && inCart(cart, c.id, null)}
+                       started={!!(mine?.ok && mine.data.progress.completed > 0)} />
         <div>
           <p className="mb-2 text-sm font-semibold">{t("market.course.includes")}</p>
           <ul className="flex flex-col gap-2 text-sm text-foreground/85">

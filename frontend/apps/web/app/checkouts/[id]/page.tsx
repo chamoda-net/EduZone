@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { getMe } from "@/lib/session";
 import { formatDateTime, formatMoney } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
+import { learnHref } from "@eduzone/lib/orders";
 import type { CheckoutDetail } from "@eduzone/lib/types";
 import { ErrorText, Spinner, buttonStyles, cx } from "@eduzone/ui";
 
@@ -92,8 +93,8 @@ export default async function CheckoutPage({ params }: PageProps<"/checkouts/[id
                 <div className="flex items-center gap-3">
                   <span className="font-display text-lg font-semibold tabular-nums">{formatMoney(o.total_cents, o.currency)}</span>
                   {c.status === "paid" && (
-                    <Link href={`/learn/classes/${o.item.class_id}`} className={buttonStyles("secondary", "sm", "ez-no-print")}>
-                      {t("checkouts.openClass")}
+                    <Link href={learnHref(o.item)} className={buttonStyles("secondary", "sm", "ez-no-print")}>
+                      {o.item.kind === "course" ? t("checkouts.openCourse") : t("checkouts.openClass")}
                       <ArrowRight className="size-4" />
                     </Link>
                   )}

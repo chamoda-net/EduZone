@@ -23,6 +23,7 @@ class OrderItemOut(BaseModel):
     class_month_id: UUID | None
     description: str
     amount_cents: int
+    kind: str = "tuition"              # tuition | course: where "open" goes (/learn/classes or /learn/courses)
 
 
 class OrderOut(BaseModel):

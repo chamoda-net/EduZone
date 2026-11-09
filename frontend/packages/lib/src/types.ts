@@ -278,6 +278,7 @@ export type Order = {
     class_month_id: string | null;
     description: string;
     amount_cents: number;
+    kind?: string;                 // tuition | course
   };
   org?: OrgRef | null;
 };

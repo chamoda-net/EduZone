@@ -47,7 +47,7 @@ log = logging.getLogger("eduzone.checkout")
 _ORDER_SELECT = """
     SELECT o.id, o.order_no, o.status, o.currency, o.total_cents, o.created_at, o.paid_at, o.student_member_id,
            o.checkout_id,
-           i.id AS item_id, i.class_id, c.slug AS class_slug, i.class_month_id, i.description, i.amount_cents,
+           i.id AS item_id, i.class_id, c.slug AS class_slug, c.kind, i.class_month_id, i.description, i.amount_cents,
            i.teacher_member_id,
            (SELECT p.method FROM payments p WHERE p.order_id = o.id AND p.status = 'succeeded' LIMIT 1) AS method,
            (SELECT p.card_last4 FROM payments p WHERE p.order_id = o.id AND p.status = 'succeeded' LIMIT 1) AS card_last4
@@ -63,7 +63,8 @@ def _order_out(r: Any) -> OrderOut:
         created_at=r.created_at, paid_at=r.paid_at, method=r.method, card_last4=r.card_last4,
         checkout_id=r.checkout_id,
         item=OrderItemOut(id=r.item_id, class_id=r.class_id, class_slug=r.class_slug,
-                          class_month_id=r.class_month_id, description=r.description, amount_cents=r.amount_cents),
+                          class_month_id=r.class_month_id, description=r.description, amount_cents=r.amount_cents,
+                          kind=r.kind),
     )
 
 
@@ -115,9 +116,6 @@ async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
     """), {"id": class_id})).one_or_none()
     if c is None or c.status != "published":
         raise ApiError("NOT_FOUND", "Class not found.", status_code=404)
-    if c.kind == "course":
-        # Courses become buyable with their own checkout rules (docs/COURSES.md, step C3).
-        raise ApiError("UNAVAILABLE", "This course can't be bought yet.", status_code=409)
     tenant = (await session.execute(text(
         "SELECT currency, commission_bps FROM tenants WHERE id = current_tenant_id()"))).one()
 

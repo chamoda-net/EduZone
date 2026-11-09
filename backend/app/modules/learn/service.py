@@ -53,6 +53,11 @@ async def _memberships(user: UserContext) -> list[Any]:
         return await auth_repo.memberships(session)
 
 
+async def memberships(user: UserContext) -> list[Any]:
+    """The tenants where this user is a member (tenant_id, member_id, slug, name), from their own rows."""
+    return await _memberships(user)
+
+
 async def _per_tenant(user: UserContext) -> AsyncIterator[tuple[AsyncSession, UUID, OrgRef]]:
     """Each tenant where the user is a member, in its own tenant transaction."""
     for m in await _memberships(user):
@@ -169,13 +174,17 @@ async def my_payments(user: UserContext) -> list[OrderOut]:
             ORDER BY o.created_at DESC
             LIMIT 200
         """))).all()
+        from app.modules.cart.service import class_kinds  # the cart builds on this module
+
+        kinds = await class_kinds(session, [r.class_id for r in rows])
     return [
         OrderOut(
             id=r.id, order_no=r.order_no, status=r.status, currency=r.currency, total_cents=r.total_cents,
             created_at=r.created_at, paid_at=r.paid_at, method=r.method, card_last4=r.card_last4,
             checkout_id=r.checkout_id,
             item=OrderItemOut(id=r.item_id, class_id=r.class_id, class_slug=None, class_month_id=r.class_month_id,
-                              description=r.description, amount_cents=r.amount_cents),
+                              description=r.description, amount_cents=r.amount_cents,
+                              kind=kinds.get(r.class_id, "tuition")),
             org=OrgRef(slug=r.org_slug, name=r.org_name),
         )
         for r in rows

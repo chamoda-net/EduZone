@@ -1,7 +1,8 @@
 """THE access rule (CLAUDE.md section 6). Every place that decides whether a student may
 open a lesson goes through this module; nothing else re-implements it.
 
-A student can open a lesson if the lesson is published, its class is not a draft, and:
+A student can open a lesson if the lesson is published, its class is not a draft (nor a course waiting for
+review), and:
   * the lesson is a free preview, or
   * monthly class: an active grant for (student, lesson.class_month_id), or
   * one-time / free class: an active grant for (student, class_id) with no month.
@@ -18,7 +19,7 @@ ACTIVE_GRANT = "g.revoked_at IS NULL AND (g.expires_at IS NULL OR g.expires_at >
 
 # SQL boolean for lesson `l` (joined with its class `c`) and student :member_id.
 LESSON_UNLOCKED = f"""(
-    l.is_published AND c.status <> 'draft' AND (
+    l.is_published AND c.status NOT IN ('draft', 'in_review') AND (
         l.is_free_preview OR EXISTS (
             SELECT 1 FROM access_grants g
             WHERE g.student_member_id = :member_id AND {ACTIVE_GRANT}
@@ -36,7 +37,7 @@ async def lesson_for_student(session: AsyncSession, member_id: UUID, lesson_id: 
         SELECT l.*, c.slug AS class_slug, c.title AS class_title, c.max_video_views,
                {LESSON_UNLOCKED} AS unlocked
         FROM lessons l JOIN classes c ON c.id = l.class_id
-        WHERE l.id = :lesson_id AND l.is_published AND c.status <> 'draft'
+        WHERE l.id = :lesson_id AND l.is_published AND c.status NOT IN ('draft', 'in_review')
     """), {"member_id": member_id, "lesson_id": lesson_id})).one_or_none()
 
 

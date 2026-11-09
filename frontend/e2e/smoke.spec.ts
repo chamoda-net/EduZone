@@ -170,7 +170,7 @@ test("anyone can browse courses and watch a free preview", async ({ page }) => {
   await expect(page).toHaveURL(/\/course\/al-physics-problem-solving$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "What you'll learn" })).toBeVisible();
   await expect(page.getByText("3 sections · 7 lectures · 1 h total length")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Enrolment opens soon" }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Buy now" }).first()).toBeVisible();
 
   // A free-preview lecture plays for anyone, without an account.
   await page.getByRole("button", { name: "Preview", exact: true }).click();
@@ -182,4 +182,23 @@ test("anyone can browse courses and watch a free preview", async ({ page }) => {
   await page.getByRole("link", { name: "Kasun Perera" }).first().click();
   await expect(page).toHaveURL(/\/instructor\/kasun-perera$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: /Courses/ })).toBeVisible();
+});
+
+test("a student enrols in a free course and completes a lecture", async ({ page }) => {
+  await registerStudent(page, newStudentEmail(), newStudentPhone());
+  await page.goto("/course/maths-shortcuts-free");
+  await page.getByRole("button", { name: "Enrol for free" }).first().click();
+  await expect(page).toHaveURL(/\/learn\/courses\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByText("0 of 5 complete")).toBeVisible();
+  await expect(page.getByText("Welcome", { exact: true })).toBeVisible();
+
+  // An article: read it, mark it complete; the curriculum and progress follow.
+  await page.getByRole("link", { name: /Cheat sheet/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Cheat sheet" })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Mark as complete" }).click();
+  await expect(page.getByText("1 of 5 complete")).toBeVisible();
+
+  await page.goto("/learn/courses");
+  await expect(page.getByText("Mental Maths Shortcuts (Free)")).toBeVisible();
+  await expect(page.getByText("20% complete")).toBeVisible();
 });

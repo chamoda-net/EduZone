@@ -103,7 +103,7 @@ async def my_classes(session: AsyncSession, member_id: UUID) -> list[Any]:
                 WHERE g.student_member_id = :m AND g.class_id = c.id AND {ACTIVE_GRANT}) AS unlocked_months
         {_PUBLIC_FROM}
         JOIN class_enrollments e ON e.class_id = c.id AND e.student_member_id = :m AND e.status = 'active'
-        WHERE c.status IN ('published', 'archived')
+        WHERE c.status IN ('published', 'archived') AND c.kind = 'tuition'
         ORDER BY e.enrolled_at DESC
     """), {"m": member_id})).all())
 
@@ -204,3 +204,11 @@ async def member_identity(session: AsyncSession, member_id: UUID) -> Any:
     return (await session.execute(text("""
         SELECT u.full_name, u.phone FROM tenant_members tm JOIN users u ON u.id = tm.user_id WHERE tm.id = :m
     """), {"m": member_id})).one()
+
+
+async def complete_lecture(session: AsyncSession, member_id: UUID, lesson_id: UUID, source: str) -> None:
+    """A course lecture done (docs/COURSES.md C.4): `auto` when its video passes 90%, `manual` by the student."""
+    await session.execute(text("""
+        INSERT INTO lesson_completions (tenant_id, student_member_id, lesson_id, source)
+        VALUES (current_tenant_id(), :m, :l, :src) ON CONFLICT (student_member_id, lesson_id) DO NOTHING
+    """), {"m": member_id, "l": lesson_id, "src": source})

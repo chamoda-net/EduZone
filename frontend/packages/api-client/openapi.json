@@ -2383,6 +2383,29 @@
         "title": "ClassUpdate",
         "type": "object"
       },
+      "CompletionOut": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "lecture_id": {
+            "format": "uuid",
+            "title": "Lecture Id",
+            "type": "string"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/CourseProgress"
+          }
+        },
+        "required": [
+          "lecture_id",
+          "completed",
+          "progress"
+        ],
+        "title": "CompletionOut",
+        "type": "object"
+      },
       "CourseCategoryOut": {
         "properties": {
           "course_count": {
@@ -2907,6 +2930,29 @@
           "title"
         ],
         "title": "CoursePreviewOut",
+        "type": "object"
+      },
+      "CourseProgress": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "completed",
+          "total",
+          "percent"
+        ],
+        "title": "CourseProgress",
         "type": "object"
       },
       "CourseRow": {
@@ -4115,6 +4161,243 @@
         "title": "LateRequestRow",
         "type": "object"
       },
+      "LearnCourse": {
+        "properties": {
+          "completion_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Message"
+          },
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "has_access": {
+            "title": "Has Access",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "next_lecture_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Lecture Id"
+          },
+          "one_time_price_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "One Time Price Cents"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "pricing_model": {
+            "title": "Pricing Model",
+            "type": "string"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/CourseProgress"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/LearnSection"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle"
+          },
+          "teacher_name": {
+            "title": "Teacher Name",
+            "type": "string"
+          },
+          "teacher_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Slug"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "welcome_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Welcome Message"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "subtitle",
+          "cover_image_url",
+          "status",
+          "path",
+          "teacher_name",
+          "teacher_slug",
+          "org_name",
+          "pricing_model",
+          "one_time_price_cents",
+          "currency",
+          "has_access",
+          "welcome_message",
+          "completion_message",
+          "progress",
+          "sections",
+          "next_lecture_id"
+        ],
+        "title": "LearnCourse",
+        "type": "object"
+      },
+      "LearnLecture": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_free_preview": {
+            "title": "Is Free Preview",
+            "type": "boolean"
+          },
+          "lesson_type": {
+            "title": "Lesson Type",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "unlocked": {
+            "title": "Unlocked",
+            "type": "boolean"
+          },
+          "video_seconds": {
+            "title": "Video Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "lesson_type",
+          "video_seconds",
+          "is_free_preview",
+          "unlocked",
+          "completed"
+        ],
+        "title": "LearnLecture",
+        "type": "object"
+      },
+      "LearnSection": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lectures": {
+            "items": {
+              "$ref": "#/components/schemas/LearnLecture"
+            },
+            "title": "Lectures",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "lectures",
+          "completed",
+          "total"
+        ],
+        "title": "LearnSection",
+        "type": "object"
+      },
       "LectureCreate": {
         "additionalProperties": false,
         "properties": {
@@ -4186,6 +4469,109 @@
           "lesson_type"
         ],
         "title": "LectureCreate",
+        "type": "object"
+      },
+      "LectureDetail": {
+        "properties": {
+          "article_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Article Body"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lesson_type": {
+            "title": "Lesson Type",
+            "type": "string"
+          },
+          "next_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Id"
+          },
+          "prev_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Id"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/StudentResource"
+            },
+            "title": "Resources",
+            "type": "array"
+          },
+          "section_title": {
+            "title": "Section Title",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "unlocked": {
+            "title": "Unlocked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "course_id",
+          "section_title",
+          "title",
+          "lesson_type",
+          "description",
+          "article_body",
+          "unlocked",
+          "completed",
+          "resources",
+          "prev_id",
+          "next_id"
+        ],
+        "title": "LectureDetail",
         "type": "object"
       },
       "LectureOut": {
@@ -5942,6 +6328,88 @@
         "title": "MyClass",
         "type": "object"
       },
+      "MyCourse": {
+        "properties": {
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_activity_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity At"
+          },
+          "next_lecture_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Lecture Id"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/CourseProgress"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "teacher_name": {
+            "title": "Teacher Name",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "cover_image_url",
+          "teacher_name",
+          "org_name",
+          "progress",
+          "next_lecture_id",
+          "started_at",
+          "last_activity_at"
+        ],
+        "title": "MyCourse",
+        "type": "object"
+      },
       "MyRequest": {
         "properties": {
           "class_id": {
@@ -6130,6 +6598,11 @@
           "id": {
             "format": "uuid",
             "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "default": "tuition",
+            "title": "Kind",
             "type": "string"
           }
         },
@@ -11228,6 +11701,274 @@
           }
         ],
         "summary": "Enroll",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/courses": {
+      "get": {
+        "operationId": "my_courses_api_v1_learn_courses_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MyCourse"
+                  },
+                  "title": "Response My Courses Api V1 Learn Courses Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Courses",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/courses/{course_id}": {
+      "get": {
+        "operationId": "course_view_api_v1_learn_courses__course_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnCourse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Course View",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/courses/{course_id}/enroll": {
+      "post": {
+        "operationId": "enroll_api_v1_learn_courses__course_id__enroll_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnCourse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Enroll",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/lectures/{lecture_id}": {
+      "get": {
+        "operationId": "lecture_api_v1_learn_lectures__lecture_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lecture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lecture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LectureDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lecture",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/lectures/{lecture_id}/complete": {
+      "delete": {
+        "operationId": "uncomplete_api_v1_learn_lectures__lecture_id__complete_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lecture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lecture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Uncomplete",
+        "tags": [
+          "learn"
+        ]
+      },
+      "post": {
+        "operationId": "complete_api_v1_learn_lectures__lecture_id__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lecture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lecture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete",
         "tags": [
           "learn"
         ]

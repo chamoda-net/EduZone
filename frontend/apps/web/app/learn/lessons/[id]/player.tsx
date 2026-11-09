@@ -31,7 +31,11 @@ function Watermark({ name, phone }: { name: string; phone: string | null }) {
   );
 }
 
-export function VideoResource({ r }: { r: StudentResource }) {
+export function VideoResource({ r, onCompleted }: {
+  r: StudentResource;
+  /** Called once when watching completes the video (a course lecture then completes too). */
+  onCompleted?: () => void;
+}) {
   const t = useT();
   const [opened, setOpened] = useState<OpenResource | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,9 +58,12 @@ export function VideoResource({ r }: { r: StudentResource }) {
   const report = useCallback((positionSeconds: number, watchedSeconds: number) => {
     setPosition(Math.floor(positionSeconds));
     void saveProgress(r.id, positionSeconds, watchedSeconds).then((p) => {
-      if (p?.completed) setCompleted(true);
+      if (p?.completed && !completed) {
+        setCompleted(true);
+        onCompleted?.();
+      }
     });
-  }, [r.id]);
+  }, [r.id, completed, onCompleted]);
 
   const expired = useCallback(() => setOpened(null), []);
 
