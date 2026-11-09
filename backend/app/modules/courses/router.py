@@ -1,13 +1,21 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Query, Request, Response
 
 from app.core.db import AppSession
-from app.core.tenancy import TenantSession
+from app.core.tenancy import TenantSession, site_url
 from app.modules.auth.dependencies import CurrentUser, StaffActor
-from app.modules.courses import service, student
+from app.modules.courses import certificates, reviews, service, student
 from app.modules.courses.schemas import (
     CategoryOut,
+    CertificateOut,
+    CertificateVerify,
+    MyReview,
+    PublicReviewPage,
+    ReplyIn,
+    ReviewIn,
+    StaffReview,
     CompletionOut,
     CourseCreate,
     CourseDetail,
@@ -150,3 +158,60 @@ async def complete(lecture_id: UUID, user: CurrentUser) -> CompletionOut:
 async def uncomplete(lecture_id: UUID, user: CurrentUser) -> CompletionOut:
     async with learn_service.in_tenant_of("lesson", lecture_id, user) as (session, auth, _):
         return await student.set_completed(session, auth, lecture_id, False)
+
+
+# --- reviews and certificates (step C4) ----------------------------------------------------------
+
+@learn_router.get("/courses/{course_id}/review", response_model=MyReview | None)
+async def my_review(course_id: UUID, user: CurrentUser) -> MyReview | None:
+    async with learn_service.in_tenant_of("class", course_id, user) as (session, auth, _):
+        return await reviews.my_review(session, auth, course_id)
+
+
+@learn_router.put("/courses/{course_id}/review", response_model=MyReview)
+async def save_review(course_id: UUID, body: ReviewIn, user: CurrentUser) -> MyReview:
+    async with learn_service.in_tenant_of("class", course_id, user) as (session, auth, _):
+        return await reviews.save_review(session, auth, course_id, body)
+
+
+@learn_router.delete("/courses/{course_id}/review", status_code=204)
+async def delete_review(course_id: UUID, user: CurrentUser) -> Response:
+    async with learn_service.in_tenant_of("class", course_id, user) as (session, auth, _):
+        await reviews.delete_review(session, auth, course_id)
+    return Response(status_code=204)
+
+
+@learn_router.get("/certificates", response_model=list[CertificateOut])
+async def my_certificates(user: CurrentUser) -> list[CertificateOut]:
+    return await certificates.my_certificates(user, await learn_service.memberships(user))
+
+
+@public_router.get("/course/{slug}/reviews", response_model=PublicReviewPage)
+async def course_reviews(slug: str, cursor: str | None = None,
+                         limit: Annotated[int, Query(ge=1, le=50)] = 10) -> PublicReviewPage:
+    return await reviews.public_reviews(slug, cursor, limit)
+
+
+@public_router.get("/certificates/{number}", response_model=CertificateVerify)
+async def verify_certificate(number: str) -> CertificateVerify:
+    return await certificates.verify(number)
+
+
+@public_router.get("/certificates/{number}/pdf")
+async def certificate_pdf(number: str, request: Request) -> Response:
+    c = await certificates.verify(number)
+    if not c.valid:
+        return Response(status_code=410)
+    pdf = certificates.render_pdf(c, f"{await site_url(request)}/certificates/{c.certificate_no}")
+    return Response(pdf, media_type="application/pdf", headers={
+        "Content-Disposition": f'inline; filename="{c.certificate_no}.pdf"', "Cache-Control": "private, max-age=300"})
+
+
+@org_router.get("/courses/{course_id}/reviews", response_model=list[StaffReview])
+async def staff_course_reviews(course_id: UUID, session: TenantSession, actor: StaffActor) -> list[StaffReview]:
+    return await reviews.course_reviews(session, actor, course_id)
+
+
+@org_router.put("/course-reviews/{review_id}/reply", response_model=StaffReview)
+async def reply(review_id: UUID, body: ReplyIn, session: TenantSession, actor: StaffActor) -> StaffReview:
+    return await reviews.reply(session, actor, review_id, body)

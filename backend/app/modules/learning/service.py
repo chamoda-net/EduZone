@@ -240,6 +240,9 @@ async def save_progress(session: AsyncSession, auth: AuthContext, resource_id: U
     if row is None:
         raise ApiError("PLAY_NOT_STARTED", "Start the video first.", status_code=409)
     if row.completed_at is not None and lesson.section_id is not None:
+        from app.modules.courses.certificates import maybe_issue  # courses build on this module
+
         await repo.complete_lecture(session, auth.member_id, lesson.id, "auto")
+        await maybe_issue(session, auth.member_id, lesson.class_id)
     return ProgressOut(position_seconds=row.last_position_sec, watched_seconds=row.watched_seconds,
                        completed=row.completed_at is not None)

@@ -15,16 +15,18 @@ import { Badge, Card, ClassCover, ErrorText, buttonClass, cx } from "@eduzone/ui
 
 import {
   addLecture, addSection, attachLectureFile, courseAction, deleteCourse, deleteLecture, deleteSection, removeLectureFile,
-  renameSection, saveLanding, saveLearners, saveLecture, saveMessages, savePricing, swapLectures, swapSections,
+  renameSection, replyToReview, saveLanding, saveLearners, saveLecture, saveMessages, savePricing, swapLectures,
+  swapSections,
 } from "../actions";
-import { InlineForm, LandingForm, LearnersForm, LectureForm, LectureTypeSelect, MessagesForm, PricingForm } from "../forms";
+import { InlineForm, LandingForm, LearnersForm, LectureForm, LectureTypeSelect, MessagesForm, PricingForm, ReplyForm } from "../forms";
+import { Stars } from "@/components/stars";
 import { AttachFileForm } from "../../classes/[id]/lesson-files";
 
 type CourseDetail = Schema<"CourseDetail">;
 type Category = Schema<"CategoryOut">;
 type Check = Schema<"Check">;
 
-const TABS = ["landing", "learners", "curriculum", "pricing", "messages"] as const;
+const TABS = ["landing", "learners", "curriculum", "pricing", "messages", "reviews"] as const;
 type Tab = (typeof TABS)[number];
 
 // Which tab fixes which check.
@@ -67,6 +69,7 @@ export default async function CourseBuilderPage({ params, searchParams }: PagePr
         return [l.id, r.ok ? r.data : []] as const;
       })))
     : new Map<string, LessonResource[]>();
+  const reviewsRes = tab === "reviews" ? await api<Schema<"StaffReview">[]>(`~/courses/${id}/reviews`) : null;
   const done = c.checks.filter((x) => x.ok).length;
   const locked = c.status === "in_review";
   const minutes = Math.round(c.total_video_seconds / 60);
@@ -153,6 +156,24 @@ export default async function CourseBuilderPage({ params, searchParams }: PagePr
             {tab === "pricing" && <Card><PricingForm action={savePricing.bind(null, c.id)} course={c} /></Card>}
             {tab === "messages" && <Card><MessagesForm action={saveMessages.bind(null, c.id)} course={c} /></Card>}
           </fieldset>
+
+          {tab === "reviews" && (
+            <div className="flex flex-col gap-3">
+              {reviewsRes?.ok && reviewsRes.data.length === 0 && <p className="text-sm text-muted">{t("courseReviews.empty")}</p>}
+              {reviewsRes?.ok && reviewsRes.data.map((r) => (
+                <Card key={r.id} className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Stars value={r.rating} />
+                    <span className="text-sm font-semibold">{r.reviewer}</span>
+                    <span className="text-xs text-muted">{new Date(r.created_at).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}</span>
+                    {r.status === "hidden" && <Badge tone="warning">{t("courseReviews.hiddenByEduzone", { reason: r.hidden_reason ?? "" })}</Badge>}
+                  </div>
+                  {r.comment && <p className="text-sm whitespace-pre-line">{r.comment}</p>}
+                  <ReplyForm action={replyToReview.bind(null, c.id, r.id)} initial={r.instructor_reply ?? null} />
+                </Card>
+              ))}
+            </div>
+          )}
 
           {tab === "curriculum" && (
             <div className="flex flex-col gap-4">

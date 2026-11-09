@@ -284,6 +284,8 @@ class LearnCourse(BaseModel):
     progress: CourseProgress
     sections: list[LearnSection]
     next_lecture_id: UUID | None                 # where "Continue" goes: the first lecture not done yet
+    my_rating: int | None = None                 # the student's own review, if any (step C4)
+    certificate_no: str | None = None            # issued at 100% of a paid course (step C4)
 
 
 class LectureDetail(BaseModel):
@@ -318,3 +320,99 @@ class MyCourse(BaseModel):
     next_lecture_id: UUID | None
     started_at: datetime                         # when access began
     last_activity_at: datetime | None
+
+
+# --- reviews and certificates (step C4) ----------------------------------------------------------
+
+class ReviewIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rating: int = Field(ge=1, le=5)
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+class MyReview(BaseModel):
+    id: UUID
+    rating: int
+    comment: str | None
+    status: str                                  # visible | hidden (by EduZone staff)
+    instructor_reply: str | None
+    replied_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class PublicReview(BaseModel):
+    id: UUID
+    rating: int
+    comment: str | None
+    reviewer: str                                # first name and initial only
+    instructor_reply: str | None
+    replied_at: datetime | None
+    created_at: datetime
+
+
+class ReviewSummary(BaseModel):
+    average: float | None
+    count: int
+    distribution: dict[int, int]                 # stars -> number of reviews, 5 to 1
+
+
+class PublicReviewPage(BaseModel):
+    summary: ReviewSummary
+    items: list[PublicReview]
+    next_cursor: str | None
+
+
+class StaffReview(BaseModel):
+    """The instructor's and EduZone staff's view of a review."""
+
+    id: UUID
+    course_id: UUID
+    course_title: str
+    rating: int
+    comment: str | None
+    reviewer: str
+    status: str
+    hidden_reason: str | None
+    instructor_reply: str | None
+    replied_at: datetime | None
+    created_at: datetime
+    tenant_name: str | None = None               # in the platform admin's list
+
+
+class ReplyIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reply: str | None = Field(default=None, max_length=2000)   # empty or null removes the reply
+
+
+class HideIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class CertificateOut(BaseModel):
+    certificate_no: str
+    course_id: UUID
+    course_title: str
+    student_name: str
+    instructor_name: str
+    org_name: str
+    total_video_seconds: int
+    issued_at: datetime
+    revoked_at: datetime | None
+    verify_path: str                             # /certificates/<no>
+
+
+class CertificateVerify(BaseModel):
+    certificate_no: str
+    student_name: str
+    course_title: str
+    instructor_name: str
+    org_name: str
+    total_video_seconds: int
+    issued_at: datetime
+    revoked_at: datetime | None
+    valid: bool

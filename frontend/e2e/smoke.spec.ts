@@ -169,6 +169,7 @@ test("anyone can browse courses and watch a free preview", async ({ page }) => {
   await page.getByRole("link", { name: /A\/L Physics: Problem Solving Masterclass/ }).click();
   await expect(page).toHaveURL(/\/course\/al-physics-problem-solving$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "What you'll learn" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Student reviews" })).toBeVisible();
   await expect(page.getByText("3 sections · 7 lectures · 1 h total length")).toBeVisible();
   await expect(page.getByRole("button", { name: "Buy now" }).first()).toBeVisible();
 

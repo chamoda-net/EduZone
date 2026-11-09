@@ -1335,6 +1335,136 @@
         "title": "CategoryUpdate",
         "type": "object"
       },
+      "CertificateOut": {
+        "properties": {
+          "certificate_no": {
+            "title": "Certificate No",
+            "type": "string"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "course_title": {
+            "title": "Course Title",
+            "type": "string"
+          },
+          "instructor_name": {
+            "title": "Instructor Name",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "total_video_seconds": {
+            "title": "Total Video Seconds",
+            "type": "integer"
+          },
+          "verify_path": {
+            "title": "Verify Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "certificate_no",
+          "course_id",
+          "course_title",
+          "student_name",
+          "instructor_name",
+          "org_name",
+          "total_video_seconds",
+          "issued_at",
+          "revoked_at",
+          "verify_path"
+        ],
+        "title": "CertificateOut",
+        "type": "object"
+      },
+      "CertificateVerify": {
+        "properties": {
+          "certificate_no": {
+            "title": "Certificate No",
+            "type": "string"
+          },
+          "course_title": {
+            "title": "Course Title",
+            "type": "string"
+          },
+          "instructor_name": {
+            "title": "Instructor Name",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "total_video_seconds": {
+            "title": "Total Video Seconds",
+            "type": "integer"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "certificate_no",
+          "student_name",
+          "course_title",
+          "instructor_name",
+          "org_name",
+          "total_video_seconds",
+          "issued_at",
+          "revoked_at",
+          "valid"
+        ],
+        "title": "CertificateVerify",
+        "type": "object"
+      },
       "Check": {
         "properties": {
           "current": {
@@ -3722,6 +3852,22 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "HideIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "HideIn",
+        "type": "object"
+      },
       "Home": {
         "properties": {
           "classes": {
@@ -4163,6 +4309,17 @@
       },
       "LearnCourse": {
         "properties": {
+          "certificate_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate No"
+          },
           "completion_message": {
             "anyOf": [
               {
@@ -4197,6 +4354,17 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "my_rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Rating"
           },
           "next_lecture_id": {
             "anyOf": [
@@ -6486,6 +6654,79 @@
         "title": "MyRequest",
         "type": "object"
       },
+      "MyReview": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "instructor_reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructor Reply"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "replied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replied At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "comment",
+          "status",
+          "instructor_reply",
+          "replied_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "MyReview",
+        "type": "object"
+      },
       "OpenResourceOut": {
         "properties": {
           "duration_seconds": {
@@ -8040,6 +8281,105 @@
         "title": "PublicMonth",
         "type": "object"
       },
+      "PublicReview": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "instructor_reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructor Reply"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "replied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replied At"
+          },
+          "reviewer": {
+            "title": "Reviewer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "comment",
+          "reviewer",
+          "instructor_reply",
+          "replied_at",
+          "created_at"
+        ],
+        "title": "PublicReview",
+        "type": "object"
+      },
+      "PublicReviewPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicReview"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ReviewSummary"
+          }
+        },
+        "required": [
+          "summary",
+          "items",
+          "next_cursor"
+        ],
+        "title": "PublicReviewPage",
+        "type": "object"
+      },
       "RecoveryComplete": {
         "properties": {
           "code": {
@@ -8227,6 +8567,25 @@
         "title": "Register",
         "type": "object"
       },
+      "ReplyIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reply": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply"
+          }
+        },
+        "title": "ReplyIn",
+        "type": "object"
+      },
       "ResourceCreate": {
         "additionalProperties": false,
         "properties": {
@@ -8352,6 +8711,34 @@
         "title": "ReviewDecision",
         "type": "object"
       },
+      "ReviewIn": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "rating": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rating"
+        ],
+        "title": "ReviewIn",
+        "type": "object"
+      },
       "ReviewRow": {
         "properties": {
           "category_name": {
@@ -8442,6 +8829,39 @@
           "submitted_at"
         ],
         "title": "ReviewRow",
+        "type": "object"
+      },
+      "ReviewSummary": {
+        "properties": {
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Distribution",
+            "type": "object"
+          }
+        },
+        "required": [
+          "average",
+          "count",
+          "distribution"
+        ],
+        "title": "ReviewSummary",
         "type": "object"
       },
       "SectionCreate": {
@@ -8610,6 +9030,113 @@
           "institutes"
         ],
         "title": "SitemapOut",
+        "type": "object"
+      },
+      "StaffReview": {
+        "description": "The instructor's and EduZone staff's view of a review.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "course_title": {
+            "title": "Course Title",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "hidden_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden Reason"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "instructor_reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructor Reply"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "replied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replied At"
+          },
+          "reviewer": {
+            "title": "Reviewer",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tenant_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Name"
+          }
+        },
+        "required": [
+          "id",
+          "course_id",
+          "course_title",
+          "rating",
+          "comment",
+          "reviewer",
+          "status",
+          "hidden_reason",
+          "instructor_reply",
+          "replied_at",
+          "created_at"
+        ],
+        "title": "StaffReview",
         "type": "object"
       },
       "StreamWebhook": {
@@ -11477,6 +12004,36 @@
         "summary": "Health"
       }
     },
+    "/api/v1/learn/certificates": {
+      "get": {
+        "operationId": "my_certificates_api_v1_learn_certificates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateOut"
+                  },
+                  "title": "Response My Certificates Api V1 Learn Certificates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Certificates",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
     "/api/v1/learn/checkout": {
       "post": {
         "operationId": "create_checkout_api_v1_learn_checkout_post",
@@ -11827,6 +12384,157 @@
           }
         ],
         "summary": "Enroll",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/courses/{course_id}/review": {
+      "delete": {
+        "operationId": "delete_review_api_v1_learn_courses__course_id__review_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Review",
+        "tags": [
+          "learn"
+        ]
+      },
+      "get": {
+        "operationId": "my_review_api_v1_learn_courses__course_id__review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MyReview"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response My Review Api V1 Learn Courses  Course Id  Review Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Review",
+        "tags": [
+          "learn"
+        ]
+      },
+      "put": {
+        "operationId": "save_review_api_v1_learn_courses__course_id__review_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Review",
         "tags": [
           "learn"
         ]
@@ -12417,6 +13125,88 @@
         ]
       }
     },
+    "/api/v1/market/certificates/{number}": {
+      "get": {
+        "operationId": "verify_certificate_api_v1_market_certificates__number__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateVerify"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Certificate",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/certificates/{number}/pdf": {
+      "get": {
+        "operationId": "certificate_pdf_api_v1_market_certificates__number__pdf_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Certificate Pdf",
+        "tags": [
+          "market"
+        ]
+      }
+    },
     "/api/v1/market/classes": {
       "get": {
         "operationId": "classes_api_v1_market_classes_get",
@@ -12843,6 +13633,76 @@
           }
         },
         "summary": "Course Preview",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/course/{slug}/reviews": {
+      "get": {
+        "operationId": "course_reviews_api_v1_market_course__slug__reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicReviewPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Course Reviews",
         "tags": [
           "market"
         ]
@@ -14670,6 +15530,64 @@
         ]
       }
     },
+    "/api/v1/org/course-reviews/{review_id}/reply": {
+      "put": {
+        "operationId": "reply_api_v1_org_course_reviews__review_id__reply_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reply",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
     "/api/v1/org/course-sections/{section_id}": {
       "delete": {
         "operationId": "delete_section_api_v1_org_course_sections__section_id__delete",
@@ -15044,6 +15962,58 @@
           }
         ],
         "summary": "Update Course",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
+    "/api/v1/org/courses/{course_id}/reviews": {
+      "get": {
+        "operationId": "staff_course_reviews_api_v1_org_courses__course_id__reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffReview"
+                  },
+                  "title": "Response Staff Course Reviews Api V1 Org Courses  Course Id  Reviews Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Staff Course Reviews",
         "tags": [
           "org: courses"
         ]
@@ -17205,6 +18175,191 @@
           }
         ],
         "summary": "Update Course Category",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/course-reviews": {
+      "get": {
+        "operationId": "list_course_reviews_api_v1_platform_course_reviews_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "visible",
+                    "hidden"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "course_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffReview"
+                  },
+                  "title": "Response List Course Reviews Api V1 Platform Course Reviews Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Course Reviews",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/course-reviews/{review_id}/hide": {
+      "post": {
+        "operationId": "hide_course_review_api_v1_platform_course_reviews__review_id__hide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HideIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Hide Course Review",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/course-reviews/{review_id}/show": {
+      "post": {
+        "operationId": "show_course_review_api_v1_platform_course_reviews__review_id__show_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Show Course Review",
         "tags": [
           "platform"
         ]
@@ -19505,6 +20660,64 @@
         ]
       }
     },
+    "/api/v1/teach/{tenant_slug}/course-reviews/{review_id}/reply": {
+      "put": {
+        "operationId": "reply_api_v1_teach__tenant_slug__course_reviews__review_id__reply_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reply",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
     "/api/v1/teach/{tenant_slug}/course-sections/{section_id}": {
       "delete": {
         "operationId": "delete_section_api_v1_teach__tenant_slug__course_sections__section_id__delete",
@@ -19879,6 +21092,58 @@
           }
         ],
         "summary": "Update Course",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
+    "/api/v1/teach/{tenant_slug}/courses/{course_id}/reviews": {
+      "get": {
+        "operationId": "staff_course_reviews_api_v1_teach__tenant_slug__courses__course_id__reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffReview"
+                  },
+                  "title": "Response Staff Course Reviews Api V1 Teach  Tenant Slug  Courses  Course Id  Reviews Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Staff Course Reviews",
         "tags": [
           "org: courses"
         ]

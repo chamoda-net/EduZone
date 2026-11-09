@@ -33,3 +33,19 @@ export async function setLectureComplete(courseId: string, lectureId: string, do
   revalidatePath(`/learn/courses/${courseId}`);
   return { ok: true };
 }
+
+export async function saveReview(courseId: string, rating: number, comment: string): Promise<Result> {
+  const res = await api(`/learn/courses/${courseId}/review`, {
+    method: "PUT", body: { rating, comment: comment.trim() || null },
+  });
+  if (!res.ok) return { ok: false, error: errorText(t, res.error) };
+  revalidatePath(`/learn/courses/${courseId}`);
+  return { ok: true };
+}
+
+export async function deleteReview(courseId: string): Promise<Result> {
+  const res = await api(`/learn/courses/${courseId}/review`, { method: "DELETE" });
+  if (!res.ok) return { ok: false, error: errorText(t, res.error) };
+  revalidatePath(`/learn/courses/${courseId}`);
+  return { ok: true };
+}

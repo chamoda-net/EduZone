@@ -168,3 +168,10 @@ export async function removeLectureFile(courseId: string, resourceId: string): P
   await refresh(courseId);
   return { ok: true };
 }
+
+export async function replyToReview(courseId: string, reviewId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api(`~/course-reviews/${reviewId}/reply`, { method: "PUT", body: { reply: textOrNull(fd, "reply") } });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  await refresh(courseId);
+  return { ok: true, at: Date.now() };
+}

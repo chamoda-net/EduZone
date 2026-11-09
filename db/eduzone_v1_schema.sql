@@ -1313,3 +1313,46 @@ CREATE FUNCTION class_kinds(p_ids uuid[]) RETURNS TABLE (id uuid, kind text)   -
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
     SELECT c.id, c.kind FROM classes c WHERE c.id = ANY (p_ids)
 $$;
+
+-- =============================================================================
+-- Courses, step C4 (migration 0013): reviews and certificates (docs/COURSES.md C.5, C.6)
+-- Both tenant-scoped with forced RLS (tenant_isolation) and user_own_rows FOR SELECT.
+-- =============================================================================
+CREATE TABLE course_reviews (
+    id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id           uuid NOT NULL DEFAULT current_tenant_id(),
+    class_id            uuid NOT NULL,
+    student_member_id   uuid NOT NULL,
+    rating              smallint NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment             text CHECK (char_length(comment) <= 2000),
+    status              text NOT NULL DEFAULT 'visible' CHECK (status IN ('visible','hidden')),
+    hidden_reason       text CHECK (char_length(hidden_reason) <= 500),
+    instructor_reply    text CHECK (char_length(instructor_reply) <= 2000),
+    replied_at          timestamptz,
+    created_at          timestamptz NOT NULL DEFAULT now(),
+    updated_at          timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (class_id, student_member_id),
+    UNIQUE (tenant_id, id),
+    FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, student_member_id) REFERENCES tenant_members (tenant_id, id)
+);
+CREATE TABLE certificates (
+    id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id               uuid NOT NULL DEFAULT current_tenant_id(),
+    class_id                uuid NOT NULL,
+    student_member_id       uuid NOT NULL,
+    certificate_no          text NOT NULL UNIQUE CHECK (certificate_no ~ '^EZCERT-[A-Z0-9]{4}-[A-Z0-9]{4}$'),
+    student_name            text NOT NULL,           -- snapshots at issue time
+    course_title            text NOT NULL,
+    instructor_name         text NOT NULL,
+    total_video_seconds     integer NOT NULL,
+    issued_at               timestamptz NOT NULL DEFAULT now(),
+    revoked_at              timestamptz,             -- a refund (step C6)
+    revoke_reason           text,
+    UNIQUE (tenant_id, id),
+    FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id),
+    FOREIGN KEY (tenant_id, student_member_id) REFERENCES tenant_members (tenant_id, id)
+);
+CREATE UNIQUE INDEX uq_certificate_active ON certificates (class_id, student_member_id) WHERE revoked_at IS NULL;
+-- public_course_reviews (view, eduzone_admin): visible reviews of public courses, reviewer = first name + initial.
+-- verify_certificate(p_no) (SECURITY DEFINER): snapshot fields, organization name, issued/revoked only.

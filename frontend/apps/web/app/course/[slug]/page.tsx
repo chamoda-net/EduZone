@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import type { Schema } from "@eduzone/api-client";
 import { ShareTools } from "@/components/share-tools";
+import { Stars } from "@/components/stars";
 import { SiteShell } from "@/components/shell";
 import { TeacherAvatar } from "@/components/teacher-avatar";
 import { api } from "@/lib/api";
@@ -15,7 +16,7 @@ import { getMe } from "@/lib/session";
 import { siteOrigin } from "@/lib/site";
 import { formatDateTime } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
-import { ClassCover, Container, cx } from "@eduzone/ui";
+import { ClassCover, Container } from "@eduzone/ui";
 
 import { CourseActions } from "./buy";
 import { PreviewDialog } from "./preview";
@@ -32,16 +33,6 @@ export async function generateMetadata({ params }: PageProps<"/course/[slug]">):
 }
 
 const lectureIcon = { recorded: PlayCircle, document: FileText, article: ScrollText } as const;
-
-function Stars({ value }: { value: number }) {
-  return (
-    <span className="inline-flex" aria-hidden>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} className={cx("size-4", value >= i - 0.25 ? "fill-gold text-gold" : value >= i - 0.75 ? "fill-gold/50 text-gold" : "text-gold/50")} />
-      ))}
-    </span>
-  );
-}
 
 /** /course/<slug>: the course landing page. Previews play for anyone; a paid course is bought through the cart,
  * a free one is enrolled in, and a student who has it goes straight to the player. */
@@ -64,6 +55,8 @@ export default async function CourseLandingPage({ params }: PageProps<"/course/[
   const mine = me ? await api<Schema<"LearnCourse">>(`/learn/courses/${c.id}`) : null;
   const owned = !!(mine?.ok && mine.data.has_access);
   const cart = !owned && paid ? await getCart() : null;
+  const reviews = await market<Schema<"PublicReviewPage">>(`/course/${c.slug}/reviews?limit=10`);
+  const sum = reviews.summary;
 
   const includes = [
     { icon: <PlayCircle />, text: t("market.course.includesVideo", { length: formatLength(t, c.total_video_seconds) }) },
@@ -265,6 +258,58 @@ export default async function CourseLandingPage({ params }: PageProps<"/course/[
               </ul>
               {d.instructor.bio && <p className="text-[0.9375rem] leading-relaxed whitespace-pre-line text-foreground/85">{d.instructor.bio}</p>}
             </div>
+          </section>
+
+          <section className="flex flex-col gap-5">
+            <h2 className="font-display text-2xl font-semibold">{t("reviews.title")}</h2>
+            {sum.count === 0 ? (
+              <p className="rounded-ez-lg border border-dashed border-border-strong p-5 text-sm text-muted">{t("reviews.none")}</p>
+            ) : (
+              <>
+                <div className="flex flex-col gap-6 rounded-ez-lg border border-border bg-surface p-6 shadow-ez-sm sm:flex-row sm:items-center">
+                  <div className="flex shrink-0 flex-col items-center gap-1 sm:w-40">
+                    <p className="font-display text-5xl font-semibold text-gold-strong tabular-nums">{(sum.average ?? 0).toFixed(1)}</p>
+                    <Stars value={sum.average ?? 0} size="md" />
+                    <p className="text-xs font-semibold text-muted">{t("reviews.count", { count: sum.count })}</p>
+                  </div>
+                  <ul className="flex flex-1 flex-col gap-1.5">
+                    {[5, 4, 3, 2, 1].map((stars) => {
+                      const n = sum.distribution[String(stars)] ?? 0;
+                      const pct = sum.count ? Math.round((n / sum.count) * 100) : 0;
+                      return (
+                        <li key={stars} className="flex items-center gap-3 text-xs">
+                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-sunken" aria-hidden>
+                            <div className="h-full rounded-full bg-gold" style={{ width: `${pct}%` }} />
+                          </div>
+                          <Stars value={stars} />
+                          <span className="w-9 text-right text-muted tabular-nums">{pct}%</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <ul className="flex flex-col divide-y divide-border">
+                  {reviews.items.map((r) => (
+                    <li key={r.id} className="flex flex-col gap-2 py-5">
+                      <div className="flex items-center gap-3">
+                        <span className="grid size-9 place-items-center rounded-full bg-brand-800 text-sm font-semibold text-on-brand">{r.reviewer.charAt(0)}</span>
+                        <div>
+                          <p className="text-sm font-semibold">{r.reviewer}</p>
+                          <p className="flex items-center gap-2 text-xs text-muted"><Stars value={r.rating} />{formatDateTime(r.created_at).split(",")[0]}</p>
+                        </div>
+                      </div>
+                      {r.comment && <p className="text-[0.9375rem] leading-relaxed whitespace-pre-line text-foreground/85">{r.comment}</p>}
+                      {r.instructor_reply && (
+                        <div className="ml-6 rounded-ez border-l-4 border-brand bg-sunken/60 p-3 text-sm">
+                          <p className="mb-1 font-semibold">{t("reviews.reply", { name: c.teacher_name })}</p>
+                          <p className="whitespace-pre-line text-foreground/85">{r.instructor_reply}</p>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </section>
         </div>
 

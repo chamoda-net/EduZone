@@ -6,8 +6,8 @@
 > The SQL below is written against `db/eduzone_v1_schema.sql`; **check it against the current
 > migrations (0001–0009) before writing the Alembic migration** and adapt names if they have moved on.
 >
-> **Status (2026-11-09): steps C1, C2 and C3 built** (migrations 0010-0012; CLAUDE.md section 6, "How it's built
-> (courses C1)", "(courses C2)" and "(courses C3)"). The player lives at `/learn/courses/<id>` (by id, like every
+> **Status (2026-11-09): steps C1 to C4 built** (migrations 0010-0013; CLAUDE.md section 6, "How it's built
+> (courses C1)" to "(courses C4)"). The certificate PDF uses ReportLab (pure Python, draws the QR code itself). The player lives at `/learn/courses/<id>` (by id, like every
 > `/learn` route), not `<slug>`.
 > Corrections made while building, which win over the text below:
 > - Certificate numbers use the prefix **`EZCERT-`** (`EZC-` is already the checkout number prefix).
@@ -493,7 +493,7 @@ Each step includes its console/student/admin screens and tests. Tuition work is 
 | **C1** ✅ | Migrations C.1–C.3; categories in admin; course builder (landing page, intended learners, curriculum with sections, article lectures, pricing); automated publish checks; review queue in admin |
 | **C2** ✅ | Public catalog for courses: `/courses`, category pages, `/course/<slug>` landing page, `/instructor/<slug>`, home lanes, SEO (JSON-LD `Course`, sitemap) |
 | **C3** ✅ | Cart/checkout for courses; course player; `lesson_completions`; progress; My learning; welcome/completion messages |
-| **C4** | Reviews and ratings (student, instructor reply, staff moderation); certificates (issue, PDF, public verify) |
+| **C4** ✅ | Reviews and ratings (student, instructor reply, staff moderation); certificates (issue, PDF, public verify) |
 | **C5** | Coupons (incl. public sale price) and wishlist |
 | **C6** | Refunds (gateway call, auto-approval rule, refund queue, ledger, payout hold) |
 | **C7** | Instructor analytics; commission rates per product type + scheduled changes with notice (C.10), admin screen and tenant banner |

@@ -287,3 +287,19 @@ export async function setCategoryActive(categoryId: number, active: boolean): Pr
   revalidatePath("/course-categories");
   return { ok: true, at: Date.now() };
 }
+
+// --- course reviews: moderation (step C4) -------------------------------------------------
+
+export async function hideReview(reviewId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api(`/platform/course-reviews/${reviewId}/hide`, { method: "POST", body: { reason: text(fd, "reason") } });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/course-reviews");
+  return { ok: true, at: Date.now() };
+}
+
+export async function showReview(reviewId: string): Promise<FormState> {
+  const res = await api(`/platform/course-reviews/${reviewId}/show`, { method: "POST" });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/course-reviews");
+  return { ok: true, at: Date.now() };
+}

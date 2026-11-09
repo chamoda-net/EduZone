@@ -157,7 +157,8 @@ async def test_categories_home_instructor_sitemap(client: AsyncClient, seed: See
 
     home = (await client.get(f"{M}/courses/home")).json()
     assert home["total"] >= 1 and ccna["slug"] in {c["slug"] for c in home["popular"]}
-    assert ccna["slug"] in {c["slug"] for c in home["newest"]} and home["top_rated"] == []
+    assert ccna["slug"] in {c["slug"] for c in home["newest"]}
+    assert ccna["slug"] not in {c["slug"] for c in home["top_rated"]}      # no ratings yet
     assert any(c["slug"] == "it-networking" for c in home["categories"])
 
     # One page per person: their courses and their tuition classes.

@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response
@@ -9,13 +9,16 @@ from app.integrations.sms import SmsSender, get_sms_sender
 from app.modules.auth.dependencies import user_agent
 from app.modules.auth.schemas import OtpRequest, OtpRequested
 from app.modules.onboarding.schemas import AccountNumber, ApplicationDetail, ApplicationRow, ApplicationStatus, DecisionIn
+from app.modules.courses import reviews as course_reviews
 from app.modules.courses.schemas import (
     CategoryCreate,
     CategoryOut,
     CategoryUpdate,
     CourseDetail,
     CourseStatus,
+    HideIn,
     ReviewDecision,
+    StaffReview,
     ReviewRow,
     UnpublishIn,
 )
@@ -263,3 +266,28 @@ async def decide_course(course_id: UUID, body: ReviewDecision, actor: Admin, ses
 @router.post("/courses/{course_id}/unpublish", response_model=CourseDetail)
 async def unpublish_course(course_id: UUID, body: UnpublishIn, actor: Admin, session: AdminTx) -> CourseDetail:
     return await courses.unpublish(session, actor, course_id, body)
+
+
+# --- course reviews: moderation (step C4) ----------------------------------------------------------
+
+@router.get("/course-reviews", response_model=list[StaffReview])
+async def list_course_reviews(actor: Admin, session: AdminTx, status: Literal["visible", "hidden"] | None = None,
+                              course_id: UUID | None = None) -> list[StaffReview]:
+    return await course_reviews.staff_list(session, status, course_id)
+
+
+@router.post("/course-reviews/{review_id}/hide", response_model=StaffReview)
+async def hide_course_review(review_id: UUID, body: HideIn, actor: Admin, session: AdminTx) -> StaffReview:
+    review, tenant_id = await course_reviews.set_visibility(session, review_id, body)
+    await service._set_tenant(session, tenant_id)
+    await service._audit(session, actor, "platform.course_review.hide", "course_review", review_id,
+                         {"reason": body.reason})
+    return review
+
+
+@router.post("/course-reviews/{review_id}/show", response_model=StaffReview)
+async def show_course_review(review_id: UUID, actor: Admin, session: AdminTx) -> StaffReview:
+    review, tenant_id = await course_reviews.set_visibility(session, review_id, None)
+    await service._set_tenant(session, tenant_id)
+    await service._audit(session, actor, "platform.course_review.show", "course_review", review_id)
+    return review

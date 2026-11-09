@@ -1,5 +1,5 @@
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Circle, FileText, Lock, PartyPopper, PlayCircle, ScrollText,
-  Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, CheckCircle2, ChevronDown, Circle, Download, FileText, Lock, PartyPopper, PlayCircle,
+  ScrollText, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -16,7 +16,7 @@ import { Container, ErrorText, buttonStyles, cx } from "@eduzone/ui";
 
 import { PdfResource } from "@/app/learn/lessons/[id]/player";
 
-import { CompleteButton, LectureVideo } from "./client";
+import { CompleteButton, LectureVideo, RatingCard } from "./client";
 
 type Course = Schema<"LearnCourse">;
 type Lecture = Schema<"LectureDetail">;
@@ -45,6 +45,9 @@ export default async function CoursePlayerPage({ params, searchParams }: PagePro
   const lecture = lectureRes?.ok ? lectureRes.data : null;
   const href = (lectureId: string) => `/learn/courses/${c.id}?lecture=${lectureId}`;
   const p = c.progress;
+  // "Rate this course" after a quarter of it, or as soon as they have rated (docs/COURSES.md section 6).
+  const askRating = c.has_access && (p.percent >= 25 || c.my_rating != null);
+  const reviewRes = askRating ? await api<Schema<"MyReview"> | null>(`/learn/courses/${c.id}/review`) : null;
 
   return (
     <SiteShell bare>
@@ -70,6 +73,23 @@ export default async function CoursePlayerPage({ params, searchParams }: PagePro
 
       <Container className="grid gap-8 py-6 lg:grid-cols-[minmax(0,1fr)_22rem] [&>*]:min-w-0">
         <main className="flex flex-col gap-5">
+          {c.certificate_no && (
+            <div className="ez-grain flex flex-col gap-3 rounded-ez-lg bg-brand-900 p-5 text-on-brand sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-3">
+                <Award className="mt-0.5 size-6 shrink-0 text-gold" />
+                <div>
+                  <p className="font-display text-lg font-semibold">{t("cert.ready")}</p>
+                  <p className="text-sm text-brand-100/80">{t("cert.readyBody")}</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Link href={`/certificates/${c.certificate_no}`} className={buttonStyles("gold", "sm")}>{t("cert.view")}</Link>
+                <a href={`/certificates/${c.certificate_no}/pdf`} className={buttonStyles("secondary", "sm")}>
+                  <Download className="size-4" />{t("cert.download")}
+                </a>
+              </div>
+            </div>
+          )}
           {c.completion_message && (
             <Banner tone="gold" icon={<PartyPopper />} title={t("player.course.congrats")} body={c.completion_message} />
           )}
@@ -122,6 +142,9 @@ export default async function CoursePlayerPage({ params, searchParams }: PagePro
         </main>
 
         <aside className="flex flex-col gap-3 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:self-start lg:overflow-y-auto">
+          {askRating && reviewRes?.ok && (
+            <RatingCard courseId={c.id} review={reviewRes.data ? { rating: reviewRes.data.rating, comment: reviewRes.data.comment ?? null, status: reviewRes.data.status } : null} />
+          )}
           <h2 className="font-display text-xl font-semibold">{t("player.course.content")}</h2>
           <div className="overflow-hidden rounded-ez-lg border border-border bg-surface">
             {c.sections.map((s, si) => {

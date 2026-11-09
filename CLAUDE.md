@@ -372,6 +372,28 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   congratulations banners. Tests: `tests/test_learn_courses.py` and an e2e check. COURSES.md's player URL used the
   slug; it uses the id, like every `/learn` route.
 
+### How it's built (courses C4: `app/modules/courses/{reviews,certificates}.py`, migration 0013)
+- **Reviews** (`course_reviews`, tenant RLS + user SELECT policy): one per student per course, 1-5 stars and an
+  optional comment, editable and deletable, only by students with an active grant (403 otherwise). The instructor
+  replies (`PUT /teach/{t}/course-reviews/{id}/reply`, empty removes it; list at `GET /teach/{t}/courses/{id}/reviews`).
+  EduZone staff hide with a reason or show again (`/platform/course-reviews[...]/hide|show`, audited).
+  `classes.rating_avg`/`rating_count` are recomputed from visible reviews in the same transaction as every change.
+  Public: `GET /market/course/{slug}/reviews` (summary with the 5-to-1 distribution, reviews with the reviewer's
+  first name and initial only, via the `public_course_reviews` view). Student: `GET/PUT/DELETE
+  /learn/courses/{id}/review`; `LearnCourse.my_rating`.
+- **Certificates** (`certificates`): issued when the last published lecture is completed (manually or by the
+  video's 90%) if the student **bought** the course (a `purchase` grant on an order item that cost more than 0):
+  free courses, scholarships and manual grants get none. Snapshots the student's name, course title, instructor
+  and length; number `EZCERT-XXXX-XXXX` (random, no 0/O/1/I); one active per student and course. `GET
+  /learn/certificates`, `LearnCourse.certificate_no`. Public: `GET /market/certificates/{no}` through
+  `verify_certificate()` (SECURITY DEFINER, snapshot and status only) and `GET /market/certificates/{no}/pdf`
+  (ReportLab, A4 landscape, a QR code to `<site>/certificates/<no>`; 410 when revoked). Fonts are the PDF base
+  fonts: Sinhala or Tamil names need an embedded font later.
+- **Web:** reviews on the course page (average, distribution bars, reviews with replies); "Rate this course" in the
+  player once a quarter is done (or after rating); the certificate banner in the player; `/learn/certificates`
+  (download, view, copy link); the public `/certificates/<no>` page and `/certificates/<no>/pdf` (a route that
+  streams the API's PDF); a Reviews tab in the console's course builder; admin `/course-reviews` (moderation).
+
 ### Access rule (one function, used everywhere)
 A student can open a lesson if **any** of these is true:
 - `lesson.is_free_preview` and the lesson is published

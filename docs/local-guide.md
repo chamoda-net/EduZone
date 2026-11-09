@@ -237,6 +237,15 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
    bar shows your progress. A welcome message shows at the start and a congratulations message at 100%.
 4. **My learning** → **My courses** (or "Continue learning" on Today) lists your courses with progress bars.
 
+### C5. Reviews and certificates: new in step C4
+1. Once a quarter of a course is done, the player shows **Rate this course** (stars and a comment). Your review
+   appears on the course page under **Student reviews**, with the average and the 5-to-1 bars.
+2. The instructor replies from the console: the course → **Reviews** tab. EduZone staff can hide a review (with a
+   reason) in the admin app → **Review moderation**.
+3. Finish every lecture of a **paid** course: the player shows **Your certificate is ready**. **My courses** →
+   **Certificates** lists them; **Download PDF** gives an A4 certificate with a QR code; the public page
+   `/certificates/<number>` lets anyone check it. Free courses and courses given by the teacher earn none.
+
 ### D. Become a teacher (any new account)
 1. Register a new account at `/register` and confirm the phone.
 2. Go to `/teach` → **Apply** (`/teach/apply`): teacher or institute, name, subjects, experience, identity
@@ -348,8 +357,9 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
   previews, instructor pages, home lane, sitemap and JSON-LD.
 - Buying and taking courses (step C3): cart and checkout, free enrolment, the course player with a curriculum
   sidebar, lecture completion and progress, My courses, welcome and congratulations messages.
-- Not yet: reviews and certificates (C4),
-  coupons and wishlist (C5), refunds (C6), analytics and commission changes (C7).
+- Reviews and certificates (step C4): ratings with instructor replies and staff moderation, certificates for
+  completed paid courses with a PDF and a public verify page.
+- Not yet: coupons and wishlist (C5), refunds (C6), analytics and commission changes (C7).
 
 ### Platform admin (step 9, phases 5 and 8)
 - Separate app, private network only (`PLATFORM_ALLOWED_CIDRS`), sign-in with SMS code + authenticator app,

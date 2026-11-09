@@ -320,3 +320,19 @@ export function LectureForm({ action, lecture }: { action: Action; lecture: Lect
     </form>
   );
 }
+
+/** The instructor's reply under a review (an empty reply removes it). */
+export function ReplyForm({ action, initial }: { action: Action; initial: string | null }) {
+  const t = useT();
+  const [state, submit, pending] = useActionState(action, {});
+  useSaved(state, t("courseReviews.replied"));
+  return (
+    <form action={submit} className="flex flex-col gap-2">
+      <Field label={t("courseReviews.replyLabel")}>
+        <Textarea name="reply" rows={2} maxLength={2000} defaultValue={initial ?? ""} />
+      </Field>
+      <ErrorText>{state.error}</ErrorText>
+      <Button variant="secondary" size="sm" className="self-start" loading={pending}>{t("courseReviews.saveReply")}</Button>
+    </form>
+  );
+}

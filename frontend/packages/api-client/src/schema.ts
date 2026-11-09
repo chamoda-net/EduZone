@@ -280,6 +280,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learn/certificates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Certificates */
+        get: operations["my_certificates_api_v1_learn_certificates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learn/checkout": {
         parameters: {
             query?: never;
@@ -395,6 +412,25 @@ export interface paths {
         /** Enroll */
         post: operations["enroll_api_v1_learn_courses__course_id__enroll_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learn/courses/{course_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Review */
+        get: operations["my_review_api_v1_learn_courses__course_id__review_get"];
+        /** Save Review */
+        put: operations["save_review_api_v1_learn_courses__course_id__review_put"];
+        post?: never;
+        /** Delete Review */
+        delete: operations["delete_review_api_v1_learn_courses__course_id__review_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -611,6 +647,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/market/certificates/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verify Certificate */
+        get: operations["verify_certificate_api_v1_market_certificates__number__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/certificates/{number}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Certificate Pdf */
+        get: operations["certificate_pdf_api_v1_market_certificates__number__pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/market/classes": {
         parameters: {
             query?: never;
@@ -710,6 +780,23 @@ export interface paths {
         put?: never;
         /** Course Preview */
         post: operations["course_preview_api_v1_market_course__slug__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/course/{slug}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course Reviews */
+        get: operations["course_reviews_api_v1_market_course__slug__reviews_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1206,6 +1293,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/org/course-reviews/{review_id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reply */
+        put: operations["reply_api_v1_org_course_reviews__review_id__reply_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/org/course-sections/{section_id}": {
         parameters: {
             query?: never;
@@ -1276,6 +1380,23 @@ export interface paths {
         head?: never;
         /** Update Course */
         patch: operations["update_course_api_v1_org_courses__course_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/org/courses/{course_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff Course Reviews */
+        get: operations["staff_course_reviews_api_v1_org_courses__course_id__reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/org/courses/{course_id}/sections": {
@@ -1882,6 +2003,57 @@ export interface paths {
         patch: operations["update_course_category_api_v1_platform_course_categories__category_id__patch"];
         trace?: never;
     };
+    "/api/v1/platform/course-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Course Reviews */
+        get: operations["list_course_reviews_api_v1_platform_course_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/course-reviews/{review_id}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hide Course Review */
+        post: operations["hide_course_review_api_v1_platform_course_reviews__review_id__hide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/course-reviews/{review_id}/show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Show Course Review */
+        post: operations["show_course_review_api_v1_platform_course_reviews__review_id__show_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/courses": {
         parameters: {
             query?: never;
@@ -2459,6 +2631,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teach/{tenant_slug}/course-reviews/{review_id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reply */
+        put: operations["reply_api_v1_teach__tenant_slug__course_reviews__review_id__reply_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teach/{tenant_slug}/course-sections/{section_id}": {
         parameters: {
             query?: never;
@@ -2529,6 +2718,23 @@ export interface paths {
         head?: never;
         /** Update Course */
         patch: operations["update_course_api_v1_teach__tenant_slug__courses__course_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/teach/{tenant_slug}/courses/{course_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff Course Reviews */
+        get: operations["staff_course_reviews_api_v1_teach__tenant_slug__courses__course_id__reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/teach/{tenant_slug}/courses/{course_id}/sections": {
@@ -3362,6 +3568,59 @@ export interface components {
             /** Sort Order */
             sort_order?: number | null;
         };
+        /** CertificateOut */
+        CertificateOut: {
+            /** Certificate No */
+            certificate_no: string;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /** Instructor Name */
+            instructor_name: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /** Org Name */
+            org_name: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Student Name */
+            student_name: string;
+            /** Total Video Seconds */
+            total_video_seconds: number;
+            /** Verify Path */
+            verify_path: string;
+        };
+        /** CertificateVerify */
+        CertificateVerify: {
+            /** Certificate No */
+            certificate_no: string;
+            /** Course Title */
+            course_title: string;
+            /** Instructor Name */
+            instructor_name: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /** Org Name */
+            org_name: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Student Name */
+            student_name: string;
+            /** Total Video Seconds */
+            total_video_seconds: number;
+            /** Valid */
+            valid: boolean;
+        };
         /** Check */
         Check: {
             /** Current */
@@ -4045,6 +4304,11 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** HideIn */
+        HideIn: {
+            /** Reason */
+            reason: string;
+        };
         /** Home */
         Home: {
             /** Classes */
@@ -4198,6 +4462,8 @@ export interface components {
         };
         /** LearnCourse */
         LearnCourse: {
+            /** Certificate No */
+            certificate_no?: string | null;
             /** Completion Message */
             completion_message: string | null;
             /** Cover Image Url */
@@ -4211,6 +4477,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** My Rating */
+            my_rating?: number | null;
             /** Next Lecture Id */
             next_lecture_id: string | null;
             /** One Time Price Cents */
@@ -4955,6 +5223,34 @@ export interface components {
             /** Student Note */
             student_note: string | null;
         };
+        /** MyReview */
+        MyReview: {
+            /** Comment */
+            comment: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instructor Reply */
+            instructor_reply: string | null;
+            /** Rating */
+            rating: number;
+            /** Replied At */
+            replied_at: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** OpenResourceOut */
         OpenResourceOut: {
             /** Duration Seconds */
@@ -5503,6 +5799,37 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** PublicReview */
+        PublicReview: {
+            /** Comment */
+            comment: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instructor Reply */
+            instructor_reply: string | null;
+            /** Rating */
+            rating: number;
+            /** Replied At */
+            replied_at: string | null;
+            /** Reviewer */
+            reviewer: string;
+        };
+        /** PublicReviewPage */
+        PublicReviewPage: {
+            /** Items */
+            items: components["schemas"]["PublicReview"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            summary: components["schemas"]["ReviewSummary"];
+        };
         /** RecoveryComplete */
         RecoveryComplete: {
             /** Code */
@@ -5569,6 +5896,11 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** ReplyIn */
+        ReplyIn: {
+            /** Reply */
+            reply?: string | null;
+        };
         /** ResourceCreate */
         ResourceCreate: {
             /**
@@ -5620,6 +5952,13 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** ReviewIn */
+        ReviewIn: {
+            /** Comment */
+            comment?: string | null;
+            /** Rating */
+            rating: number;
+        };
         /** ReviewRow */
         ReviewRow: {
             /** Category Name */
@@ -5652,6 +5991,17 @@ export interface components {
             title: string;
             /** Total Video Seconds */
             total_video_seconds: number;
+        };
+        /** ReviewSummary */
+        ReviewSummary: {
+            /** Average */
+            average: number | null;
+            /** Count */
+            count: number;
+            /** Distribution */
+            distribution: {
+                [key: string]: number;
+            };
         };
         /** SectionCreate */
         SectionCreate: {
@@ -5702,6 +6052,45 @@ export interface components {
             subjects: string[];
             /** Teachers */
             teachers: string[];
+        };
+        /**
+         * StaffReview
+         * @description The instructor's and EduZone staff's view of a review.
+         */
+        StaffReview: {
+            /** Comment */
+            comment: string | null;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Hidden Reason */
+            hidden_reason: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instructor Reply */
+            instructor_reply: string | null;
+            /** Rating */
+            rating: number;
+            /** Replied At */
+            replied_at: string | null;
+            /** Reviewer */
+            reviewer: string;
+            /** Status */
+            status: string;
+            /** Tenant Name */
+            tenant_name?: string | null;
         };
         /** StreamWebhook */
         StreamWebhook: {
@@ -6966,6 +7355,26 @@ export interface operations {
             };
         };
     };
+    my_certificates_api_v1_learn_certificates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateOut"][];
+                };
+            };
+        };
+    };
     create_checkout_api_v1_learn_checkout_post: {
         parameters: {
             query?: {
@@ -7182,6 +7591,101 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LearnCourse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_review_api_v1_learn_courses__course_id__review_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyReview"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_review_api_v1_learn_courses__course_id__review_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyReview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_review_api_v1_learn_courses__course_id__review_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -7574,6 +8078,68 @@ export interface operations {
             };
         };
     };
+    verify_certificate_api_v1_market_certificates__number__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateVerify"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    certificate_pdf_api_v1_market_certificates__number__pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     classes_api_v1_market_classes_get: {
         parameters: {
             query?: {
@@ -7751,6 +8317,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CoursePreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    course_reviews_api_v1_market_course__slug__reviews_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicReviewPage"];
                 };
             };
             /** @description Validation Error */
@@ -8826,6 +9426,41 @@ export interface operations {
             };
         };
     };
+    reply_api_v1_org_course_reviews__review_id__reply_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffReview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     delete_section_api_v1_org_course_sections__section_id__delete: {
         parameters: {
             query?: never;
@@ -9062,6 +9697,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CourseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    staff_course_reviews_api_v1_org_courses__course_id__reviews_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffReview"][];
                 };
             };
             /** @description Validation Error */
@@ -10348,6 +11014,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_course_reviews_api_v1_platform_course_reviews_get: {
+        parameters: {
+            query?: {
+                status?: ("visible" | "hidden") | null;
+                course_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffReview"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hide_course_review_api_v1_platform_course_reviews__review_id__hide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffReview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    show_course_review_api_v1_platform_course_reviews__review_id__show_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffReview"];
                 };
             };
             /** @description Validation Error */
@@ -11709,6 +12473,41 @@ export interface operations {
             };
         };
     };
+    reply_api_v1_teach__tenant_slug__course_reviews__review_id__reply_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffReview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     delete_section_api_v1_teach__tenant_slug__course_sections__section_id__delete: {
         parameters: {
             query?: never;
@@ -11945,6 +12744,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CourseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    staff_course_reviews_api_v1_teach__tenant_slug__courses__course_id__reviews_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffReview"][];
                 };
             };
             /** @description Validation Error */

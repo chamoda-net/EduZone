@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import ApiError
 from app.core.tenancy import tenant_transaction
 from app.modules.auth.dependencies import AuthContext, UserContext, ensure_student_member
+from app.modules.courses import certificates
 from app.modules.courses.schemas import (
     CompletionOut,
     CourseProgress,
@@ -102,6 +103,9 @@ async def course_view(session: AsyncSession, auth: AuthContext, course_id: UUID)
         s.total += 1
         s.completed += int(lec.completed)
     upcoming = next((lec.id for lec in lectures if not lec.completed and (has or lec.is_free_preview)), None)
+    my_rating = (await session.execute(text(
+        "SELECT rating FROM course_reviews WHERE class_id = :c AND student_member_id = CAST(:m AS uuid)"),
+        {"c": course_id, "m": auth.member_id})).scalar_one_or_none() if auth.member_id else None
     return LearnCourse(
         id=c.id, slug=c.slug, title=c.title, subtitle=c.subtitle, cover_image_url=c.cover_image_url, status=c.status,
         path=f"/course/{c.slug}", teacher_name=c.teacher_name, teacher_slug=c.teacher_slug, org_name=c.org_name,
@@ -110,6 +114,7 @@ async def course_view(session: AsyncSession, auth: AuthContext, course_id: UUID)
         completion_message=c.completion_message if has and progress.total and progress.percent == 100 else None,
         progress=progress, sections=sections,
         next_lecture_id=upcoming or (lectures[0].id if lectures and has else None),
+        my_rating=my_rating, certificate_no=await certificates.certificate_for(session, auth.member_id, course_id),
     )
 
 
@@ -167,6 +172,7 @@ async def set_completed(session: AsyncSession, auth: AuthContext, lecture_id: UU
     assert auth.member_id is not None
     if done:
         await learning_repo.complete_lecture(session, auth.member_id, lesson.id, "manual")
+        await certificates.maybe_issue(session, auth.member_id, lesson.class_id)
     else:
         await session.execute(text("DELETE FROM lesson_completions WHERE student_member_id = :m AND lesson_id = :l"),
                               {"m": auth.member_id, "l": lesson.id})
