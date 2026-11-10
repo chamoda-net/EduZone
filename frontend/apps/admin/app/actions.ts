@@ -68,15 +68,17 @@ function limits(fd: FormData): { storage_limit_bytes: number | null; bandwidth_l
   return { storage_limit_bytes: storage, bandwidth_limit_bytes: bandwidth };
 }
 
-function commissionBps(fd: FormData): number | null {
+/** "" = the platform defaults; a percentage -> basis points; undefined when it isn't one. */
+function commissionBps(fd: FormData): number | null | undefined {
   const v = text(fd, "commission");
-  return /^\d{1,3}(\.\d{1,2})?$/.test(v) ? Math.round(Number(v) * 100) : null;
+  if (!v) return null;
+  return /^\d{1,3}(\.\d{1,2})?$/.test(v) && Number(v) <= 100 ? Math.round(Number(v) * 100) : undefined;
 }
 
 export async function createTenant(_: FormState, fd: FormData): Promise<FormState> {
   const lim = limits(fd);
   const bps = commissionBps(fd);
-  if (!lim || bps === null) return { error: t("platform.form.invalidNumber") };
+  if (!lim || bps === undefined) return { error: t("platform.form.invalidNumber") };
   const library = text(fd, "bunny_library_id");
   const res = await api<{ tenant: PlatformTenant }>("/platform/tenants", {
     method: "POST",
@@ -100,15 +102,13 @@ export async function createTenant(_: FormState, fd: FormData): Promise<FormStat
 
 export async function updateTenant(tenantId: string, _: FormState, fd: FormData): Promise<FormState> {
   const lim = limits(fd);
-  const bps = commissionBps(fd);
-  if (!lim || bps === null) return { error: t("platform.form.invalidNumber") };
+  if (!lim) return { error: t("platform.form.invalidNumber") };
   const library = text(fd, "bunny_library_id");
   const res = await api(`/platform/tenants/${tenantId}`, {
     method: "PATCH",
     body: {
       name: text(fd, "name"),
       status: text(fd, "status"),
-      commission_bps: bps,
       gateway_fee_bearer: text(fd, "gateway_fee_bearer"),
       primary_color: text(fd, "primary_color") || null,
       bunny_library_id: library ? Number(library) : null,
@@ -339,6 +339,38 @@ export async function markRefundProcessed(refundId: string, _: FormState, fd: Fo
   });
   revalidatePath(`/refunds/${refundId}`);
   revalidatePath("/refunds");
+  if (!res.ok) return { error: errorText(t, res.error) };
+  return { ok: true, at: Date.now() };
+}
+
+// --- commission rates and scheduled changes (courses step C7) -------------------------------
+
+export async function scheduleCommissionChange(_: FormState, fd: FormData): Promise<FormState> {
+  const pct = text(fd, "new_rate");
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(pct) || Number(pct) > 100) return { error: t("platform.form.invalidNumber") };
+  const date = text(fd, "effective_on");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: t("platform.commission.dateRequired") };
+  const scope = text(fd, "scope") === "tenant" ? "tenant" : "platform";
+  const res = await api("/platform/commission/changes", {
+    method: "POST",
+    body: {
+      scope,
+      tenant_id: scope === "tenant" ? text(fd, "tenant_id") || null : null,
+      kind: text(fd, "kind"),
+      new_bps: Math.round(Number(pct) * 100),
+      effective_at: `${date}T00:00:00+05:30`, // the start of that day in Colombo
+      reason: text(fd, "reason"),
+    },
+  });
+  if (!res.ok) return { error: errorText(t, res.error) };
+  revalidatePath("/commission");
+  revalidatePath("/");
+  return { ok: true, at: Date.now() };
+}
+
+export async function cancelCommissionChange(changeId: string): Promise<FormState> {
+  const res = await api(`/platform/commission/changes/${changeId}/cancel`, { method: "POST" });
+  revalidatePath("/commission");
   if (!res.ok) return { error: errorText(t, res.error) };
   return { ok: true, at: Date.now() };
 }

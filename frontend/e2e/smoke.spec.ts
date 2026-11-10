@@ -262,3 +262,15 @@ test("a student buys a course and refunds it from the player", async ({ page }) 
   await expect(page.getByText("Refunded", { exact: true })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("This lecture is locked").or(page.getByRole("link", { name: "Get the course" }).first())).toBeVisible();
 });
+
+test("a teacher reads a course's insights", async ({ page }) => {
+  await signIn(page, TEACHER_EMAIL, DEMO_PASSWORD, TEACHER_PHONE);
+  await page.goto("/teach/demo/courses");
+  await page.getByRole("link", { name: /A\/L Physics: Problem Solving Masterclass/ }).click();
+  await expect(page).toHaveURL(/\/teach\/demo\/courses\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await page.getByRole("link", { name: "Insights" }).click();
+  await expect(page.getByRole("heading", { name: "Revenue" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("With access now")).toBeVisible();
+  await expect(page.getByRole("table", { name: "Enrolments and revenue by month" })).toBeVisible();
+  await expect(page.getByText("PHYSICS50")).toBeVisible();
+});

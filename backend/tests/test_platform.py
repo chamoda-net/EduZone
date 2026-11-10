@@ -141,7 +141,9 @@ async def test_create_organization_and_owner(client: AsyncClient, sms: FakeSms, 
     assert resp.status_code == 201, resp.text
     created = resp.json()
     created_tenants.append(UUID(created["tenant"]["id"]))
-    assert created["tenant"]["status"] == "active" and created["tenant"]["commission_bps"] == 1500
+    t = created["tenant"]
+    assert t["status"] == "active" and (t["tuition_commission_bps"], t["course_commission_bps"]) == (1500, 1500)
+    assert t["tuition_override_bps"] == 1500
     assert created["tenant"]["members"] == 1 and created["tenant"]["balance_due_cents"] == 0
 
     # A new owner has no password yet (they set one with "Forgot password") and no phone.

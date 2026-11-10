@@ -1,9 +1,9 @@
 import { teachHref } from "@/lib/workspace";
-import { Hourglass, Landmark, Percent, TrendingUp } from "lucide-react";
+import { CalendarClock, Hourglass, Landmark, Percent, TrendingUp } from "lucide-react";
 
 import { Card, ErrorText, FilterChips, PageHeader, StatTile } from "@eduzone/ui";
 import { api } from "@/lib/api";
-import { colomboMonth, formatMoney, formatMonth, shiftMonth } from "@eduzone/lib/format";
+import { colomboMonth, formatDateTime, formatMoney, formatMonth, shiftMonth } from "@eduzone/lib/format";
 import { errorText, t, type MessageKey } from "@eduzone/lib/i18n";
 import type { Cashflow, CashflowFigures } from "@eduzone/lib/types";
 
@@ -60,10 +60,28 @@ export default async function MoneyPage({ searchParams }: PageProps<"/teach/[ten
           tone="gold"
           icon={<Percent />}
           label={t("money.commission")}
-          value={`${c.commission_bps / 100}%`}
-          hint={t("money.rate", { rate: c.commission_bps / 100, bearer: t(`money.bearer.${c.gateway_fee_bearer}`) })}
+          value={c.tuition_commission_bps === c.course_commission_bps
+            ? `${c.tuition_commission_bps / 100}%`
+            : `${c.tuition_commission_bps / 100}% · ${c.course_commission_bps / 100}%`}
+          hint={t("money.rates", { tuition: c.tuition_commission_bps / 100, course: c.course_commission_bps / 100,
+                                   bearer: t(`money.bearer.${c.gateway_fee_bearer}`) })}
         />
       </div>
+
+      {c.upcoming_changes.map((n) => (
+        <div key={`${n.kind}-${n.effective_at}`} role="status"
+             className="flex gap-3 rounded-ez-lg border border-gold/40 bg-gold/10 px-4 py-3">
+          <CalendarClock className="mt-0.5 size-5 shrink-0 text-gold-strong" />
+          <div className="text-sm">
+            <p className="font-semibold">
+              {t("money.change", { product: t(`money.product.${n.kind}`), old: n.old_bps / 100, new: n.new_bps / 100,
+                                   date: formatDateTime(n.effective_at) })}
+            </p>
+            <p className="text-foreground/80">{t("money.changeWhy", { reason: n.reason })}</p>
+            <p className="text-xs text-muted">{t("money.changeNote")}</p>
+          </div>
+        </div>
+      ))}
 
       {c.pending_cents > 0 && (
         <p className="flex items-start gap-2.5 rounded-ez-lg border border-info/25 bg-info-bg px-4 py-3 text-sm">

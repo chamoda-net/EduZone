@@ -118,6 +118,8 @@ class Settings(BaseSettings):
     # Gateway fee booked at sale time, in basis points; trued up from the settlement report.
     # Set from the merchant agreement.
     gateway_fee_estimate_bps: int = Field(default=300, ge=0, le=10000)
+    # A commission increase must be announced at least this many days before it applies (docs/COURSES.md C.10).
+    commission_notice_days: int = Field(default=30, ge=0, le=365)
     # Public base URL of this API (the gateway calls {api_public_url}/api/v1/webhooks/<gateway>).
     api_public_url: str = "http://localhost:8000"
     # Scheme the tenant sites are served on (for return URLs built from the user's host).

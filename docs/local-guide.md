@@ -269,6 +269,14 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
 3. Owners: console → **Money** shows course sales still inside the 7-day window as held; payouts can only include
    what is available.
 
+### C8. Insights and commission: new in step C7
+1. Teacher or owner: console → **Courses** → a course → **Insights**: students, completion, rating, saves, revenue
+   and enrolments per month (3, 6 or 12 months), a month table and the top coupons.
+2. Admin app → **Commission**: the default rate for tuition and for courses. Schedule a change for everyone or for
+   one organization: an increase needs 30 days' notice, a decrease can come sooner. The owners it affects get an
+   email (with `EMAIL_PROVIDER=console` it is in the API log) and a banner on their **Money** page; cancel it until
+   its date. `python scripts/apply_commission_changes.py` records due changes (checkout already uses them).
+
 ### D. Become a teacher (any new account)
 1. Register a new account at `/register` and confirm the phone.
 2. Go to `/teach` → **Apply** (`/teach/apply`): teacher or institute, name, subjects, experience, identity
@@ -386,7 +394,8 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
   courses, the console's Coupons page.
 - Refunds (step C6): the 7-day / 30% rule, automatic approval with an abuse limit, the admin refund queue, the
   ledger reversal, and the 7-day payout hold.
-- Not yet: analytics and commission changes (C7).
+- Insights and commission (step C7): per-course analytics, commission per product type with changes scheduled
+  with notice, the admin Commission page and the Money page banner. The course steps C1-C7 are complete.
 
 ### Platform admin (step 9, phases 5 and 8)
 - Separate app, private network only (`PLATFORM_ALLOWED_CIDRS`), sign-in with SMS code + authenticator app,

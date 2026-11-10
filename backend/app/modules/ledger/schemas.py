@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -26,9 +26,21 @@ class CashflowTotals(BaseModel):
     paid_out_cents: int
 
 
+class CommissionNotice(BaseModel):
+    """A scheduled change of this organization's rate (step C7): the Money page's banner."""
+
+    kind: str                            # tuition | course
+    old_bps: int                         # this organization's rate now
+    new_bps: int
+    effective_at: datetime
+    reason: str
+
+
 class Cashflow(BaseModel):
     currency: str
-    commission_bps: int                  # current rate (history uses each sale's own snapshot)
+    tuition_commission_bps: int          # rates now, per product (history uses each sale's own snapshot)
+    course_commission_bps: int
+    upcoming_changes: list[CommissionNotice]
     gateway_fee_bearer: str              # tenant | platform
     balance_due_cents: int               # what EduZone owes the organization now (all time)
     pending_cents: int                   # net of course sales still inside the 7-day refund window (step C6)

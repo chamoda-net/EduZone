@@ -1420,3 +1420,43 @@ CREATE INDEX idx_refunds_status ON refunds (status, created_at DESC);
 ALTER TABLE order_items ADD COLUMN refunded_at timestamptz;      -- app: UPDATE (refunded_at) only
 -- v_tenant_pending_balance (security_invoker): net of course sales paid in the last 7 days and not refunded;
 -- a payout may not include it.
+
+-- =============================================================================
+-- Courses, step C7 (migration 0016): commission per product type and scheduled changes (docs/COURSES.md C.10)
+-- =============================================================================
+CREATE TABLE platform_commission_rates (     -- app: SELECT
+    kind            text PRIMARY KEY CHECK (kind IN ('tuition','course')),
+    commission_bps  integer NOT NULL CHECK (commission_bps BETWEEN 0 AND 10000),
+    updated_at      timestamptz NOT NULL DEFAULT now()
+);
+-- ('tuition', 2000), ('course', 2000)
+ALTER TABLE tenants
+    ADD COLUMN tuition_commission_bps integer CHECK (tuition_commission_bps BETWEEN 0 AND 10000),  -- NULL = default
+    ADD COLUMN course_commission_bps  integer CHECK (course_commission_bps BETWEEN 0 AND 10000);
+-- tenants.commission_bps is no longer read (copied into both overrides where it wasn't 2000).
+CREATE TABLE commission_changes (            -- forced RLS: tenant_read (platform rows + own); only eduzone_admin writes
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    scope           text NOT NULL CHECK (scope IN ('platform','tenant')),
+    tenant_id       uuid REFERENCES tenants(id),
+    kind            text NOT NULL CHECK (kind IN ('tuition','course')),
+    old_bps         integer NOT NULL CHECK (old_bps BETWEEN 0 AND 10000),
+    new_bps         integer NOT NULL CHECK (new_bps BETWEEN 0 AND 10000),
+    reason          text NOT NULL CHECK (char_length(reason) BETWEEN 3 AND 1000),
+    announced_at    timestamptz NOT NULL DEFAULT now(),
+    effective_at    timestamptz NOT NULL,
+    status          text NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled','applied','cancelled')),
+    applied_at      timestamptz,
+    cancelled_at    timestamptz,
+    notified        jsonb NOT NULL DEFAULT '[]'::jsonb,     -- [{tenant_id, tenant_name, emails}]
+    created_by      uuid NOT NULL REFERENCES users(id),
+    cancelled_by    uuid REFERENCES users(id),
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    CHECK ((scope = 'platform' AND tenant_id IS NULL) OR (scope = 'tenant' AND tenant_id IS NOT NULL)),
+    CHECK (effective_at > announced_at),
+    CHECK (new_bps <> old_bps)
+);
+CREATE INDEX idx_commission_changes_due ON commission_changes (effective_at) WHERE status = 'scheduled';
+CREATE UNIQUE INDEX uq_commission_change_scheduled ON commission_changes (scope, tenant_id, kind)
+    NULLS NOT DISTINCT WHERE status = 'scheduled';
+-- commission_rate_for(tenant, kind) (SECURITY DEFINER, eduzone_admin only) and commission_rate(kind) (current tenant,
+-- for checkout): due tenant change > override > due platform change > default.

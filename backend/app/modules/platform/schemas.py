@@ -33,7 +33,9 @@ class TenantCreate(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     slug: Slug
     org_type: OrgType = "individual"
-    commission_bps: int = Field(default=2000, ge=0, le=10000)
+    # A new organization's own rate for both products (None = the platform defaults). Later changes are scheduled
+    # with notice (commission_changes, step C7).
+    commission_bps: int | None = Field(default=None, ge=0, le=10000)
     gateway_fee_bearer: FeeBearer = "tenant"
     primary_color: Color | None = None
     bunny_library_id: int | None = Field(default=None, gt=0)
@@ -51,12 +53,12 @@ class TenantCreate(BaseModel):
 
 
 class TenantUpdate(_Patch):
-    non_nullable: ClassVar[tuple[str, ...]] = ("name", "status", "is_listed", "commission_bps", "gateway_fee_bearer")
+    non_nullable: ClassVar[tuple[str, ...]] = ("name", "status", "is_listed", "gateway_fee_bearer")
 
     name: str | None = Field(default=None, min_length=2, max_length=120)
     status: TenantStatus | None = None
     is_listed: bool | None = None
-    commission_bps: int | None = Field(default=None, ge=0, le=10000)
+    # Commission is not edited here: rate changes are scheduled with notice (POST /platform/commission/changes).
     gateway_fee_bearer: FeeBearer | None = None
     primary_color: Color | None = None
     logo_url: str | None = Field(default=None, max_length=1000)
@@ -75,7 +77,10 @@ class TenantRow(BaseModel):
     status: str
     is_listed: bool
     currency: str
-    commission_bps: int
+    tuition_commission_bps: int          # the rate now (override, else the platform default; due changes count)
+    course_commission_bps: int
+    tuition_override_bps: int | None     # the organization's own rate, if any
+    course_override_bps: int | None
     gateway_fee_bearer: str
     primary_color: str | None
     logo_url: str | None

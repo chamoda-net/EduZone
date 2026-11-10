@@ -74,6 +74,12 @@ async def phones() -> AsyncIterator[Callable[[], str]]:
     yield make
     async with AdminSession() as s, s.begin():
         await s.execute(text("DELETE FROM otp_codes WHERE destination = ANY(:p)"), {"p": made})
+        # Platform-level rows a test's staff user wrote (commission changes, step C7) go first.
+        await s.execute(text("""
+            DELETE FROM commission_changes
+            WHERE created_by IN (SELECT id FROM users WHERE phone = ANY(:p))
+               OR cancelled_by IN (SELECT id FROM users WHERE phone = ANY(:p))
+        """), {"p": made})
         await s.execute(text("DELETE FROM users WHERE phone = ANY(:p)"), {"p": made})
 
 

@@ -27,7 +27,11 @@ from app.modules.platform.schemas import (
 )
 
 _TENANT_SELECT = """
-    SELECT t.id, t.name, t.slug, t.org_type, t.status, t.is_listed, t.currency, t.commission_bps, t.gateway_fee_bearer,
+    SELECT t.id, t.name, t.slug, t.org_type, t.status, t.is_listed, t.currency,
+           commission_rate_for(t.id, 'tuition') AS tuition_commission_bps,
+           commission_rate_for(t.id, 'course') AS course_commission_bps,
+           t.tuition_commission_bps AS tuition_override_bps, t.course_commission_bps AS course_override_bps,
+           t.gateway_fee_bearer,
            t.primary_color, t.logo_url, t.bunny_library_id, t.payout_bank_name, t.payout_account_masked,
            t.created_at, t.storage_limit_bytes, t.bandwidth_limit_bytes,
            (SELECT count(*) FROM tenant_members m WHERE m.tenant_id = t.id AND m.role <> 'student') AS members,
@@ -90,9 +94,11 @@ async def create_tenant(session: AsyncSession, actor: PlatformActor, body: Tenan
             text("SELECT 1 FROM tenants WHERE bunny_library_id = :b"), {"b": body.bunny_library_id})).first():
         raise ApiError("LIBRARY_IN_USE", "That Bunny library belongs to another organization.", status_code=409)
     tenant_id = (await session.execute(text("""
-        INSERT INTO tenants (name, slug, org_type, commission_bps, gateway_fee_bearer, primary_color,
-                             bunny_library_id, storage_limit_bytes, bandwidth_limit_bytes)
-        VALUES (:name, :slug, :org_type, :bps, :bearer, :color, :lib, :storage, :bandwidth)
+        INSERT INTO tenants (name, slug, org_type, commission_bps, tuition_commission_bps, course_commission_bps,
+                             gateway_fee_bearer, primary_color, bunny_library_id, storage_limit_bytes,
+                             bandwidth_limit_bytes)
+        VALUES (:name, :slug, :org_type, COALESCE(CAST(:bps AS integer), 2000), :bps, :bps, :bearer, :color, :lib,
+                :storage, :bandwidth)
         RETURNING id
     """), {"name": body.name, "slug": body.slug, "org_type": body.org_type, "bps": body.commission_bps,
            "bearer": body.gateway_fee_bearer, "color": body.primary_color, "lib": body.bunny_library_id,

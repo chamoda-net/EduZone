@@ -21,12 +21,13 @@ import {
 import { InlineForm, LandingForm, LearnersForm, LectureForm, LectureTypeSelect, MessagesForm, PricingForm, ReplyForm } from "../forms";
 import { Stars } from "@/components/stars";
 import { AttachFileForm } from "../../classes/[id]/lesson-files";
+import { CourseInsightsView, INSIGHT_RANGES } from "./insights";
 
 type CourseDetail = Schema<"CourseDetail">;
 type Category = Schema<"CategoryOut">;
 type Check = Schema<"Check">;
 
-const TABS = ["landing", "learners", "curriculum", "pricing", "messages", "reviews"] as const;
+const TABS = ["landing", "learners", "curriculum", "pricing", "messages", "reviews", "insights"] as const;
 type Tab = (typeof TABS)[number];
 
 // Which tab fixes which check.
@@ -70,6 +71,8 @@ export default async function CourseBuilderPage({ params, searchParams }: PagePr
       })))
     : new Map<string, LessonResource[]>();
   const reviewsRes = tab === "reviews" ? await api<Schema<"StaffReview">[]>(`~/courses/${id}/reviews`) : null;
+  const range = INSIGHT_RANGES.includes(sp.months as "12") ? (sp.months as string) : "12";
+  const insightsRes = tab === "insights" ? await api<Schema<"CourseInsights">>(`~/courses/${id}/insights?months=${range}`) : null;
   const done = c.checks.filter((x) => x.ok).length;
   const locked = c.status === "in_review";
   const minutes = Math.round(c.total_video_seconds / 60);
@@ -163,6 +166,12 @@ export default async function CourseBuilderPage({ params, searchParams }: PagePr
             {tab === "pricing" && <Card><PricingForm action={savePricing.bind(null, c.id)} course={c} /></Card>}
             {tab === "messages" && <Card><MessagesForm action={saveMessages.bind(null, c.id)} course={c} /></Card>}
           </fieldset>
+
+          {tab === "insights" && insightsRes?.ok && (
+            <CourseInsightsView d={insightsRes.data} range={range}
+                                href={(m) => `${base}/courses/${c.id}?tab=insights${m === "12" ? "" : `&months=${m}`}`} />
+          )}
+          {tab === "insights" && insightsRes && !insightsRes.ok && <ErrorText>{errorText(t, insightsRes.error)}</ErrorText>}
 
           {tab === "reviews" && (
             <div className="flex flex-col gap-3">

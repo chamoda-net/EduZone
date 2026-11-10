@@ -46,10 +46,11 @@ export function TenantForm({ action, initial }: {
             </Select>
           </Field>
         )}
-        <Field label={t("platform.form.commission")}>
-          <Input name="commission" inputMode="decimal" required
-                 defaultValue={initial ? String(initial.commission_bps / 100) : "20"} />
-        </Field>
+        {!initial && (
+          <Field label={`${t("platform.form.commission")} (${t("common.optional")})`} hint={t("platform.form.commissionHint")}>
+            <Input name="commission" inputMode="decimal" placeholder="20" />
+          </Field>
+        )}
         <Field label={t("platform.form.feeBearerLabel")}>
           <Select name="gateway_fee_bearer" defaultValue={initial?.gateway_fee_bearer ?? "tenant"}>
             <option value="tenant">{t("platform.form.feeBearer.tenant")}</option>

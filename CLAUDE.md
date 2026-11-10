@@ -454,6 +454,33 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   (filter chips, "Needs action" count) and `/refunds/[id]` (the request against the rule, approve/refuse, retry or
   record a portal refund). Tests: `tests/test_refunds.py`, an e2e check.
 
+### How it's built (courses C7: `app/modules/platform/commission.py`, `app/modules/courses/insights.py`, migration 0016)
+- **Commission per product type:** `platform_commission_rates` (tuition, course; 20% each) and an organization's
+  own rate in `tenants.tuition_commission_bps` / `course_commission_bps` (NULL = the default). `tenants.commission_bps`
+  was copied into both where it wasn't 20% and is **no longer read**. Checkout's `price_item()` snapshots
+  `commission_rate(kind)` (SECURITY DEFINER, the current tenant): a due tenant change, else the override, else a due
+  platform change, else the default. Due changes count before anything marks them applied, so no job is needed for
+  the rate to be right. Orders are created when the checkout starts, so a checkout started before a change keeps the
+  old rate.
+- **Changes are scheduled, never immediate** (`commission_changes`, forced RLS: organizations read their own and the
+  platform rows; only eduzone_admin writes): `GET /platform/commission` (records due changes as applied first:
+  `apply_due()`, also `scripts/apply_commission_changes.py` for a daily job), `POST /platform/commission/changes
+  {scope platform|tenant, tenant_id?, kind, new_bps, effective_at, reason}` (an increase needs
+  `COMMISSION_NOTICE_DAYS` = 30 days' notice, a decrease may come sooner; one scheduled change per scope, tenant and
+  kind; the affected owners are emailed and listed in `notified`), `POST .../{id}/cancel` (until its date; the same
+  owners are told). Commission is no longer edited on the organization (`PATCH /tenants/{id}` refuses it); a new
+  organization may start with its own rate. Organization rows show both rates and overrides.
+- **The organization's side:** the cash-flow report has `tuition_commission_bps`, `course_commission_bps` and
+  `upcoming_changes` (also `GET /teach/{t}/commission`); the Money page shows a banner per change (old and new rate,
+  date, reason).
+- **Instructor analytics** (`GET /teach/{t}/courses/{id}/insights?months=1..24`, the builder's rule): students with
+  access, completion rate (everyone at 100% / students with access), rating, wishlist count, top coupons, and per
+  Colombo month: enrolments paid / with a coupon / free or given, gross, refunds and the organization's net from the
+  ledger by `order_items.class_id`, refund count. Web: the builder's **Insights** tab (tiles, revenue and enrolment
+  bars, a month table, top coupons; 3, 6 or 12 months).
+- **Admin app:** `/commission` (the defaults, the schedule form, scheduled changes with cancel, history, who was
+  notified); the organization form asks a rate only when creating. Tests: `tests/test_commission.py`, an e2e check.
+
 ### Access rule (one function, used everywhere)
 A student can open a lesson if **any** of these is true:
 - `lesson.is_free_preview` and the lesson is published

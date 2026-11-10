@@ -1084,8 +1084,8 @@
             "title": "Balance Due Cents",
             "type": "integer"
           },
-          "commission_bps": {
-            "title": "Commission Bps",
+          "course_commission_bps": {
+            "title": "Course Commission Bps",
             "type": "integer"
           },
           "currency": {
@@ -1109,11 +1109,24 @@
           },
           "totals": {
             "$ref": "#/components/schemas/CashflowTotals"
+          },
+          "tuition_commission_bps": {
+            "title": "Tuition Commission Bps",
+            "type": "integer"
+          },
+          "upcoming_changes": {
+            "items": {
+              "$ref": "#/components/schemas/CommissionNotice"
+            },
+            "title": "Upcoming Changes",
+            "type": "array"
           }
         },
         "required": [
           "currency",
-          "commission_bps",
+          "tuition_commission_bps",
+          "course_commission_bps",
+          "upcoming_changes",
           "gateway_fee_bearer",
           "balance_due_cents",
           "pending_cents",
@@ -1536,6 +1549,65 @@
           "valid"
         ],
         "title": "CertificateVerify",
+        "type": "object"
+      },
+      "ChangeCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "effective_at": {
+            "format": "date-time",
+            "title": "Effective At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "tuition",
+              "course"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "new_bps": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "New Bps",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "platform",
+              "tenant"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          }
+        },
+        "required": [
+          "scope",
+          "kind",
+          "new_bps",
+          "effective_at",
+          "reason"
+        ],
+        "title": "ChangeCreate",
         "type": "object"
       },
       "Check": {
@@ -2586,6 +2658,190 @@
         "title": "ClassUpdate",
         "type": "object"
       },
+      "CommissionChange": {
+        "properties": {
+          "announced_at": {
+            "format": "date-time",
+            "title": "Announced At",
+            "type": "string"
+          },
+          "applied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied At"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "created_by_name": {
+            "title": "Created By Name",
+            "type": "string"
+          },
+          "effective_at": {
+            "format": "date-time",
+            "title": "Effective At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "new_bps": {
+            "title": "New Bps",
+            "type": "integer"
+          },
+          "notified": {
+            "items": {
+              "$ref": "#/components/schemas/NotifiedTenant"
+            },
+            "title": "Notified",
+            "type": "array"
+          },
+          "old_bps": {
+            "title": "Old Bps",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          },
+          "tenant_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Name"
+          }
+        },
+        "required": [
+          "id",
+          "scope",
+          "tenant_id",
+          "tenant_name",
+          "kind",
+          "old_bps",
+          "new_bps",
+          "reason",
+          "announced_at",
+          "effective_at",
+          "status",
+          "applied_at",
+          "cancelled_at",
+          "notified",
+          "created_by_name"
+        ],
+        "title": "CommissionChange",
+        "type": "object"
+      },
+      "CommissionNotice": {
+        "description": "A scheduled change of this organization's rate (step C7): the Money page's banner.",
+        "properties": {
+          "effective_at": {
+            "format": "date-time",
+            "title": "Effective At",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "new_bps": {
+            "title": "New Bps",
+            "type": "integer"
+          },
+          "old_bps": {
+            "title": "Old Bps",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "old_bps",
+          "new_bps",
+          "effective_at",
+          "reason"
+        ],
+        "title": "CommissionNotice",
+        "type": "object"
+      },
+      "CommissionOverview": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/CommissionChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "notice_days": {
+            "title": "Notice Days",
+            "type": "integer"
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformRate"
+            },
+            "title": "Rates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "notice_days",
+          "rates",
+          "changes"
+        ],
+        "title": "CommissionOverview",
+        "type": "object"
+      },
       "CompletionOut": {
         "properties": {
           "completed": {
@@ -3388,6 +3644,82 @@
           "needs_review"
         ],
         "title": "CourseDetail",
+        "type": "object"
+      },
+      "CourseInsights": {
+        "properties": {
+          "completed_students": {
+            "title": "Completed Students",
+            "type": "integer"
+          },
+          "completion_rate": {
+            "title": "Completion Rate",
+            "type": "integer"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/InsightMonth"
+            },
+            "title": "Months",
+            "type": "array"
+          },
+          "rating_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Avg"
+          },
+          "rating_count": {
+            "title": "Rating Count",
+            "type": "integer"
+          },
+          "students": {
+            "title": "Students",
+            "type": "integer"
+          },
+          "top_coupons": {
+            "items": {
+              "$ref": "#/components/schemas/TopCoupon"
+            },
+            "title": "Top Coupons",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/InsightMonth"
+          },
+          "wishlist_count": {
+            "title": "Wishlist Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "course_id",
+          "currency",
+          "students",
+          "completed_students",
+          "completion_rate",
+          "rating_avg",
+          "rating_count",
+          "wishlist_count",
+          "totals",
+          "months",
+          "top_coupons"
+        ],
+        "title": "CourseInsights",
         "type": "object"
       },
       "CourseLectureOut": {
@@ -4323,6 +4655,55 @@
           "teachers"
         ],
         "title": "Home",
+        "type": "object"
+      },
+      "InsightMonth": {
+        "properties": {
+          "enrol_coupon": {
+            "title": "Enrol Coupon",
+            "type": "integer"
+          },
+          "enrol_free": {
+            "title": "Enrol Free",
+            "type": "integer"
+          },
+          "enrol_paid": {
+            "title": "Enrol Paid",
+            "type": "integer"
+          },
+          "gross_cents": {
+            "title": "Gross Cents",
+            "type": "integer"
+          },
+          "month": {
+            "format": "date",
+            "title": "Month",
+            "type": "string"
+          },
+          "net_cents": {
+            "title": "Net Cents",
+            "type": "integer"
+          },
+          "refund_count": {
+            "title": "Refund Count",
+            "type": "integer"
+          },
+          "refunds_cents": {
+            "title": "Refunds Cents",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "enrol_paid",
+          "enrol_coupon",
+          "enrol_free",
+          "gross_cents",
+          "refunds_cents",
+          "net_cents",
+          "refund_count"
+        ],
+        "title": "InsightMonth",
         "type": "object"
       },
       "InstituteOut": {
@@ -7203,6 +7584,33 @@
         "title": "MyReview",
         "type": "object"
       },
+      "NotifiedTenant": {
+        "properties": {
+          "emails": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Emails",
+            "type": "array"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "tenant_name": {
+            "title": "Tenant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "tenant_name",
+          "emails"
+        ],
+        "title": "NotifiedTenant",
+        "type": "object"
+      },
       "OpenResourceOut": {
         "properties": {
           "duration_seconds": {
@@ -8258,6 +8666,30 @@
           "next_cursor"
         ],
         "title": "PlatformPaymentPage",
+        "type": "object"
+      },
+      "PlatformRate": {
+        "properties": {
+          "commission_bps": {
+            "title": "Commission Bps",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "commission_bps",
+          "updated_at"
+        ],
+        "title": "PlatformRate",
         "type": "object"
       },
       "PlatformRefresh": {
@@ -11067,11 +11499,17 @@
             "title": "Bunny Library Id"
           },
           "commission_bps": {
-            "default": 2000,
-            "maximum": 10000.0,
-            "minimum": 0.0,
-            "title": "Commission Bps",
-            "type": "integer"
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commission Bps"
           },
           "gateway_fee_bearer": {
             "default": "tenant",
@@ -11205,9 +11643,20 @@
             ],
             "title": "Bunny Library Id"
           },
-          "commission_bps": {
-            "title": "Commission Bps",
+          "course_commission_bps": {
+            "title": "Course Commission Bps",
             "type": "integer"
+          },
+          "course_override_bps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Override Bps"
           },
           "created_at": {
             "format": "date-time",
@@ -11322,6 +11771,21 @@
             "title": "Students",
             "type": "integer"
           },
+          "tuition_commission_bps": {
+            "title": "Tuition Commission Bps",
+            "type": "integer"
+          },
+          "tuition_override_bps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tuition Override Bps"
+          },
           "usage_synced_on": {
             "anyOf": [
               {
@@ -11343,7 +11807,10 @@
           "status",
           "is_listed",
           "currency",
-          "commission_bps",
+          "tuition_commission_bps",
+          "course_commission_bps",
+          "tuition_override_bps",
+          "course_override_bps",
           "gateway_fee_bearer",
           "primary_color",
           "logo_url",
@@ -11391,19 +11858,6 @@
               }
             ],
             "title": "Bunny Library Id"
-          },
-          "commission_bps": {
-            "anyOf": [
-              {
-                "maximum": 10000.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Commission Bps"
           },
           "gateway_fee_bearer": {
             "anyOf": [
@@ -11585,6 +12039,34 @@
           "expires_in"
         ],
         "title": "TokenPair",
+        "type": "object"
+      },
+      "TopCoupon": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "discount_cents": {
+            "title": "Discount Cents",
+            "type": "integer"
+          },
+          "revenue_cents": {
+            "title": "Revenue Cents",
+            "type": "integer"
+          },
+          "uses": {
+            "title": "Uses",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "uses",
+          "discount_cents",
+          "revenue_cents"
+        ],
+        "title": "TopCoupon",
         "type": "object"
       },
       "TusUpload": {
@@ -16942,6 +17424,37 @@
         ]
       }
     },
+    "/api/v1/org/commission": {
+      "get": {
+        "description": "Scheduled changes of this organization's commission (the console banner).",
+        "operationId": "commission_notices_api_v1_org_commission_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CommissionNotice"
+                  },
+                  "title": "Response Commission Notices Api V1 Org Commission Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Commission Notices",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
     "/api/v1/org/coupons": {
       "get": {
         "operationId": "list_coupons_api_v1_org_coupons_get",
@@ -17506,6 +18019,66 @@
           }
         ],
         "summary": "Update Course",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
+    "/api/v1/org/courses/{course_id}/insights": {
+      "get": {
+        "operationId": "course_insights_api_v1_org_courses__course_id__insights_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "months",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 24,
+              "minimum": 1,
+              "title": "Months",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseInsights"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Course Insights",
         "tags": [
           "org: courses"
         ]
@@ -19588,6 +20161,128 @@
           }
         ],
         "summary": "Retry Checkout",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/commission": {
+      "get": {
+        "description": "Platform defaults, scheduled changes and recent ones (due changes are recorded as applied first).",
+        "operationId": "commission_overview_api_v1_platform_commission_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Commission Overview",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/commission/changes": {
+      "post": {
+        "description": "Never immediate: an increase needs the notice period; the affected owners are emailed.",
+        "operationId": "schedule_commission_change_api_v1_platform_commission_changes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionChange"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Schedule Commission Change",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/commission/changes/{change_id}/cancel": {
+      "post": {
+        "operationId": "cancel_commission_change_api_v1_platform_commission_changes__change_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Change Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionChange"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Commission Change",
         "tags": [
           "platform"
         ]
@@ -22502,6 +23197,37 @@
         ]
       }
     },
+    "/api/v1/teach/{tenant_slug}/commission": {
+      "get": {
+        "description": "Scheduled changes of this organization's commission (the console banner).",
+        "operationId": "commission_notices_api_v1_teach__tenant_slug__commission_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CommissionNotice"
+                  },
+                  "title": "Response Commission Notices Api V1 Teach  Tenant Slug  Commission Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Commission Notices",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
     "/api/v1/teach/{tenant_slug}/coupons": {
       "get": {
         "operationId": "list_coupons_api_v1_teach__tenant_slug__coupons_get",
@@ -23066,6 +23792,66 @@
           }
         ],
         "summary": "Update Course",
+        "tags": [
+          "org: courses"
+        ]
+      }
+    },
+    "/api/v1/teach/{tenant_slug}/courses/{course_id}/insights": {
+      "get": {
+        "operationId": "course_insights_api_v1_teach__tenant_slug__courses__course_id__insights_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "months",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 24,
+              "minimum": 1,
+              "title": "Months",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseInsights"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Course Insights",
         "tags": [
           "org: courses"
         ]

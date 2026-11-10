@@ -41,7 +41,7 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
           [t("platform.tenants.balance"), money(x.balance_due_cents)],
           [t("platform.tenants.salesMonth"), money(x.sales_this_month_cents)],
           [t("platform.tenants.students"), String(x.students)],
-          [t("platform.form.commission"), `${x.commission_bps / 100}%`],
+          [t("platform.tenants.commission"), `${x.tuition_commission_bps / 100}% · ${x.course_commission_bps / 100}%`],
         ].map(([label, value]) => (
           <Card key={label} className="flex flex-col gap-1 p-3 sm:p-4">
             <p className="text-xs text-muted">{label}</p>

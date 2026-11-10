@@ -13,7 +13,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ApiError
 from app.modules.auth.dependencies import Actor
-from app.modules.ledger.schemas import Cashflow, CashflowMonth, CashflowTotals, Earnings, TeacherEarning
+from app.modules.ledger.schemas import (
+    Cashflow,
+    CashflowMonth,
+    CashflowTotals,
+    CommissionNotice,
+    Earnings,
+    TeacherEarning,
+)
 
 MAX_MONTHS = 36
 
@@ -58,7 +65,9 @@ async def cashflow(session: AsyncSession, actor: Actor, *, start: date | None, e
         raise ApiError("BAD_REQUEST", f"Choose at most {MAX_MONTHS} months.", status_code=400)
 
     tenant = (await session.execute(text("""
-        SELECT t.currency, t.commission_bps, t.gateway_fee_bearer,
+        SELECT t.currency, commission_rate('tuition') AS tuition_bps, commission_rate('course') AS course_bps,
+               t.tuition_commission_bps AS tuition_override, t.course_commission_bps AS course_override,
+               t.gateway_fee_bearer,
                COALESCE((SELECT balance_due_cents FROM v_tenant_balance), 0) AS balance_due_cents,
                COALESCE((SELECT pending_cents FROM v_tenant_pending_balance), 0) AS pending_cents
         FROM tenants t WHERE t.id = current_tenant_id()
@@ -86,7 +95,9 @@ async def cashflow(session: AsyncSession, actor: Actor, *, start: date | None, e
     totals = CashflowTotals(**{
         field: sum(getattr(m, field) for m in months) for field in CashflowTotals.model_fields
     })
-    return Cashflow(currency=tenant.currency, commission_bps=tenant.commission_bps,
+    return Cashflow(currency=tenant.currency, tuition_commission_bps=tenant.tuition_bps,
+                    course_commission_bps=tenant.course_bps,
+                    upcoming_changes=await upcoming_changes(session, tenant),
                     gateway_fee_bearer=tenant.gateway_fee_bearer, balance_due_cents=int(tenant.balance_due_cents),
                     pending_cents=int(tenant.pending_cents),
                     available_cents=max(0, int(tenant.balance_due_cents) - int(tenant.pending_cents)),
@@ -125,3 +136,19 @@ async def earnings(session: AsyncSession, actor: Actor, *, month: date | None) -
                                net_cents=int(r.net_cents)) for r in rows]
     return Earnings(month=month, currency=currency, teachers=teachers,
                     total_net_cents=sum(t.net_cents for t in teachers))
+
+
+async def upcoming_changes(session: AsyncSession, tenant: Any) -> list[CommissionNotice]:
+    """Scheduled changes that will change this organization's rate: its own, and platform-wide ones for a product it
+    has no own rate for (the RLS policy shows only those two kinds of rows)."""
+    rows = (await session.execute(text("""
+        SELECT scope, kind, new_bps, effective_at, reason FROM commission_changes
+        WHERE status = 'scheduled' AND effective_at > now() ORDER BY effective_at
+    """))).all()
+    current = {"tuition": tenant.tuition_bps, "course": tenant.course_bps}
+    override = {"tuition": tenant.tuition_override, "course": tenant.course_override}
+    own = {r.kind for r in rows if r.scope == "tenant"}
+    return [CommissionNotice(kind=r.kind, old_bps=current[r.kind], new_bps=r.new_bps, effective_at=r.effective_at,
+                             reason=r.reason)
+            for r in rows
+            if r.scope == "tenant" or (override[r.kind] is None and r.kind not in own)]

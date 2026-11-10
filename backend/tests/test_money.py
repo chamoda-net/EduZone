@@ -56,7 +56,8 @@ async def test_cashflow_after_sales(client: AsyncClient, sms: FakeSms, seed: See
         "commission_cents": 40000, "net_cents": 154000, "paid_out_cents": 0,
     }
     assert cash["balance_due_cents"] == 154000 and cash["totals"]["net_cents"] == 154000
-    assert (cash["currency"], cash["commission_bps"], cash["gateway_fee_bearer"]) == ("LKR", 2000, "tenant")
+    assert (cash["currency"], cash["tuition_commission_bps"], cash["course_commission_bps"], cash["gateway_fee_bearer"]) == (
+        "LKR", 2000, 2000, "tenant")
     # Months without activity are present with zeros.
     assert all(m["gross_sales_cents"] == 0 for m in cash["months"][:-1])
 

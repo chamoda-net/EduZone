@@ -6,8 +6,8 @@
 > The SQL below is written against `db/eduzone_v1_schema.sql`; **check it against the current
 > migrations (0001–0009) before writing the Alembic migration** and adapt names if they have moved on.
 >
-> **Status (2026-11-10): steps C1 to C6 built** (migrations 0010-0015; CLAUDE.md section 6, "How it's built
-> (courses C1)" to "(courses C6)"). Coupons that make a cart free complete it without the gateway. PayHere refunds
+> **Status (2026-11-10): steps C1 to C7 built** (migrations 0010-0016; CLAUDE.md section 6, "How it's built
+> (courses C1)" to "(courses C7)"). Coupons that make a cart free complete it without the gateway. PayHere refunds
 > are recorded by hand in the admin app until its Refund API is checked in the sandbox. The certificate PDF uses ReportLab (pure Python, draws the QR code itself). The player lives at `/learn/courses/<id>` (by id, like every
 > `/learn` route), not `<slug>`.
 > Corrections made while building, which win over the text below:
@@ -497,7 +497,7 @@ Each step includes its console/student/admin screens and tests. Tuition work is 
 | **C4** ✅ | Reviews and ratings (student, instructor reply, staff moderation); certificates (issue, PDF, public verify) |
 | **C5** ✅ | Coupons (incl. public sale price) and wishlist |
 | **C6** ✅ | Refunds (gateway call, auto-approval rule, refund queue, ledger, payout hold) |
-| **C7** | Instructor analytics; commission rates per product type + scheduled changes with notice (C.10), admin screen and tenant banner |
+| **C7** ✅ | Instructor analytics; commission rates per product type + scheduled changes with notice (C.10), admin screen and tenant banner |
 | Later | Quizzes, assignments, Q&A, announcements, notes, USD, per-lecture analytics |
 
 ---

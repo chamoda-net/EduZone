@@ -22,7 +22,7 @@ from app.modules.courses.schemas import (
     ReviewRow,
     UnpublishIn,
 )
-from app.modules.platform import applications, audit_log, auth, checkouts, courses, refunds, service, subjects, users
+from app.modules.platform import applications, audit_log, auth, checkouts, commission, courses, refunds, service, subjects, users
 from app.modules.platform.auth import Admin, AdminTx, PlatformLogin, PlatformMe, PlatformRefresh, PlatformTokens
 from app.modules.platform.schemas import (
     AuditPage,
@@ -327,3 +327,23 @@ async def mark_refund_processed(refund_id: UUID, body: refunds.ManualRefund,
                                 actor: Admin) -> refunds.PlatformRefundDetail:
     """Refunded by hand in the gateway's portal: record its reference and finish the refund."""
     return await refunds.mark_processed(actor, refund_id, body)
+
+
+# --- commission rates and scheduled changes (courses step C7) -------------------------------------
+
+@router.get("/commission", response_model=commission.CommissionOverview)
+async def commission_overview(actor: Admin, session: AdminTx) -> commission.CommissionOverview:
+    """Platform defaults, scheduled changes and recent ones (due changes are recorded as applied first)."""
+    return await commission.overview(session)
+
+
+@router.post("/commission/changes", response_model=commission.CommissionChange, status_code=201)
+async def schedule_commission_change(body: commission.ChangeCreate, actor: Admin,
+                                     session: AdminTx) -> commission.CommissionChange:
+    """Never immediate: an increase needs the notice period; the affected owners are emailed."""
+    return await commission.schedule(session, actor, body)
+
+
+@router.post("/commission/changes/{change_id}/cancel", response_model=commission.CommissionChange)
+async def cancel_commission_change(change_id: UUID, actor: Admin, session: AdminTx) -> commission.CommissionChange:
+    return await commission.cancel(session, actor, change_id)

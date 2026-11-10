@@ -1407,6 +1407,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/org/commission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Commission Notices
+         * @description Scheduled changes of this organization's commission (the console banner).
+         */
+        get: operations["commission_notices_api_v1_org_commission_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/org/coupons": {
         parameters: {
             query?: never;
@@ -1529,6 +1549,23 @@ export interface paths {
         head?: never;
         /** Update Course */
         patch: operations["update_course_api_v1_org_courses__course_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/org/courses/{course_id}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course Insights */
+        get: operations["course_insights_api_v1_org_courses__course_id__insights_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/org/courses/{course_id}/reviews": {
@@ -2111,6 +2148,63 @@ export interface paths {
         put?: never;
         /** Retry Checkout */
         post: operations["retry_checkout_api_v1_platform_checkouts__checkout_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/commission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Commission Overview
+         * @description Platform defaults, scheduled changes and recent ones (due changes are recorded as applied first).
+         */
+        get: operations["commission_overview_api_v1_platform_commission_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/commission/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Schedule Commission Change
+         * @description Never immediate: an increase needs the notice period; the affected owners are emailed.
+         */
+        post: operations["schedule_commission_change_api_v1_platform_commission_changes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/commission/changes/{change_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Commission Change */
+        post: operations["cancel_commission_change_api_v1_platform_commission_changes__change_id__cancel_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2871,6 +2965,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teach/{tenant_slug}/commission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Commission Notices
+         * @description Scheduled changes of this organization's commission (the console banner).
+         */
+        get: operations["commission_notices_api_v1_teach__tenant_slug__commission_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teach/{tenant_slug}/coupons": {
         parameters: {
             query?: never;
@@ -2993,6 +3107,23 @@ export interface paths {
         head?: never;
         /** Update Course */
         patch: operations["update_course_api_v1_teach__tenant_slug__courses__course_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/teach/{tenant_slug}/courses/{course_id}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course Insights */
+        get: operations["course_insights_api_v1_teach__tenant_slug__courses__course_id__insights_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/teach/{tenant_slug}/courses/{course_id}/reviews": {
@@ -3768,8 +3899,8 @@ export interface components {
             available_cents: number;
             /** Balance Due Cents */
             balance_due_cents: number;
-            /** Commission Bps */
-            commission_bps: number;
+            /** Course Commission Bps */
+            course_commission_bps: number;
             /** Currency */
             currency: string;
             /** Gateway Fee Bearer */
@@ -3779,6 +3910,10 @@ export interface components {
             /** Pending Cents */
             pending_cents: number;
             totals: components["schemas"]["CashflowTotals"];
+            /** Tuition Commission Bps */
+            tuition_commission_bps: number;
+            /** Upcoming Changes */
+            upcoming_changes: components["schemas"]["CommissionNotice"][];
         };
         /**
          * CashflowMonth
@@ -3921,6 +4056,30 @@ export interface components {
             total_video_seconds: number;
             /** Valid */
             valid: boolean;
+        };
+        /** ChangeCreate */
+        ChangeCreate: {
+            /**
+             * Effective At
+             * Format: date-time
+             */
+            effective_at: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "tuition" | "course";
+            /** New Bps */
+            new_bps: number;
+            /** Reason */
+            reason: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "platform" | "tenant";
+            /** Tenant Id */
+            tenant_id?: string | null;
         };
         /** Check */
         Check: {
@@ -4198,6 +4357,76 @@ export interface components {
             /** Title */
             title?: string | null;
         };
+        /** CommissionChange */
+        CommissionChange: {
+            /**
+             * Announced At
+             * Format: date-time
+             */
+            announced_at: string;
+            /** Applied At */
+            applied_at: string | null;
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /** Created By Name */
+            created_by_name: string;
+            /**
+             * Effective At
+             * Format: date-time
+             */
+            effective_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** New Bps */
+            new_bps: number;
+            /** Notified */
+            notified: components["schemas"]["NotifiedTenant"][];
+            /** Old Bps */
+            old_bps: number;
+            /** Reason */
+            reason: string;
+            /** Scope */
+            scope: string;
+            /** Status */
+            status: string;
+            /** Tenant Id */
+            tenant_id: string | null;
+            /** Tenant Name */
+            tenant_name: string | null;
+        };
+        /**
+         * CommissionNotice
+         * @description A scheduled change of this organization's rate (step C7): the Money page's banner.
+         */
+        CommissionNotice: {
+            /**
+             * Effective At
+             * Format: date-time
+             */
+            effective_at: string;
+            /** Kind */
+            kind: string;
+            /** New Bps */
+            new_bps: number;
+            /** Old Bps */
+            old_bps: number;
+            /** Reason */
+            reason: string;
+        };
+        /** CommissionOverview */
+        CommissionOverview: {
+            /** Changes */
+            changes: components["schemas"]["CommissionChange"][];
+            /** Notice Days */
+            notice_days: number;
+            /** Rates */
+            rates: components["schemas"]["PlatformRate"][];
+        };
         /** CompletionOut */
         CompletionOut: {
             /** Completed */
@@ -4435,6 +4664,33 @@ export interface components {
              * Wishlist Count
              * @default 0
              */
+            wishlist_count: number;
+        };
+        /** CourseInsights */
+        CourseInsights: {
+            /** Completed Students */
+            completed_students: number;
+            /** Completion Rate */
+            completion_rate: number;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Currency */
+            currency: string;
+            /** Months */
+            months: components["schemas"]["InsightMonth"][];
+            /** Rating Avg */
+            rating_avg: number | null;
+            /** Rating Count */
+            rating_count: number;
+            /** Students */
+            students: number;
+            /** Top Coupons */
+            top_coupons: components["schemas"]["TopCoupon"][];
+            totals: components["schemas"]["InsightMonth"];
+            /** Wishlist Count */
             wishlist_count: number;
         };
         /** CourseLectureOut */
@@ -4734,6 +4990,28 @@ export interface components {
             subjects: components["schemas"]["SubjectOut"][];
             /** Teachers */
             teachers: number;
+        };
+        /** InsightMonth */
+        InsightMonth: {
+            /** Enrol Coupon */
+            enrol_coupon: number;
+            /** Enrol Free */
+            enrol_free: number;
+            /** Enrol Paid */
+            enrol_paid: number;
+            /** Gross Cents */
+            gross_cents: number;
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Net Cents */
+            net_cents: number;
+            /** Refund Count */
+            refund_count: number;
+            /** Refunds Cents */
+            refunds_cents: number;
         };
         /** InstituteOut */
         InstituteOut: {
@@ -5675,6 +5953,18 @@ export interface components {
              */
             updated_at: string;
         };
+        /** NotifiedTenant */
+        NotifiedTenant: {
+            /** Emails */
+            emails: string[];
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Name */
+            tenant_name: string;
+        };
         /** OpenResourceOut */
         OpenResourceOut: {
             /** Duration Seconds */
@@ -6060,6 +6350,18 @@ export interface components {
             items: components["schemas"]["PlatformPayment"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** PlatformRate */
+        PlatformRate: {
+            /** Commission Bps */
+            commission_bps: number;
+            /** Kind */
+            kind: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** PlatformRefresh */
         PlatformRefresh: {
@@ -6998,11 +7300,8 @@ export interface components {
             bandwidth_limit_bytes?: number | null;
             /** Bunny Library Id */
             bunny_library_id?: number | null;
-            /**
-             * Commission Bps
-             * @default 2000
-             */
-            commission_bps: number;
+            /** Commission Bps */
+            commission_bps?: number | null;
             /**
              * Gateway Fee Bearer
              * @default tenant
@@ -7055,8 +7354,10 @@ export interface components {
             bandwidth_this_month_bytes: number;
             /** Bunny Library Id */
             bunny_library_id: number | null;
-            /** Commission Bps */
-            commission_bps: number;
+            /** Course Commission Bps */
+            course_commission_bps: number;
+            /** Course Override Bps */
+            course_override_bps: number | null;
             /**
              * Created At
              * Format: date-time
@@ -7101,6 +7402,10 @@ export interface components {
             storage_used_bytes: number;
             /** Students */
             students: number;
+            /** Tuition Commission Bps */
+            tuition_commission_bps: number;
+            /** Tuition Override Bps */
+            tuition_override_bps: number | null;
             /** Usage Synced On */
             usage_synced_on: string | null;
         };
@@ -7110,8 +7415,6 @@ export interface components {
             bandwidth_limit_bytes?: number | null;
             /** Bunny Library Id */
             bunny_library_id?: number | null;
-            /** Commission Bps */
-            commission_bps?: number | null;
             /** Gateway Fee Bearer */
             gateway_fee_bearer?: ("tenant" | "platform") | null;
             /** Is Listed */
@@ -7155,6 +7458,17 @@ export interface components {
              * @default bearer
              */
             token_type: string;
+        };
+        /** TopCoupon */
+        TopCoupon: {
+            /** Code */
+            code: string;
+            /** Discount Cents */
+            discount_cents: number;
+            /** Revenue Cents */
+            revenue_cents: number;
+            /** Uses */
+            uses: number;
         };
         /**
          * TusUpload
@@ -10253,6 +10567,26 @@ export interface operations {
             };
         };
     };
+    commission_notices_api_v1_org_commission_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissionNotice"][];
+                };
+            };
+        };
+    };
     list_coupons_api_v1_org_coupons_get: {
         parameters: {
             query?: never;
@@ -10612,6 +10946,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CourseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    course_insights_api_v1_org_courses__course_id__insights_get: {
+        parameters: {
+            query?: {
+                months?: number;
+            };
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseInsights"];
                 };
             };
             /** @description Validation Error */
@@ -11841,6 +12208,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RetryResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commission_overview_api_v1_platform_commission_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissionOverview"];
+                };
+            };
+        };
+    };
+    schedule_commission_change_api_v1_platform_commission_changes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissionChange"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_commission_change_api_v1_platform_commission_changes__change_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissionChange"];
                 };
             };
             /** @description Validation Error */
@@ -13553,6 +14004,26 @@ export interface operations {
             };
         };
     };
+    commission_notices_api_v1_teach__tenant_slug__commission_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissionNotice"][];
+                };
+            };
+        };
+    };
     list_coupons_api_v1_teach__tenant_slug__coupons_get: {
         parameters: {
             query?: never;
@@ -13912,6 +14383,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CourseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    course_insights_api_v1_teach__tenant_slug__courses__course_id__insights_get: {
+        parameters: {
+            query?: {
+                months?: number;
+            };
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseInsights"];
                 };
             };
             /** @description Validation Error */

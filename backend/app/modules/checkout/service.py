@@ -124,7 +124,8 @@ async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
     if c is None or c.status != "published":
         raise ApiError("NOT_FOUND", "Class not found.", status_code=404)
     tenant = (await session.execute(text(
-        "SELECT currency, commission_bps FROM tenants WHERE id = current_tenant_id()"))).one()
+        "SELECT currency, commission_rate(:kind) AS commission_bps FROM tenants WHERE id = current_tenant_id()"),
+        {"kind": "course" if c.kind == "course" else "tuition"})).one()
 
     late_request_id: UUID | None = None
     if c.pricing_model == "free":

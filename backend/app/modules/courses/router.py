@@ -6,7 +6,11 @@ from fastapi import APIRouter, Query, Request, Response
 from app.core.db import AppSession
 from app.core.tenancy import TenantSession, site_url
 from app.modules.auth.dependencies import CurrentUser, StaffActor
-from app.modules.courses import certificates, coupons, refunds, reviews, service, student
+from sqlalchemy import text
+
+from app.modules.courses import certificates, coupons, insights, refunds, reviews, service, student
+from app.modules.ledger.schemas import CommissionNotice
+from app.modules.ledger.service import upcoming_changes
 from app.modules.courses import wishlist as wishlist_service
 from app.modules.market.schemas import MarketCourse
 from app.modules.courses.schemas import (
@@ -267,3 +271,22 @@ async def request_refund(course_id: UUID, body: refunds.RefundIn, user: CurrentU
     """Within 7 days of buying and under 30% complete: approved at once (and refunded) unless the student has had 3
     refunds in 90 days, then EduZone reviews it."""
     return await refunds.request_refund(user, course_id, body)
+
+
+# --- instructor analytics (step C7) ---------------------------------------------------------------
+
+@org_router.get("/courses/{course_id}/insights", response_model=insights.CourseInsights)
+async def course_insights(course_id: UUID, session: TenantSession, actor: StaffActor,
+                          months: Annotated[int, Query(ge=1, le=24)] = 12) -> insights.CourseInsights:
+    return await insights.course_insights(session, actor, course_id, months)
+
+
+@org_router.get("/commission", response_model=list[CommissionNotice])
+async def commission_notices(session: TenantSession, actor: StaffActor) -> list[CommissionNotice]:
+    """Scheduled changes of this organization's commission (the console banner)."""
+    tenant = (await session.execute(text("""
+        SELECT commission_rate('tuition') AS tuition_bps, commission_rate('course') AS course_bps,
+               tuition_commission_bps AS tuition_override, course_commission_bps AS course_override
+        FROM tenants WHERE id = current_tenant_id()
+    """))).one()
+    return await upcoming_changes(session, tenant)

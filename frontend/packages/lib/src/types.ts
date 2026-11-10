@@ -433,9 +433,12 @@ export type CashflowFigures = {
   paid_out_cents: number;
 };
 
+export type CommissionNotice = { kind: "tuition" | "course"; old_bps: number; new_bps: number; effective_at: string; reason: string };
 export type Cashflow = {
   currency: string;
-  commission_bps: number;
+  tuition_commission_bps: number;  // rates now, per product
+  course_commission_bps: number;
+  upcoming_changes: CommissionNotice[];
   gateway_fee_bearer: "tenant" | "platform";
   balance_due_cents: number;
   pending_cents: number;      // course sales still inside the 7-day refund window
@@ -468,7 +471,10 @@ export type PlatformTenant = {
   status: TenantStatus;
   is_listed: boolean;
   currency: string;
-  commission_bps: number;
+  tuition_commission_bps: number;      // the rate now (own rate, else the platform default)
+  course_commission_bps: number;
+  tuition_override_bps: number | null; // the organization's own rate
+  course_override_bps: number | null;
   gateway_fee_bearer: "tenant" | "platform";
   primary_color: string | null;
   logo_url: string | null;
