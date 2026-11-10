@@ -15,6 +15,7 @@ const venvBin = process.platform === "win32" ? ".venv/Scripts" : ".venv/bin";
 export default defineConfig({
   testDir: ".",
   globalSetup: "./global-setup.ts",
+  globalTeardown: "./global-teardown.ts",
   fullyParallel: false,
   workers: 1,
   retries: 0,

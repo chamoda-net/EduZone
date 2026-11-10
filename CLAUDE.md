@@ -1010,7 +1010,8 @@ httpOnly cookies.
 - **Smoke suite:** `npm run e2e` (Playwright; first time `npx playwright install chromium`). It starts
   its own API (port 8010, `SMS_PROVIDER=file` so tests read OTP codes from `e2e/.outbox.jsonl`) and web
   app (port 3010, build dir `.next-e2e`), so it runs beside the dev servers; it needs the migrated local
-  database and seeds the `demo` organization; it also sets `EMAIL_PROVIDER=file`. Covers: a student
+  database and seeds the `demo` organization; it also sets `EMAIL_PROVIDER=file`. Afterwards `scripts/purge_e2e.py`
+  removes the pending `e2e-...` organizations its "applies to teach" test opens. Covers: a student
   registers, confirms the phone, joins and pays with the fake gateway; a second browser signs the first out;
   the teacher signs in (with the new-device code) and opens the console. Add a test for each flow a later
   phase changes.
