@@ -34,6 +34,8 @@ _TENANT_SELECT = """
            (SELECT count(*) FROM tenant_members m WHERE m.tenant_id = t.id AND m.role = 'student') AS students,
            COALESCE((SELECT -sum(e.amount_cents) FROM ledger_entries e
                      WHERE e.tenant_id = t.id AND e.account = 'tenant_payable'), 0) AS balance_due_cents,
+           COALESCE((SELECT p.pending_cents FROM v_tenant_pending_balance p WHERE p.tenant_id = t.id), 0)
+               AS pending_cents,
            COALESCE((SELECT c.gross_sales_cents FROM v_tenant_cashflow_monthly c
                      WHERE c.tenant_id = t.id
                        AND c.month = date_trunc('month', now() AT TIME ZONE 'Asia/Colombo')::date), 0)
@@ -196,6 +198,14 @@ async def record_payout(session: AsyncSession, actor: PlatformActor, tenant_id: 
     if body.amount_cents > balance:
         raise ApiError("PAYOUT_EXCEEDS_BALANCE",
                        f"The balance due is {balance} cents; a payout can't be larger.", status_code=409)
+    # Course sales inside the 7-day refund window are held back (docs/COURSES.md section 9).
+    pending = (await session.execute(text(
+        "SELECT COALESCE(pending_cents, 0) FROM v_tenant_pending_balance WHERE tenant_id = :t"),
+        {"t": tenant_id})).scalar_one_or_none() or 0
+    if body.amount_cents > balance - pending:
+        raise ApiError("PAYOUT_EXCEEDS_AVAILABLE",
+                       f"{pending} cents are course sales still inside the 7-day refund window; at most "
+                       f"{max(0, balance - pending)} cents can be paid out now.", status_code=409)
     await _set_tenant(session, tenant_id)
     payout_id = (await session.execute(text("""
         INSERT INTO payouts (tenant_id, amount_cents, period_start, period_end, status, bank_reference,

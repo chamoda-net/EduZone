@@ -427,6 +427,33 @@ tenants ─┬─ tenant_members (role: owner/admin/teacher/student) ── user
   `seed_market.py` adds LAUNCH-25 (public 25% sale) and PHYSICS50 (50%, 100 uses) on the physics course. Tests:
   `tests/test_coupons.py`, two e2e checks.
 
+### How it's built (courses C6: `app/modules/courses/refunds.py`, `app/modules/platform/refunds.py`, migration 0015)
+- **The rule:** a bought course can be refunded within 7 days of paying, while under 30% complete, with no active
+  certificate and something paid (a coupon-free purchase has nothing to refund). Errors: `REFUND_WINDOW_PASSED`,
+  `REFUND_PROGRESS`, `REFUND_CERTIFICATE`, `REFUND_NOTHING_PAID`, `REFUND_NOT_BOUGHT`, `REFUND_OPEN` (one open refund
+  per order item, unique index). `LearnCourse.refund` (`RefundInfo`: eligible, blocked_by, deadline, amount, latest
+  refund) drives the player's card.
+- **Request** (`POST /learn/courses/{id}/refund {reason}`): approved at once when the student has had fewer than 3
+  refunds (not rejected, any organization, read through the `refunds` user policy) in 90 days; otherwise `requested`
+  for the queue. Students keep access until the refund is processed.
+- **Processing, exactly once:** `approved` is committed first; then `Gateway.refund(payment_ref, amount, refund_key,
+  reason)` on the checkout payment's reference (or the order payment's for a single Pay): `processed` | `manual`
+  (PayHere for now: its Refund API needs an OAuth app and a sandbox check, so staff refund in the portal and record
+  it) | `failed`. `finalize()` in the organization's transaction: refund `processed`, ledger `refund` posting
+  (`refund_entries`; the gateway fee stays with whoever bore it), grant revoked (`refunded`), certificate revoked,
+  review hidden (rating recomputed), `order_items.refunded_at`, order and payment `refunded`. The course can be bought
+  again.
+- **Queue** (`/api/v1/platform/refunds?status=open|requested|approved|processed|rejected|all`, detail with progress,
+  certificate, 90-day count, window and gateway): `POST .../decision {approve | reject, note}` (note required to
+  refuse; approve refunds at once), `POST .../retry`, `POST .../mark-processed {gateway_refund_ref}`. All audited.
+- **Payout hold:** `v_tenant_pending_balance` = net of course sales paid in the last 7 days and not refunded. The
+  cash-flow report adds `pending_cents` and `available_cents`; organizations show `pending_cents`; a payout above
+  the balance minus pending is 409 `PAYOUT_EXCEEDS_AVAILABLE`.
+- **Web:** the player's refund card (offer with deadline and a reason dialog, then requested / approved / refunded /
+  refused with the note); the console's Money page shows the held amount and what is available; admin `/refunds`
+  (filter chips, "Needs action" count) and `/refunds/[id]` (the request against the rule, approve/refuse, retry or
+  record a portal refund). Tests: `tests/test_refunds.py`, an e2e check.
+
 ### Access rule (one function, used everywhere)
 A student can open a lesson if **any** of these is true:
 - `lesson.is_free_preview` and the lesson is published
@@ -584,7 +611,7 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   console `/org/payments`.
 - **Test cleanup:** `purge_tenants()` in `tests/conftest.py` deletes test tenants as the schema owner with
   triggers paused (the ledger is append-only even for `eduzone_admin`). Test databases only.
-- Open: refunds (gateway API + refund flow), PayHere needs an email (phone-only students have none),
+- Open: PayHere's Refund API (refunds are recorded by hand until then, step C6), PayHere needs an email (phone-only students have none),
   receipts wording pending the legal review of collecting on behalf of organizations.
 
 ### How it's built (phase 6: `app/modules/cart`, migration 0009)

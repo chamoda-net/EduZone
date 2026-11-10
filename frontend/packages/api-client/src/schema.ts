@@ -417,6 +417,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learn/courses/{course_id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Refund
+         * @description Within 7 days of buying and under 30% complete: approved at once (and refunded) unless the student has had 3
+         *     refunds in 90 days, then EduZone reviews it.
+         */
+        post: operations["request_refund_api_v1_learn_courses__course_id__refund_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learn/courses/{course_id}/review": {
         parameters: {
             query?: never;
@@ -2267,6 +2288,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Refunds
+         * @description The queue: `open` (default) = waiting for a decision or for the gateway.
+         */
+        get: operations["list_refunds_api_v1_platform_refunds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/refunds/{refund_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Refund */
+        get: operations["get_refund_api_v1_platform_refunds__refund_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/refunds/{refund_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Refund */
+        post: operations["decide_refund_api_v1_platform_refunds__refund_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/refunds/{refund_id}/mark-processed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Refund Processed
+         * @description Refunded by hand in the gateway's portal: record its reference and finish the refund.
+         */
+        post: operations["mark_refund_processed_api_v1_platform_refunds__refund_id__mark_processed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/refunds/{refund_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Refund */
+        post: operations["retry_refund_api_v1_platform_refunds__refund_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/subjects": {
         parameters: {
             query?: never;
@@ -3652,6 +3764,8 @@ export interface components {
         };
         /** Cashflow */
         Cashflow: {
+            /** Available Cents */
+            available_cents: number;
             /** Balance Due Cents */
             balance_due_cents: number;
             /** Commission Bps */
@@ -3662,6 +3776,8 @@ export interface components {
             gateway_fee_bearer: string;
             /** Months */
             months: components["schemas"]["CashflowMonth"][];
+            /** Pending Cents */
+            pending_cents: number;
             totals: components["schemas"]["CashflowTotals"];
         };
         /**
@@ -4787,6 +4903,7 @@ export interface components {
             /** Pricing Model */
             pricing_model: string;
             progress: components["schemas"]["CourseProgress"];
+            refund?: components["schemas"]["RefundInfo"] | null;
             /** Sections */
             sections: components["schemas"]["LearnSection"][];
             /** Slug */
@@ -5076,6 +5193,11 @@ export interface components {
              */
             status: "signed_in" | "device_check";
             tokens?: components["schemas"]["TokenPair"] | null;
+        };
+        /** ManualRefund */
+        ManualRefund: {
+            /** Gateway Refund Ref */
+            gateway_refund_ref: string;
         };
         /**
          * MarketClass
@@ -5944,6 +6066,145 @@ export interface components {
             /** Refresh Token */
             refresh_token: string;
         };
+        /** PlatformRefund */
+        PlatformRefund: {
+            /** Amount Cents */
+            amount_cents: number;
+            /** Auto Approved */
+            auto_approved: boolean;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Decision Note */
+            decision_note: string | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Gateway Refund Ref */
+            gateway_refund_ref: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order No */
+            order_no: string;
+            /** Paid At */
+            paid_at: string | null;
+            /** Processed At */
+            processed_at: string | null;
+            /** Reason */
+            reason: string;
+            /** Status */
+            status: string;
+            /** Student Name */
+            student_name: string;
+            /** Student Phone */
+            student_phone: string | null;
+            /**
+             * Student User Id
+             * Format: uuid
+             */
+            student_user_id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Name */
+            tenant_name: string;
+        };
+        /** PlatformRefundDetail */
+        PlatformRefundDetail: {
+            /** Amount Cents */
+            amount_cents: number;
+            /** Auto Approved */
+            auto_approved: boolean;
+            /** Certificate */
+            certificate: boolean;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Decision Note */
+            decision_note: string | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Gateway */
+            gateway: string;
+            /** Gateway Payment Ref */
+            gateway_payment_ref: string | null;
+            /** Gateway Refund Ref */
+            gateway_refund_ref: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** In Window */
+            in_window: boolean;
+            /** Order No */
+            order_no: string;
+            /** Paid At */
+            paid_at: string | null;
+            /** Processed At */
+            processed_at: string | null;
+            /** Progress Percent */
+            progress_percent: number;
+            /** Reason */
+            reason: string;
+            /** Recent Refunds */
+            recent_refunds: number;
+            /** Status */
+            status: string;
+            /** Student Name */
+            student_name: string;
+            /** Student Phone */
+            student_phone: string | null;
+            /**
+             * Student User Id
+             * Format: uuid
+             */
+            student_user_id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Name */
+            tenant_name: string;
+        };
+        /** PlatformRefundPage */
+        PlatformRefundPage: {
+            /** Items */
+            items: components["schemas"]["PlatformRefund"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** PlatformTokens */
         PlatformTokens: {
             /** Access Token */
@@ -6183,6 +6444,65 @@ export interface components {
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** RefundDecision */
+        RefundDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Note */
+            note?: string | null;
+        };
+        /** RefundIn */
+        RefundIn: {
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * RefundInfo
+         * @description What the course player shows about refunds for this student.
+         */
+        RefundInfo: {
+            /** Amount Cents */
+            amount_cents: number | null;
+            /** Blocked By */
+            blocked_by: string | null;
+            /** Currency */
+            currency: string | null;
+            /** Deadline */
+            deadline: string | null;
+            /** Eligible */
+            eligible: boolean;
+            refund: components["schemas"]["RefundOut"] | null;
+        };
+        /** RefundOut */
+        RefundOut: {
+            /** Amount Cents */
+            amount_cents: number;
+            /** Auto Approved */
+            auto_approved: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Decision Note */
+            decision_note: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Processed At */
+            processed_at: string | null;
+            /** Reason */
+            reason: string;
+            /** Status */
+            status: string;
         };
         /** Register */
         Register: {
@@ -6765,6 +7085,8 @@ export interface components {
             payout_account_masked: string | null;
             /** Payout Bank Name */
             payout_bank_name: string | null;
+            /** Pending Cents */
+            pending_cents: number;
             /** Primary Color */
             primary_color: string | null;
             /** Sales This Month Cents */
@@ -7892,6 +8214,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LearnCourse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_refund_api_v1_learn_courses__course_id__refund_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundOut"];
                 };
             };
             /** @description Validation Error */
@@ -11836,6 +12193,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformPaymentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_refunds_api_v1_platform_refunds_get: {
+        parameters: {
+            query?: {
+                status?: "open" | "requested" | "approved" | "processed" | "rejected" | "all";
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformRefundPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_refund_api_v1_platform_refunds__refund_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformRefundDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_refund_api_v1_platform_refunds__refund_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformRefundDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_refund_processed_api_v1_platform_refunds__refund_id__mark_processed_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualRefund"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformRefundDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_refund_api_v1_platform_refunds__refund_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformRefundDetail"];
                 };
             };
             /** @description Validation Error */

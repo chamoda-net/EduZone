@@ -1,5 +1,5 @@
 import { teachHref } from "@/lib/workspace";
-import { Landmark, Percent, TrendingUp } from "lucide-react";
+import { Hourglass, Landmark, Percent, TrendingUp } from "lucide-react";
 
 import { Card, ErrorText, FilterChips, PageHeader, StatTile } from "@eduzone/ui";
 import { api } from "@/lib/api";
@@ -53,7 +53,7 @@ export default async function MoneyPage({ searchParams }: PageProps<"/teach/[ten
           icon={<Landmark />}
           label={t("money.balanceDue")}
           value={money(c.balance_due_cents)}
-          hint={t("money.balanceHint")}
+          hint={c.pending_cents > 0 ? t("money.availableHint", { available: money(c.available_cents) }) : t("money.balanceHint")}
         />
         <StatTile icon={<TrendingUp />} label={t("money.net")} value={money(c.totals.net_cents)} hint={t(`money.range.${preset}`)} />
         <StatTile
@@ -64,6 +64,13 @@ export default async function MoneyPage({ searchParams }: PageProps<"/teach/[ten
           hint={t("money.rate", { rate: c.commission_bps / 100, bearer: t(`money.bearer.${c.gateway_fee_bearer}`) })}
         />
       </div>
+
+      {c.pending_cents > 0 && (
+        <p className="flex items-start gap-2.5 rounded-ez-lg border border-info/25 bg-info-bg px-4 py-3 text-sm">
+          <Hourglass className="mt-0.5 size-4.5 shrink-0 text-info" />
+          <span>{t("money.pending", { pending: money(c.pending_cents), available: money(c.available_cents) })}</span>
+        </p>
+      )}
 
       <FilterChips
         items={(["12", "3", "year"] as const).map((p) => ({

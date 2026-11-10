@@ -15,6 +15,7 @@ from app.integrations.gateways.base import (
     CheckoutRequest,
     EventStatus,
     GatewayEvent,
+    RefundResult,
     format_amount,
     parse_amount_cents,
 )
@@ -42,6 +43,14 @@ class FakeGateway:
         query = urlencode({"return_url": req.return_url, "cancel_url": req.cancel_url,
                            "description": req.description})
         return CheckoutRedirect(method="GET", url=f"{self._page}/{req.payment_key}?{query}")
+
+    async def refund(self, payment_ref: str, amount_cents: int, refund_key: str, reason: str) -> RefundResult:
+        """Always refunds at once; the same key gives the same refund id (like an idempotent gateway). A payment
+        reference starting with FAIL- is refused, for tests."""
+        if payment_ref.startswith("FAIL-"):
+            return RefundResult(status="failed", message="The gateway refused the refund.")
+        digest = hmac.new(self._secret, f"refund|{refund_key}".encode(), hashlib.sha256).hexdigest()[:10].upper()
+        return RefundResult(status="processed", ref=f"FAKE-RF-{digest}")
 
     def verify_webhook(self, form: dict[str, str]) -> GatewayEvent:
         status = form.get("status", "")

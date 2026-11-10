@@ -27,6 +27,15 @@ export async function buyNow(courseId: string, couponCode: string | null = null)
   redirect("/cart");
 }
 
+/** Ask for a refund of a bought course (the API applies the rule; most are refunded at once). */
+export async function requestRefund(courseId: string, reason: string): Promise<Result> {
+  const res = await api(`/learn/courses/${courseId}/refund`, { method: "POST", body: { reason } });
+  if (!res.ok) return { ok: false, error: errorText(t, res.error) };
+  revalidatePath(`/learn/courses/${courseId}`);
+  revalidatePath("/learn/courses");
+  return { ok: true };
+}
+
 export async function setLectureComplete(courseId: string, lectureId: string, done: boolean): Promise<Result> {
   const res = await api(`/learn/lectures/${lectureId}/complete`, { method: done ? "POST" : "DELETE" });
   if (!res.ok) return { ok: false, error: errorText(t, res.error) };

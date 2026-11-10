@@ -11,6 +11,7 @@ from app.integrations.gateways.base import (
     CheckoutRequest,
     EventStatus,
     GatewayEvent,
+    RefundResult,
     format_amount,
     parse_amount_cents,
 )
@@ -53,6 +54,11 @@ class PayHereGateway:
             "country": "Sri Lanka",
             "hash": digest,
         })
+
+    async def refund(self, payment_ref: str, amount_cents: int, refund_key: str, reason: str) -> RefundResult:
+        # PayHere's Refund API needs an OAuth app (App ID and secret) and its partial-refund support must be checked
+        # in the sandbox before launch. Until then EduZone staff refund in the PayHere portal and record it.
+        return RefundResult(status="manual", message="Refund this payment in the PayHere portal, then record it.")
 
     def verify_webhook(self, form: dict[str, str]) -> GatewayEvent:
         g = form.get

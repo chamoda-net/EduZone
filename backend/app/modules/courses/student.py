@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import ApiError
 from app.core.tenancy import tenant_transaction
 from app.modules.auth.dependencies import AuthContext, UserContext, ensure_student_member
-from app.modules.courses import certificates
+from app.modules.courses import certificates, refunds
 from app.modules.courses.schemas import (
     CompletionOut,
     CourseProgress,
@@ -115,6 +115,7 @@ async def course_view(session: AsyncSession, auth: AuthContext, course_id: UUID)
         progress=progress, sections=sections,
         next_lecture_id=upcoming or (lectures[0].id if lectures and has else None),
         my_rating=my_rating, certificate_no=await certificates.certificate_for(session, auth.member_id, course_id),
+        refund=await refunds.refund_info(session, auth, course_id, progress.percent),
     )
 
 

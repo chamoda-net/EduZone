@@ -1402,3 +1402,21 @@ CREATE TABLE wishlist_items (               -- platform-level; policy wishlist_o
     FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id) ON DELETE CASCADE
 );
 -- wishlist_count(p_class) (SECURITY DEFINER): how many saved a course, never who.
+
+-- =============================================================================
+-- Courses, step C6 (migration 0015): refunds (docs/COURSES.md section 9)
+-- =============================================================================
+ALTER TABLE refunds
+    ADD COLUMN auto_approved  boolean NOT NULL DEFAULT false,   -- the automatic rule approved it
+    ADD COLUMN decided_by     uuid REFERENCES users(id),        -- EduZone staff
+    ADD COLUMN decided_at     timestamptz,
+    ADD COLUMN decision_note  text CHECK (char_length(decision_note) <= 1000),
+    ADD COLUMN failure_reason text CHECK (char_length(failure_reason) <= 500),   -- last gateway attempt
+    ADD COLUMN updated_at     timestamptz NOT NULL DEFAULT now(),
+    ADD CONSTRAINT refunds_reason_length CHECK (char_length(reason) <= 1000);
+CREATE UNIQUE INDEX uq_refund_open_item ON refunds (order_item_id) WHERE status <> 'rejected';
+CREATE INDEX idx_refunds_status ON refunds (status, created_at DESC);
+-- refunds: user_own_rows FOR SELECT (requested_by is one of the user's member rows).
+ALTER TABLE order_items ADD COLUMN refunded_at timestamptz;      -- app: UPDATE (refunded_at) only
+-- v_tenant_pending_balance (security_invoker): net of course sales paid in the last 7 days and not refunded;
+-- a payout may not include it.

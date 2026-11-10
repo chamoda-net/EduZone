@@ -287,6 +287,7 @@ class LearnCourse(BaseModel):
     next_lecture_id: UUID | None                 # where "Continue" goes: the first lecture not done yet
     my_rating: int | None = None                 # the student's own review, if any (step C4)
     certificate_no: str | None = None            # issued at 100% of a paid course (step C4)
+    refund: "RefundInfo | None" = None           # refund rule and status for a bought course (step C6)
 
 
 class LectureDetail(BaseModel):
@@ -417,3 +418,8 @@ class CertificateVerify(BaseModel):
     issued_at: datetime
     revoked_at: datetime | None
     valid: bool
+
+
+from app.modules.courses.refunds import RefundInfo  # noqa: E402  (refunds imports this module's neighbours)
+
+LearnCourse.model_rebuild()

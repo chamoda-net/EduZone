@@ -1076,6 +1076,10 @@
       },
       "Cashflow": {
         "properties": {
+          "available_cents": {
+            "title": "Available Cents",
+            "type": "integer"
+          },
           "balance_due_cents": {
             "title": "Balance Due Cents",
             "type": "integer"
@@ -1099,6 +1103,10 @@
             "title": "Months",
             "type": "array"
           },
+          "pending_cents": {
+            "title": "Pending Cents",
+            "type": "integer"
+          },
           "totals": {
             "$ref": "#/components/schemas/CashflowTotals"
           }
@@ -1108,6 +1116,8 @@
           "commission_bps",
           "gateway_fee_bearer",
           "balance_due_cents",
+          "pending_cents",
+          "available_cents",
           "months",
           "totals"
         ],
@@ -4809,6 +4819,16 @@
           "progress": {
             "$ref": "#/components/schemas/CourseProgress"
           },
+          "refund": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefundInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "sections": {
             "items": {
               "$ref": "#/components/schemas/LearnSection"
@@ -5758,6 +5778,22 @@
           "status"
         ],
         "title": "LoginResult",
+        "type": "object"
+      },
+      "ManualRefund": {
+        "additionalProperties": false,
+        "properties": {
+          "gateway_refund_ref": {
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Gateway Refund Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gateway_refund_ref"
+        ],
+        "title": "ManualRefund",
         "type": "object"
       },
       "MarketClass": {
@@ -8239,6 +8275,411 @@
         "title": "PlatformRefresh",
         "type": "object"
       },
+      "PlatformRefund": {
+        "properties": {
+          "amount_cents": {
+            "title": "Amount Cents",
+            "type": "integer"
+          },
+          "auto_approved": {
+            "title": "Auto Approved",
+            "type": "boolean"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "course_title": {
+            "title": "Course Title",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "gateway_refund_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Refund Ref"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "order_no": {
+            "title": "Order No",
+            "type": "string"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "processed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processed At"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "student_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Phone"
+          },
+          "student_user_id": {
+            "format": "uuid",
+            "title": "Student User Id",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "tenant_name": {
+            "title": "Tenant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amount_cents",
+          "currency",
+          "reason",
+          "auto_approved",
+          "decision_note",
+          "failure_reason",
+          "gateway_refund_ref",
+          "created_at",
+          "decided_at",
+          "processed_at",
+          "tenant_id",
+          "tenant_name",
+          "student_user_id",
+          "student_name",
+          "student_phone",
+          "course_id",
+          "course_title",
+          "order_no",
+          "paid_at"
+        ],
+        "title": "PlatformRefund",
+        "type": "object"
+      },
+      "PlatformRefundDetail": {
+        "properties": {
+          "amount_cents": {
+            "title": "Amount Cents",
+            "type": "integer"
+          },
+          "auto_approved": {
+            "title": "Auto Approved",
+            "type": "boolean"
+          },
+          "certificate": {
+            "title": "Certificate",
+            "type": "boolean"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "course_title": {
+            "title": "Course Title",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "gateway": {
+            "title": "Gateway",
+            "type": "string"
+          },
+          "gateway_payment_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Payment Ref"
+          },
+          "gateway_refund_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Refund Ref"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "in_window": {
+            "title": "In Window",
+            "type": "boolean"
+          },
+          "order_no": {
+            "title": "Order No",
+            "type": "string"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "processed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processed At"
+          },
+          "progress_percent": {
+            "title": "Progress Percent",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "recent_refunds": {
+            "title": "Recent Refunds",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "student_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Phone"
+          },
+          "student_user_id": {
+            "format": "uuid",
+            "title": "Student User Id",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "tenant_name": {
+            "title": "Tenant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amount_cents",
+          "currency",
+          "reason",
+          "auto_approved",
+          "decision_note",
+          "failure_reason",
+          "gateway_refund_ref",
+          "created_at",
+          "decided_at",
+          "processed_at",
+          "tenant_id",
+          "tenant_name",
+          "student_user_id",
+          "student_name",
+          "student_phone",
+          "course_id",
+          "course_title",
+          "order_no",
+          "paid_at",
+          "progress_percent",
+          "in_window",
+          "certificate",
+          "recent_refunds",
+          "gateway",
+          "gateway_payment_ref"
+        ],
+        "title": "PlatformRefundDetail",
+        "type": "object"
+      },
+      "PlatformRefundPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformRefund"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "PlatformRefundPage",
+        "type": "object"
+      },
       "PlatformTokens": {
         "properties": {
           "access_token": {
@@ -8969,6 +9410,196 @@
           "refresh_token"
         ],
         "title": "RefreshRequest",
+        "type": "object"
+      },
+      "RefundDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "RefundDecision",
+        "type": "object"
+      },
+      "RefundIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "RefundIn",
+        "type": "object"
+      },
+      "RefundInfo": {
+        "description": "What the course player shows about refunds for this student.",
+        "properties": {
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "blocked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked By"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "eligible": {
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "refund": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefundOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "eligible",
+          "blocked_by",
+          "deadline",
+          "amount_cents",
+          "currency",
+          "refund"
+        ],
+        "title": "RefundInfo",
+        "type": "object"
+      },
+      "RefundOut": {
+        "properties": {
+          "amount_cents": {
+            "title": "Amount Cents",
+            "type": "integer"
+          },
+          "auto_approved": {
+            "title": "Auto Approved",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "processed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processed At"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amount_cents",
+          "currency",
+          "reason",
+          "auto_approved",
+          "decision_note",
+          "created_at",
+          "processed_at"
+        ],
+        "title": "RefundOut",
         "type": "object"
       },
       "Register": {
@@ -10645,6 +11276,10 @@
             ],
             "title": "Payout Bank Name"
           },
+          "pending_cents": {
+            "title": "Pending Cents",
+            "type": "integer"
+          },
           "primary_color": {
             "anyOf": [
               {
@@ -10719,6 +11354,7 @@
           "members",
           "students",
           "balance_due_cents",
+          "pending_cents",
           "sales_this_month_cents",
           "storage_used_bytes",
           "storage_limit_bytes",
@@ -12824,6 +13460,65 @@
           }
         ],
         "summary": "Enroll",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/courses/{course_id}/refund": {
+      "post": {
+        "description": "Within 7 days of buying and under 30% complete: approved at once (and refunded) unless the student has had 3\nrefunds in 90 days, then EduZone reviews it.",
+        "operationId": "request_refund_api_v1_learn_courses__course_id__refund_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Request Refund",
         "tags": [
           "learn"
         ]
@@ -19530,6 +20225,304 @@
           }
         ],
         "summary": "List Payments",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/refunds": {
+      "get": {
+        "description": "The queue: `open` (default) = waiting for a decision or for the gateway.",
+        "operationId": "list_refunds_api_v1_platform_refunds_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "open",
+              "enum": [
+                "open",
+                "requested",
+                "approved",
+                "processed",
+                "rejected",
+                "all"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRefundPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Refunds",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/refunds/{refund_id}": {
+      "get": {
+        "operationId": "get_refund_api_v1_platform_refunds__refund_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "refund_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Refund Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRefundDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Refund",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/refunds/{refund_id}/decision": {
+      "post": {
+        "operationId": "decide_refund_api_v1_platform_refunds__refund_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "refund_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Refund Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRefundDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Refund",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/refunds/{refund_id}/mark-processed": {
+      "post": {
+        "description": "Refunded by hand in the gateway's portal: record its reference and finish the refund.",
+        "operationId": "mark_refund_processed_api_v1_platform_refunds__refund_id__mark_processed_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "refund_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Refund Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualRefund"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRefundDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Mark Refund Processed",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/refunds/{refund_id}/retry": {
+      "post": {
+        "operationId": "retry_refund_api_v1_platform_refunds__refund_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "refund_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Refund Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRefundDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Retry Refund",
         "tags": [
           "platform"
         ]

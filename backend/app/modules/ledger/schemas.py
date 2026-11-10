@@ -31,6 +31,8 @@ class Cashflow(BaseModel):
     commission_bps: int                  # current rate (history uses each sale's own snapshot)
     gateway_fee_bearer: str              # tenant | platform
     balance_due_cents: int               # what EduZone owes the organization now (all time)
+    pending_cents: int                   # net of course sales still inside the 7-day refund window (step C6)
+    available_cents: int                 # balance due - pending: what a payout may include now
     months: list[CashflowMonth]          # oldest first, every month in the range
     totals: CashflowTotals               # for the range
 

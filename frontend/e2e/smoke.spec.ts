@@ -244,3 +244,21 @@ test("a teacher creates a coupon in the console", async ({ page }) => {
   await expect(page.getByText(code, { exact: true })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("15% off").first()).toBeVisible();
 });
+
+test("a student buys a course and refunds it from the player", async ({ page }) => {
+  await registerStudent(page, newStudentEmail(), newStudentPhone());
+  await page.goto("/course/al-physics-problem-solving");
+  await page.getByRole("button", { name: "Buy now" }).first().click();
+  await expect(page).toHaveURL(/\/cart$/, { timeout: 30_000 });
+  await page.getByRole("button", { name: /^Pay Rs\./ }).click();
+  await page.getByRole("button", { name: "Pay", exact: true }).click();
+  await expect(page.getByText("Payment received")).toBeVisible({ timeout: 20_000 });
+
+  await page.goto("/learn/courses");
+  await page.getByText("A/L Physics: Problem Solving Masterclass").first().click();
+  await expect(page.getByText("Not what you expected?")).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Request a refund" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: /^Refund Rs\./ }).click();
+  await expect(page.getByText("Refunded", { exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("This lecture is locked").or(page.getByRole("link", { name: "Get the course" }).first())).toBeVisible();
+});

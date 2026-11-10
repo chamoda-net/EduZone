@@ -59,7 +59,8 @@ async def cashflow(session: AsyncSession, actor: Actor, *, start: date | None, e
 
     tenant = (await session.execute(text("""
         SELECT t.currency, t.commission_bps, t.gateway_fee_bearer,
-               COALESCE((SELECT balance_due_cents FROM v_tenant_balance), 0) AS balance_due_cents
+               COALESCE((SELECT balance_due_cents FROM v_tenant_balance), 0) AS balance_due_cents,
+               COALESCE((SELECT pending_cents FROM v_tenant_pending_balance), 0) AS pending_cents
         FROM tenants t WHERE t.id = current_tenant_id()
     """))).one()
     rows = {r.month: r for r in (await session.execute(text("""
@@ -87,6 +88,8 @@ async def cashflow(session: AsyncSession, actor: Actor, *, start: date | None, e
     })
     return Cashflow(currency=tenant.currency, commission_bps=tenant.commission_bps,
                     gateway_fee_bearer=tenant.gateway_fee_bearer, balance_due_cents=int(tenant.balance_due_cents),
+                    pending_cents=int(tenant.pending_cents),
+                    available_cents=max(0, int(tenant.balance_due_cents) - int(tenant.pending_cents)),
                     months=months, totals=totals)
 
 

@@ -86,6 +86,7 @@ class TenantRow(BaseModel):
     members: int
     students: int
     balance_due_cents: int
+    pending_cents: int                   # course sales still inside the 7-day refund window (step C6)
     sales_this_month_cents: int
     # Usage (CLAUDE.md section 9). Storage from our own records; bandwidth from the daily sync.
     storage_used_bytes: int

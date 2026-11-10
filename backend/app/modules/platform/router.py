@@ -22,7 +22,7 @@ from app.modules.courses.schemas import (
     ReviewRow,
     UnpublishIn,
 )
-from app.modules.platform import applications, audit_log, auth, checkouts, courses, service, subjects, users
+from app.modules.platform import applications, audit_log, auth, checkouts, courses, refunds, service, subjects, users
 from app.modules.platform.auth import Admin, AdminTx, PlatformLogin, PlatformMe, PlatformRefresh, PlatformTokens
 from app.modules.platform.schemas import (
     AuditPage,
@@ -291,3 +291,39 @@ async def show_course_review(review_id: UUID, actor: Admin, session: AdminTx) ->
     await service._set_tenant(session, tenant_id)
     await service._audit(session, actor, "platform.course_review.show", "course_review", review_id)
     return review
+
+
+# --- refunds (courses step C6) -------------------------------------------------------------------
+
+@router.get("/refunds", response_model=refunds.PlatformRefundPage)
+async def list_refunds(
+    actor: Admin, session: AdminTx,
+    status: refunds.RefundFilter = "open",
+    cursor: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = DEFAULT_LIMIT,
+) -> refunds.PlatformRefundPage:
+    """The queue: `open` (default) = waiting for a decision or for the gateway."""
+    return await refunds.list_refunds(session, status=status, cursor=cursor, limit=limit)
+
+
+@router.get("/refunds/{refund_id}", response_model=refunds.PlatformRefundDetail)
+async def get_refund(refund_id: UUID, actor: Admin, session: AdminTx) -> refunds.PlatformRefundDetail:
+    return await refunds.get_refund(session, refund_id)
+
+
+# These run several transactions of their own (the decision is committed before the gateway is called).
+@router.post("/refunds/{refund_id}/decision", response_model=refunds.PlatformRefundDetail)
+async def decide_refund(refund_id: UUID, body: refunds.RefundDecision, actor: Admin) -> refunds.PlatformRefundDetail:
+    return await refunds.decide(actor, refund_id, body)
+
+
+@router.post("/refunds/{refund_id}/retry", response_model=refunds.PlatformRefundDetail)
+async def retry_refund(refund_id: UUID, actor: Admin) -> refunds.PlatformRefundDetail:
+    return await refunds.retry(actor, refund_id)
+
+
+@router.post("/refunds/{refund_id}/mark-processed", response_model=refunds.PlatformRefundDetail)
+async def mark_refund_processed(refund_id: UUID, body: refunds.ManualRefund,
+                                actor: Admin) -> refunds.PlatformRefundDetail:
+    """Refunded by hand in the gateway's portal: record its reference and finish the refund."""
+    return await refunds.mark_processed(actor, refund_id, body)

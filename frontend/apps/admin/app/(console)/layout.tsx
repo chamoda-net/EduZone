@@ -1,4 +1,4 @@
-import { BookOpen, Building2, ClipboardList, FolderTree, GraduationCap, History, LogOut, MessageSquareText, Receipt, ShoppingCart, Users } from "lucide-react";
+import { BookOpen, Building2, ClipboardList, FolderTree, GraduationCap, History, LogOut, MessageSquareText, Receipt, RotateCcw, ShoppingCart, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -34,6 +34,7 @@ export default async function PlatformConsoleLayout({ children }: LayoutProps<"/
         { href: "/course-categories", label: t("platform.nav.courseCategories"), icon: <FolderTree /> },
         { href: "/users", label: t("platform.nav.users"), icon: <Users /> },
         { href: "/checkouts", label: t("platform.nav.checkouts"), icon: <ShoppingCart /> },
+        { href: "/refunds", label: t("platform.nav.refunds"), icon: <RotateCcw /> },
         { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt /> },
         { href: "/audit", label: t("platform.nav.audit"), icon: <History /> },
       ]}

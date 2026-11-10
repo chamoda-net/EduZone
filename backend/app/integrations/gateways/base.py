@@ -46,12 +46,27 @@ class GatewayEvent:
     raw: dict[str, str]
 
 
+@dataclass(frozen=True, slots=True)
+class RefundResult:
+    """processed: the gateway refunded it (ref = its refund id). manual: this gateway can't refund through its API
+    (yet); staff refund in the gateway's portal and record it. failed: the gateway refused (message says why)."""
+
+    status: Literal["processed", "manual", "failed"]
+    ref: str | None = None
+    message: str | None = None
+
+
 class Gateway(Protocol):
     name: str
 
     def create_checkout(self, req: CheckoutRequest) -> CheckoutRedirect: ...
 
     def verify_webhook(self, form: dict[str, str]) -> GatewayEvent: ...
+
+    async def refund(self, payment_ref: str, amount_cents: int, refund_key: str, reason: str) -> RefundResult:
+        """Refund part or all of a payment. `refund_key` (our refunds.id) makes a repeat safe where the
+        gateway supports it."""
+        ...
 
 
 def parse_amount_cents(value: str | None) -> int | None:

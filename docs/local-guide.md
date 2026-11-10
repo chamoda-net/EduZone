@@ -259,6 +259,16 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
    end date (90 days at most), a limit, and whether it shows as a public sale. Each coupon shows its usage; copy
    the course link with the code to share on WhatsApp. The course builder shows how many students saved a course.
 
+### C7. Refunds: new in step C6
+1. Buy a paid course (as a new student, so the 7 days start now). In the player, the sidebar offers **Request a
+   refund** while less than 30% is done. Pick a reason: with the fake gateway it is refunded at once, the card shows
+   **Refunded**, and the course locks (it can be bought again).
+2. A student with 3 refunds in 90 days waits for EduZone: admin app → **Refunds** lists it under **Needs action**;
+   open it to see the request against the rule, then approve (refunds now) or refuse with a note the student reads.
+   With PayHere, refund in the PayHere portal and use **Record as refunded** with its reference.
+3. Owners: console → **Money** shows course sales still inside the 7-day window as held; payouts can only include
+   what is available.
+
 ### D. Become a teacher (any new account)
 1. Register a new account at `/register` and confirm the phone.
 2. Go to `/teach` → **Apply** (`/teach/apply`): teacher or institute, name, subjects, experience, identity
@@ -374,7 +384,9 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
   completed paid courses with a PDF and a public verify page.
 - Coupons and the wishlist (step C5): codes and public sales, a coupon box in the cart, free checkouts, saved
   courses, the console's Coupons page.
-- Not yet: refunds (C6), analytics and commission changes (C7).
+- Refunds (step C6): the 7-day / 30% rule, automatic approval with an abuse limit, the admin refund queue, the
+  ledger reversal, and the 7-day payout hold.
+- Not yet: analytics and commission changes (C7).
 
 ### Platform admin (step 9, phases 5 and 8)
 - Separate app, private network only (`PLATFORM_ALLOWED_CIDRS`), sign-in with SMS code + authenticator app,

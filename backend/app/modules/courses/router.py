@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query, Request, Response
 from app.core.db import AppSession
 from app.core.tenancy import TenantSession, site_url
 from app.modules.auth.dependencies import CurrentUser, StaffActor
-from app.modules.courses import certificates, coupons, reviews, service, student
+from app.modules.courses import certificates, coupons, refunds, reviews, service, student
 from app.modules.courses import wishlist as wishlist_service
 from app.modules.market.schemas import MarketCourse
 from app.modules.courses.schemas import (
@@ -258,3 +258,12 @@ async def save_to_wishlist(course_id: UUID, user: CurrentUser) -> list[UUID]:
 @me_router.delete("/wishlist/{course_id}", response_model=list[UUID])
 async def remove_from_wishlist(course_id: UUID, user: CurrentUser) -> list[UUID]:
     return await wishlist_service.remove(user, course_id)
+
+
+# --- refunds (step C6) ----------------------------------------------------------------------------
+
+@learn_router.post("/courses/{course_id}/refund", response_model=refunds.RefundOut, status_code=201)
+async def request_refund(course_id: UUID, body: refunds.RefundIn, user: CurrentUser) -> refunds.RefundOut:
+    """Within 7 days of buying and under 30% complete: approved at once (and refunded) unless the student has had 3
+    refunds in 90 days, then EduZone reviews it."""
+    return await refunds.request_refund(user, course_id, body)

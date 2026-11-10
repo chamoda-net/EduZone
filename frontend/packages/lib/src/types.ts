@@ -438,6 +438,8 @@ export type Cashflow = {
   commission_bps: number;
   gateway_fee_bearer: "tenant" | "platform";
   balance_due_cents: number;
+  pending_cents: number;      // course sales still inside the 7-day refund window
+  available_cents: number;    // balance due - pending: what a payout may include now
   months: (CashflowFigures & { month: string })[];
   totals: CashflowFigures;
 };
@@ -477,6 +479,7 @@ export type PlatformTenant = {
   members: number;
   students: number;
   balance_due_cents: number;
+  pending_cents: number;
   sales_this_month_cents: number;
   storage_used_bytes: number;
   storage_limit_bytes: number | null;

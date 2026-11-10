@@ -17,6 +17,7 @@ import { Container, ErrorText, buttonStyles, cx } from "@eduzone/ui";
 import { PdfResource } from "@/app/learn/lessons/[id]/player";
 
 import { CompleteButton, LectureVideo, RatingCard } from "./client";
+import { RefundCard } from "./refund";
 
 type Course = Schema<"LearnCourse">;
 type Lecture = Schema<"LectureDetail">;
@@ -142,6 +143,7 @@ export default async function CoursePlayerPage({ params, searchParams }: PagePro
         </main>
 
         <aside className="flex flex-col gap-3 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:self-start lg:overflow-y-auto">
+          {c.refund && <RefundCard courseId={c.id} info={c.refund} />}
           {askRating && reviewRes?.ok && (
             <RatingCard courseId={c.id} review={reviewRes.data ? { rating: reviewRes.data.rating, comment: reviewRes.data.comment ?? null, status: reviewRes.data.status } : null} />
           )}

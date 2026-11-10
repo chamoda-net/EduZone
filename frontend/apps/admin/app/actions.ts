@@ -303,3 +303,42 @@ export async function showReview(reviewId: string): Promise<FormState> {
   revalidatePath("/course-reviews");
   return { ok: true, at: Date.now() };
 }
+
+// --- refunds (courses step C6) -----------------------------------------------------------
+
+type RefundOut = { status: string; failure_reason: string | null };
+
+function refundOutcome(r: RefundOut): FormState {
+  if (r.status === "processed" || r.status === "rejected") return { ok: true, at: Date.now() };
+  // Approved, but the gateway didn't refund it (manual or failed): say so; the page shows what to do next.
+  return { error: t("platform.refunds.waiting", { reason: r.failure_reason ?? "" }) };
+}
+
+export async function decideRefund(refundId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api<RefundOut>(`/platform/refunds/${refundId}/decision`, {
+    method: "POST",
+    body: { decision: text(fd, "decision"), note: text(fd, "note") || null },
+  });
+  revalidatePath(`/refunds/${refundId}`);
+  revalidatePath("/refunds");
+  if (!res.ok) return { error: errorText(t, res.error) };
+  return refundOutcome(res.data);
+}
+
+export async function retryRefund(refundId: string): Promise<FormState> {
+  const res = await api<RefundOut>(`/platform/refunds/${refundId}/retry`, { method: "POST" });
+  revalidatePath(`/refunds/${refundId}`);
+  revalidatePath("/refunds");
+  if (!res.ok) return { error: errorText(t, res.error) };
+  return refundOutcome(res.data);
+}
+
+export async function markRefundProcessed(refundId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api<RefundOut>(`/platform/refunds/${refundId}/mark-processed`, {
+    method: "POST", body: { gateway_refund_ref: text(fd, "gateway_refund_ref") },
+  });
+  revalidatePath(`/refunds/${refundId}`);
+  revalidatePath("/refunds");
+  if (!res.ok) return { error: errorText(t, res.error) };
+  return { ok: true, at: Date.now() };
+}
