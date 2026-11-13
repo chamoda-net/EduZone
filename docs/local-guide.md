@@ -416,7 +416,7 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
 
 ## 7. Not built yet (or only partly)
 
-- **Refunds** (the ledger builder exists; no gateway refund call or refund screen yet).
+- **PayHere's refund API** (refunds work; with PayHere they are recorded by hand in the admin app for now).
 - **Real SMS and email providers** (they print to the API terminal locally).
 - **Real Bunny account** checks (video upload, signed URLs and the HLS token formula must be verified against a
   real library); the daily Bunny usage sync and bandwidth warnings.
@@ -425,6 +425,8 @@ Months: **open** = buy directly; **closed** = a past month, the student must ask
 - Team invites for institutes; player data-saver and reduced-motion; caching of public pages.
 - Sinhala/Tamil text, 360 px pass, low-end phone pass, accessibility pass (**phase 9**).
 - Company sites on subdomains (v1.1).
+
+The full plan for what comes next is in `docs/ROADMAP.md`.
 
 ---
 

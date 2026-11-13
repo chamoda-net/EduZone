@@ -4,6 +4,7 @@
 > what has been decided, and the rules the code must follow. `FRONTEND.md` is its companion for
 > sites, screens, UX and the design system; backend contracts, money rules and schema live here.
 > The database schema lives in `db/eduzone_v1_schema.sql`, which is authoritative for tables and columns.
+> **`docs/ROADMAP.md`** is the plan after the course steps (polish, launch readiness, pilot, company sites).
 > **`docs/COURSES.md`** adds the second product, self-paced **courses**; where it and this file disagree on
 > courses, COURSES.md wins.
 >
