@@ -181,6 +181,22 @@ textarea {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 
+  /* A thin, quiet scrollbar for the dark console sidebar (it scrolls when the nav is long). */
+  .ez-scroll-dark {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ez-brand-700) transparent;
+  }
+  .ez-scroll-dark::-webkit-scrollbar {
+    width: 6px;
+  }
+  .ez-scroll-dark::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--ez-brand-700);
+  }
+  .ez-scroll-dark::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
   /* Faint ruled-paper lines behind light sections. */
   .ez-ruled {
     background-image: repeating-linear-gradient(

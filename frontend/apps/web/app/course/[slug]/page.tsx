@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import type { Schema } from "@eduzone/api-client";
+import { Expandable } from "@/components/expandable";
 import { ShareTools } from "@/components/share-tools";
 import { Stars } from "@/components/stars";
 import { SiteShell } from "@/components/shell";
@@ -18,6 +19,7 @@ import { formatDateTime, formatMoney } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
 import { ClassCover, Container } from "@eduzone/ui";
 
+import { StickyBuyBar } from "./buy-bar";
 import { CourseActions } from "./buy";
 import { PreviewDialog } from "./preview";
 
@@ -204,7 +206,7 @@ export default async function CourseLandingPage({ params, searchParams }: PagePr
               {c.level && <span>{t(`courses.level.${c.level as "all"}`)}</span>}
             </p>
           </div>
-          <div className="lg:hidden">{card}</div>
+          <div id="price-card" className="lg:hidden">{card}</div>
         </Container>
       </section>
 
@@ -274,7 +276,9 @@ export default async function CourseLandingPage({ params, searchParams }: PagePr
           {d.description && (
             <section>
               <h2 className="mb-3 font-display text-2xl font-semibold">{t("market.course.description")}</h2>
-              <p className="max-w-3xl text-[0.9375rem] leading-relaxed whitespace-pre-line text-foreground/85">{d.description}</p>
+              <Expandable>
+                <p className="max-w-3xl text-[0.9375rem] leading-relaxed whitespace-pre-line text-foreground/85">{d.description}</p>
+              </Expandable>
             </section>
           )}
 
@@ -363,6 +367,10 @@ export default async function CourseLandingPage({ params, searchParams }: PagePr
           <div className="sticky top-24">{card}</div>
         </aside>
       </Container>
+      <StickyBuyBar watchId="price-card" courseId={c.id} slug={c.slug} couponCode={offer?.code ?? null} aboveTabs={!!me}
+                    mode={owned ? "owned" : paid ? "buy" : "free"}
+                    price={offer ? (offer.price === 0 ? t("market.courses.card.free") : formatMoney(offer.price, c.currency)) : coursePrice(t, c)}
+                    listPrice={offer ? formatMoney(offer.list, c.currency) : null} />
     </SiteShell>
   );
 }

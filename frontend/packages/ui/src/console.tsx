@@ -22,7 +22,7 @@ export function ConsoleFrame({
     <div className="flex min-h-dvh flex-1">
       <aside className="ez-grain sticky top-0 hidden h-dvh w-68 shrink-0 flex-col bg-brand-900 px-3 py-5 text-on-brand lg:flex">
         <div className="px-3 pb-6">{brand}</div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="ez-scroll-dark -mr-1.5 flex-1 overflow-y-auto pr-1.5">
           <SideNav items={items} />
         </div>
         {footer && <div className="mt-4 border-t border-brand-800 pt-4">{footer}</div>}
@@ -34,7 +34,7 @@ export function ConsoleFrame({
             {(close) => (
               <div className="flex h-full flex-col">
                 <div className="px-3 pt-1 pb-6">{brand}</div>
-                <div className="flex-1 overflow-y-auto">
+                <div className="ez-scroll-dark flex-1 overflow-y-auto">
                   <SideNav items={items} onNavigate={close} />
                 </div>
                 {footer && <div className="mt-4 border-t border-brand-800 pt-4">{footer}</div>}

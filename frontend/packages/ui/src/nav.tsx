@@ -8,7 +8,8 @@ import { useState, type ReactNode } from "react";
 
 import { cx } from "./cx";
 
-export type NavItem = { href: string; label: string; icon: ReactNode; exact?: boolean };
+/** `group`: a heading shown above the first item of each group (long sidebars, e.g. the admin app). */
+export type NavItem = { href: string; label: string; icon: ReactNode; exact?: boolean; group?: string };
 
 function isActive(path: string, item: NavItem) {
   return item.exact ? path === item.href : path === item.href || path.startsWith(`${item.href}/`);
@@ -19,16 +20,23 @@ export function SideNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: 
   const path = usePathname();
   return (
     <nav className="flex flex-col gap-0.5">
-      {items.map((item) => {
+      {items.map((item, i) => {
         const active = isActive(path, item);
+        const heading = item.group && item.group !== items[i - 1]?.group ? item.group : null;
         return (
+          <div key={item.href} className="contents">
+          {heading && (
+            <p className={cx("px-3 pb-1 text-[0.6875rem] font-bold tracking-[0.14em] text-brand-300/80 uppercase", i > 0 && "mt-4")}>
+              {heading}
+            </p>
+          )}
           <Link
             key={item.href}
             href={item.href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cx(
-              "group relative flex min-h-11 items-center gap-3 rounded-ez px-3 text-[0.9375rem] font-medium transition-colors",
+              "group relative flex min-h-11 items-center gap-3 rounded-ez px-3 text-[0.9375rem] font-medium transition-colors lg:min-h-10",
               active ? "bg-brand-800 text-on-brand" : "text-brand-100/80 hover:bg-brand-800/60 hover:text-on-brand",
             )}
           >
@@ -38,6 +46,7 @@ export function SideNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: 
             </span>
             {item.label}
           </Link>
+          </div>
         );
       })}
     </nav>

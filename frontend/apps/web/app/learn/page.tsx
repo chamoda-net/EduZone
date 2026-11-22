@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import type { Schema } from "@eduzone/api-client";
+import { Lane } from "@/components/lane";
 import { LessonSlot } from "@/components/lesson-slot";
 import { MyCourseCard } from "@/components/my-course-card";
 import { PayButton } from "@/components/pay-button";
@@ -49,9 +50,9 @@ export default async function TodayPage() {
           <CardTitle action={<Link href="/learn/courses" className="text-sm font-semibold text-brand hover:underline">{t("learnCourses.seeAll")}</Link>}>
             {t("learnCourses.continueLane")}
           </CardTitle>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <Lane label={t("learnCourses.continueLane")}>
             {courses.slice(0, 4).map((c, i) => <MyCourseCard key={c.id} c={c} index={i} />)}
-          </div>
+          </Lane>
         </section>
       )}
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}

@@ -102,23 +102,28 @@ export default async function MoneyPage({ searchParams }: PageProps<"/teach/[ten
         {columns.map(([field, label]) => (
           <Card key={field} className="flex flex-col gap-1 p-4 sm:p-5">
             <p className="text-xs font-medium text-muted">{t(label)}</p>
-            <p className={`font-display text-xl font-semibold tabular-nums ${field === "net_cents" ? "text-brand" : ""}`}>
+            <p className={`font-display text-lg font-semibold whitespace-nowrap tabular-nums sm:text-xl ${field === "net_cents" ? "text-brand" : ""}`}>
               {money(c.totals[field])}
             </p>
           </Card>
         ))}
       </div>
 
-      {/* Phones: one card per month. Wider screens: a table. */}
+      {/* Phones: one card per month (a single line for a month with nothing in it). Wider screens: a table. */}
       <ul className="flex flex-col gap-2 sm:hidden">
-        {months.map((m) => (
+        {months.map((m) => columns.every(([field]) => m[field] === 0) ? (
+          <li key={m.month} className="flex justify-between rounded-ez border border-dashed border-border-strong px-3 py-2.5 text-sm">
+            <span className="font-medium">{formatMonth(m.month)}</span>
+            <span className="text-muted">{t("money.noActivity")}</span>
+          </li>
+        ) : (
           <li key={m.month}>
-            <Card className="flex flex-col gap-1 p-3">
-              <p className="font-medium">{formatMonth(m.month)}</p>
+            <Card className="flex flex-col gap-1.5 p-4">
+              <p className="mb-1 font-semibold">{formatMonth(m.month)}</p>
               {columns.map(([field, label]) => (
-                <div key={field} className="flex justify-between text-sm">
+                <div key={field} className="flex items-baseline justify-between gap-3 text-sm">
                   <span className="text-muted">{t(label)}</span>
-                  <span>{money(m[field])}</span>
+                  <span className={`whitespace-nowrap tabular-nums ${field === "net_cents" ? "font-semibold text-brand" : ""}`}>{money(m[field])}</span>
                 </div>
               ))}
             </Card>

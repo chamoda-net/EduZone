@@ -67,10 +67,17 @@ Stages 2 and 3 can overlap: provider sign-ups and legal review take calendar tim
 **Quality bar: Udemy-level polish on every screen.**
 
 ### 3.1 Look and layout
-- [ ] **Screen-by-screen review, 360 px and desktop:** marketplace, student area, console, admin. Fix spacing,
+- [~] **Screen-by-screen review, 360 px and desktop:** marketplace, student area, console, admin. Fix spacing,
       overflow and empty states; add loading skeletons where they're missing. **M**
-- [ ] **Admin sidebar:** it now has 13 items and scrolls with a plain white scrollbar. Group the items (Content /
-      People / Money / System) or style the scroll. **S**
+      *First pass done (2026-11-23):* `e2e/screens.spec.ts` captures every main screen per role at both widths
+      (`SCREEN_DIR=... npx playwright test -c e2e/playwright.config.ts screens`). Fixed: the phone header (one
+      Sign in button; a `hidden` that lost to the button's own display), swipeable card lanes on phones (home, Today),
+      the course page's "Show more" description and sticky price bar on phones, a "My courses" tab, the Money page
+      on phones (amounts no longer break, empty months collapse), coupon list alignment and a jump to the form,
+      the refund offer moved below the course content, Today counting courses as classes. Still to review: the
+      admin app's pages (needs an authenticator sign-in in the harness), and a console overview page.
+- [x] **Admin sidebar:** grouped (Organizations / Catalogue / Money / People and records) with a thin dark
+      scrollbar. **S**
 - [ ] **Uploads instead of links:** course covers and teacher photos are pasted links today. Upload them to Bunny
       Storage, with a crop preview. **M**
 - [ ] **Profile editor:** a live preview of the public teacher page. **S**

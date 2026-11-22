@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import type { Schema } from "@eduzone/api-client";
 import { CourseCard } from "@/components/course-card";
+import { Lane } from "@/components/lane";
 import { MarketClassCard } from "@/components/market-card";
 import { SiteShell } from "@/components/shell";
 import { SubjectTile } from "@/components/subject-tile";
@@ -80,9 +81,9 @@ export default async function Home() {
                   ))}
                 </nav>
               )}
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <Lane label={t("market.home.courses")}>
                 {courses.popular.slice(0, 8).map((c, i) => <CourseCard key={c.id} c={c} index={i} />)}
-              </div>
+              </Lane>
             </Container>
           )}
 
@@ -127,9 +128,9 @@ function ClassRow({ eyebrow, title, classes }: { eyebrow: string; title: string;
   return (
     <Container className="flex flex-col gap-6 pt-16 sm:pt-20">
       <SectionHead eyebrow={eyebrow} title={title} href="/classes" />
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <Lane label={title}>
         {classes.slice(0, 8).map((c, i) => <MarketClassCard key={c.id} c={c} index={i} />)}
-      </div>
+      </Lane>
     </Container>
   );
 }

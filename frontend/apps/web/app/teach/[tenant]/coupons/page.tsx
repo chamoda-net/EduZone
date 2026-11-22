@@ -1,4 +1,4 @@
-import { Megaphone, Ticket } from "lucide-react";
+import { Megaphone, Plus, Ticket } from "lucide-react";
 
 import type { Schema } from "@eduzone/api-client";
 import { api } from "@/lib/api";
@@ -7,7 +7,7 @@ import { mainOrigin } from "@/lib/site";
 import { workspaceSlug } from "@/lib/workspace";
 import { formatDateTime, formatMoney } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
-import { Badge, Card, CardTitle, EmptyState, ErrorText, PageHeader } from "@eduzone/ui";
+import { Badge, Card, CardTitle, EmptyState, ErrorText, PageHeader, buttonStyles } from "@eduzone/ui";
 
 import { CopyCouponLink, CouponToggle, NewCouponForm } from "./forms";
 
@@ -28,7 +28,8 @@ export default async function CouponsPage() {
 
   return (
     <>
-      <PageHeader eyebrow={t("shell.console")} title={t("coupons.title")} description={t("coupons.subtitle")} />
+      <PageHeader eyebrow={t("shell.console")} title={t("coupons.title")} description={t("coupons.subtitle")}
+                  actions={<a href="#new-coupon" className={buttonStyles("primary", "md", "lg:hidden")}><Plus className="size-4.5" />{t("coupons.new")}</a>} />
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <section className="flex min-w-0 flex-col gap-3">
           {!coupons.ok && <ErrorText>{errorText(t, coupons.error)}</ErrorText>}
@@ -63,7 +64,7 @@ export default async function CouponsPage() {
                         </p>
                         <p className="truncate text-sm text-muted">{k.course_title ?? t("coupons.allCourses")}</p>
                       </div>
-                      <div className="text-right text-sm">
+                      <div className="text-sm sm:text-right">
                         <p className="font-semibold tabular-nums">
                           {k.max_redemptions
                             ? t("coupons.usedOf", { used: k.redeemed_count, max: k.max_redemptions })
@@ -89,7 +90,8 @@ export default async function CouponsPage() {
             </ul>
           )}
         </section>
-        <Card className="lg:sticky lg:top-6">
+        <div id="new-coupon" className="scroll-mt-20 lg:sticky lg:top-6">
+        <Card>
           <CardTitle>{t("coupons.new")}</CardTitle>
           {paid.length === 0 && !allowAll ? (
             <p className="text-sm text-muted">{t("coupons.noCourses")}</p>
@@ -97,6 +99,7 @@ export default async function CouponsPage() {
             <NewCouponForm courses={paid.map((c) => ({ id: c.id, title: c.title }))} allowAll={allowAll} />
           )}
         </Card>
+        </div>
       </div>
     </>
   );

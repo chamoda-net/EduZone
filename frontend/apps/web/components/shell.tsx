@@ -1,4 +1,4 @@
-import { BookOpen, Building2, CalendarDays, Compass, GraduationCap, Heart, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
+import { BookOpen, Building2, Compass, GraduationCap, Heart, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -29,12 +29,12 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
   } else {
     items.push({ href: "/institutes", label: t("nav.institutes"), icon: <Building2 /> });
   }
-  // Bottom tabs (phones, signed in): the student area plus browsing.
+  // Bottom tabs (phones, signed in): the student area plus browsing. The schedule is one tap away on Today.
   const tabs: NavItem[] = [
     { href: "/learn", label: t("nav.today"), icon: <House />, exact: true },
     { href: "/learn/classes", label: t("nav.myClasses"), icon: <BookOpen /> },
+    { href: "/learn/courses", label: t("nav.myCourses"), icon: <GraduationCap /> },
     { href: "/classes", label: t("nav.browse"), icon: <Compass /> },
-    { href: "/learn/schedule", label: t("nav.schedule"), icon: <CalendarDays /> },
     me && isStaff(me)
       ? { href: "/teach", label: t("nav.console"), icon: <LayoutDashboard /> }
       : { href: "/learn/payments", label: t("nav.payments"), icon: <Receipt /> },
@@ -77,10 +77,15 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
               </>
             ) : (
               <>
-                <Link href="/login" className={buttonStyles("ghost", "sm", "hidden sm:inline-flex")}>
+                {/* Phones get one clear action (the sign-in page links to registration). `max-sm:hidden`, not
+                    `hidden`: the button's own `inline-flex` would win over a plain `hidden`. */}
+                <Link href="/login" className={buttonStyles("primary", "sm", "sm:hidden")}>
                   {t("home.signIn")}
                 </Link>
-                <Link href="/register" className={buttonStyles("primary", "sm")}>
+                <Link href="/login" className={buttonStyles("ghost", "sm", "max-sm:hidden")}>
+                  {t("home.signIn")}
+                </Link>
+                <Link href="/register" className={buttonStyles("primary", "sm", "max-sm:hidden")}>
                   {t("nav.join")}
                 </Link>
               </>

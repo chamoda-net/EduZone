@@ -26,18 +26,18 @@ export default async function PlatformConsoleLayout({ children }: LayoutProps<"/
         </Link>
       }
       items={[
-        { href: "/", label: t("platform.nav.tenants"), icon: <Building2 />, exact: true },
-        { href: "/applications", label: t("platform.nav.applications"), icon: <ClipboardList /> },
-        { href: "/courses", label: t("platform.nav.courseReviews"), icon: <GraduationCap /> },
-        { href: "/course-reviews", label: t("platform.nav.courseReviewsMod"), icon: <MessageSquareText /> },
-        { href: "/subjects", label: t("platform.nav.subjects"), icon: <BookOpen /> },
-        { href: "/course-categories", label: t("platform.nav.courseCategories"), icon: <FolderTree /> },
-        { href: "/users", label: t("platform.nav.users"), icon: <Users /> },
-        { href: "/checkouts", label: t("platform.nav.checkouts"), icon: <ShoppingCart /> },
-        { href: "/refunds", label: t("platform.nav.refunds"), icon: <RotateCcw /> },
-        { href: "/commission", label: t("platform.nav.commission"), icon: <Percent /> },
-        { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt /> },
-        { href: "/audit", label: t("platform.nav.audit"), icon: <History /> },
+        { href: "/", label: t("platform.nav.tenants"), icon: <Building2 />, exact: true, group: t("platform.navGroup.orgs") },
+        { href: "/applications", label: t("platform.nav.applications"), icon: <ClipboardList />, group: t("platform.navGroup.orgs") },
+        { href: "/courses", label: t("platform.nav.courseReviews"), icon: <GraduationCap />, group: t("platform.navGroup.content") },
+        { href: "/course-reviews", label: t("platform.nav.courseReviewsMod"), icon: <MessageSquareText />, group: t("platform.navGroup.content") },
+        { href: "/subjects", label: t("platform.nav.subjects"), icon: <BookOpen />, group: t("platform.navGroup.content") },
+        { href: "/course-categories", label: t("platform.nav.courseCategories"), icon: <FolderTree />, group: t("platform.navGroup.content") },
+        { href: "/checkouts", label: t("platform.nav.checkouts"), icon: <ShoppingCart />, group: t("platform.navGroup.money") },
+        { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt />, group: t("platform.navGroup.money") },
+        { href: "/refunds", label: t("platform.nav.refunds"), icon: <RotateCcw />, group: t("platform.navGroup.money") },
+        { href: "/commission", label: t("platform.nav.commission"), icon: <Percent />, group: t("platform.navGroup.money") },
+        { href: "/users", label: t("platform.nav.users"), icon: <Users />, group: t("platform.navGroup.system") },
+        { href: "/audit", label: t("platform.nav.audit"), icon: <History />, group: t("platform.navGroup.system") },
       ]}
       footer={
         <div className="flex flex-col gap-1">

@@ -1626,6 +1626,13 @@ export const en = {
   "insights.couponUses": "{count, plural, =1 {1 use} other {# uses}}",
   "insights.couponGiven": "{amount} off",
   "insights.note": "Money comes from the ledger: gross as sold; net is what EduZone owes you for this course after commission, gateway fees and refunds. Months are Colombo calendar months.",
+  "platform.navGroup.orgs": "Organizations",
+  "platform.navGroup.content": "Catalogue",
+  "platform.navGroup.money": "Money",
+  "platform.navGroup.system": "People and records",
+  "common.showMore": "Show more",
+  "common.showLess": "Show less",
+  "money.noActivity": "No activity",
 } as const;
 
 export type MessageKey = keyof typeof en;

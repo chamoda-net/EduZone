@@ -134,7 +134,8 @@ async def today(user: UserContext) -> Today:
             to_pay.append(MonthToPay(**r._mapping, currency=currency, org=org))
         counts = (await session.execute(text("""
             SELECT (SELECT count(*) FROM late_month_requests WHERE student_member_id = :m AND status = 'pending') AS pending,
-                   (SELECT count(*) FROM class_enrollments WHERE student_member_id = :m AND status = 'active') AS classes
+                   (SELECT count(*) FROM class_enrollments e JOIN classes c ON c.id = e.class_id AND c.kind = 'tuition'
+                    WHERE e.student_member_id = :m AND e.status = 'active') AS classes
         """), {"m": member_id})).one()
         pending += counts.pending
         classes += counts.classes

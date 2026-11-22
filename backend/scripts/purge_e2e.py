@@ -1,4 +1,5 @@
-"""Remove the organizations the Playwright smoke suite creates (slug `e2e-...`, from "a new user applies to teach").
+"""Remove what the Playwright smoke suite creates: organizations (slug `e2e-...`, from "a new user applies to teach")
+and coupons (code `E2E-...`, from "a teacher creates a coupon").
 
 Each run of that test opens a pending organization; the suite runs this after it finishes so the local database
 doesn't fill up with them. Also removes the applicants' teacher profiles when they belong to no other organization.
@@ -18,6 +19,13 @@ def main() -> None:
         raise SystemExit("purge_e2e.py runs only with ENVIRONMENT=local")
     url = s.migration_database_url.replace("postgresql+psycopg", "postgresql")
     with psycopg.connect(url) as conn:
+        # Coupons the "teacher creates a coupon" test makes in the demo organization (never used by an order).
+        removed = conn.execute("""
+            DELETE FROM coupons k WHERE k.code LIKE 'E2E-%'
+              AND NOT EXISTS (SELECT 1 FROM order_items i WHERE i.coupon_id = k.id)
+        """).rowcount
+        if removed:
+            print(f"removed {removed} e2e coupon(s)")
         ids = [r[0] for r in conn.execute("SELECT id FROM tenants WHERE slug LIKE 'e2e-%'")]
         if not ids:
             print("no e2e organizations to remove")

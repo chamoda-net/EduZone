@@ -104,7 +104,7 @@ export function CourseInsightsView({ d, href, range }: { d: Insights; href: (mon
           <tbody className="divide-y divide-border tabular-nums">
             {[...d.months].reverse().map((m) => (
               <tr key={m.month}>
-                <td className="px-4 py-2.5 font-medium">{formatMonth(m.month)}</td>
+                <td className="px-4 py-2.5 font-medium whitespace-nowrap">{new Date(`${m.month}T00:00:00`).toLocaleDateString("en", { month: "short", year: "numeric" })}</td>
                 <td className="px-3 py-2.5 text-right">{m.enrol_paid}</td>
                 <td className="px-3 py-2.5 text-right">{m.enrol_coupon}</td>
                 <td className="px-3 py-2.5 text-right">{m.enrol_free}</td>

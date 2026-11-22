@@ -143,7 +143,6 @@ export default async function CoursePlayerPage({ params, searchParams }: PagePro
         </main>
 
         <aside className="flex flex-col gap-3 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:self-start lg:overflow-y-auto">
-          {c.refund && <RefundCard courseId={c.id} info={c.refund} />}
           {askRating && reviewRes?.ok && (
             <RatingCard courseId={c.id} review={reviewRes.data ? { rating: reviewRes.data.rating, comment: reviewRes.data.comment ?? null, status: reviewRes.data.status } : null} />
           )}
@@ -190,6 +189,8 @@ export default async function CoursePlayerPage({ params, searchParams }: PagePro
               );
             })}
           </div>
+          {/* After the curriculum: the refund offer is there when wanted, without crowding the lesson. */}
+          {c.refund && <RefundCard courseId={c.id} info={c.refund} />}
         </aside>
       </Container>
     </SiteShell>
