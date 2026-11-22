@@ -3,10 +3,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MarketClassCard } from "@/components/market-card";
+import { Photo } from "@/components/photo";
 import { ShareTools } from "@/components/share-tools";
 import { SiteShell } from "@/components/shell";
 import { TeacherAvatar } from "@/components/teacher-avatar";
 import { jsonLd, market } from "@/lib/market";
+import { PHOTOS, subjectPhoto } from "@/lib/photos";
 import { siteOrigin } from "@/lib/site";
 import { t } from "@eduzone/lib/i18n";
 import type { TeacherPage } from "@eduzone/lib/types";
@@ -33,6 +35,7 @@ export default async function TeacherPageView({ params }: PageProps<"/[subject]/
   const { teacher, subject } = data;
   const url = `${await siteOrigin()}/${p.subject}/${p.teacher}`;
   const firstOpen = data.classes.find((c) => c.open_month_start);
+  const banner = subjectPhoto(subject?.slug) ?? PHOTOS.classroom;
 
   return (
     <SiteShell bare>
@@ -44,10 +47,15 @@ export default async function TeacherPageView({ params }: PageProps<"/[subject]/
           image: teacher.photo_url ?? undefined, knowsAbout: teacher.subjects.map((s) => s.name),
         })}
       />
-      <section className="border-b border-border bg-[linear-gradient(to_bottom,var(--ez-sunken),transparent)]">
-        <Container className="flex flex-col items-center gap-6 py-12 text-center sm:py-16 md:flex-row md:items-end md:text-left">
-          <TeacherAvatar name={teacher.display_name} photo={teacher.photo_url} size="xl" className="ez-rise" />
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 md:items-start">
+      <section className="border-b border-border">
+        {/* A banner of the subject, like a profile cover; the teacher's photo sits over its lower edge. */}
+        <div className="relative h-36 overflow-hidden bg-brand-900 sm:h-52">
+          {banner && <Photo photo={banner} ratio={0.3} alt="" priority sizes="100vw" className="absolute inset-0 h-full object-[center_35%] opacity-80" />}
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-brand-950/30 via-brand-900/40 to-brand-950/80" />
+        </div>
+        <Container className="flex flex-col items-center gap-6 pb-12 text-center sm:pb-14 md:flex-row md:items-start md:gap-8 md:text-left">
+          <TeacherAvatar name={teacher.display_name} photo={teacher.photo_url} size="xl" className="ez-rise relative -mt-14 sm:-mt-16" />
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 md:items-start md:pt-6">
             <p className="ez-rise text-xs font-bold tracking-[0.14em] text-brand-600 uppercase">
               {t("market.teacher.eyebrow", { subject: subject?.name ?? "" })}
             </p>
@@ -70,7 +78,7 @@ export default async function TeacherPageView({ params }: PageProps<"/[subject]/
               )}
             </div>
           </div>
-          <div className="ez-rise flex flex-col items-center gap-3 md:items-end" style={{ "--i": 3 } as React.CSSProperties}>
+          <div className="ez-rise flex flex-col items-center gap-3 md:items-end md:pt-8" style={{ "--i": 3 } as React.CSSProperties}>
             <a href="#classes" className={buttonStyles("primary", "lg")}>
               {firstOpen?.open_month_start
                 ? t("market.teacher.joinMonth", { month: new Date(firstOpen.open_month_start).toLocaleString("en", { month: "long", timeZone: "UTC" }) })

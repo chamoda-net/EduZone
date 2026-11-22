@@ -50,8 +50,15 @@ export function ClassCover({
 }) {
   if (imageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- covers come from our CDN at any size
-      <img src={imageUrl} alt="" loading="lazy" className={cx("aspect-[16/10] w-full object-cover", className)} />
+      <div className={cx("relative block aspect-[16/10] w-full overflow-hidden", className)}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- covers come from our CDN at any size */}
+        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
+        {label && (
+          <span className="absolute top-3 left-3 rounded-full bg-black/45 px-2.5 py-1 text-[0.7rem] font-bold tracking-[0.12em] text-white uppercase backdrop-blur-sm">
+            {label}
+          </span>
+        )}
+      </div>
     );
   }
   const h = hashString(`${subject ?? ""}|${title}`);

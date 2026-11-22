@@ -24,7 +24,15 @@ through a **fake gateway** page, and lesson videos play from a public test strea
 
 ## 2. Start the servers yourself
 
-You need four terminals (PowerShell or Git Bash). Start them in this order.
+**The quick way:** double-click **`start-eduzone.bat`** in the repo root. It starts the database, brings it up to
+date (migrations), then opens the API, the web app and the admin app each in its own window, waits until they
+answer, and opens http://localhost:3000 and http://localhost:3001 in Chrome (or your default browser). Anything
+already running is left alone, and a lock file left by a crashed database is removed. SMS codes and emails appear in
+the **EduZone API** window. **`stop-eduzone.bat`** stops whatever listens on the four ports (3001, 3000, 8000 and the
+database). The scripts live in `tools/start-eduzone.ps1` and `tools/stop-eduzone.ps1`; the first-time setup below
+is still needed once.
+
+**By hand:** you need four terminals (PowerShell or Git Bash). Start them in this order.
 
 ### First time only
 

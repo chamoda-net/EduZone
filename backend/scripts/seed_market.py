@@ -198,7 +198,30 @@ async def seed() -> None:
                 ON CONFLICT (tenant_id, code) DO UPDATE
                     SET starts_at = now(), ends_at = now() + interval '14 days', status = 'active'
             """), {"t": demo, "code": code, "bps": bps, "public": public, "lim": limit})
-    print("marketplace demo: dilini-maths (2 classes), Ruwan Silva at demo (1 class), 2 courses, 2 coupons")
+        # Demo pictures (Pexels, free to use): class and course covers and the demo teachers' photos. Applied every
+        # run, so an existing local database gets them too. Real teachers upload their own.
+        px = "https://images.pexels.com/photos/{id}/{file}?auto=compress&cs=tinysrgb&fit=crop&w={w}&h={h}"
+        covers = {
+            "2027-al-physics-theory": ("9785602", "pexels-photo-9785602.jpeg"),
+            "2027-al-chemistry": ("37951908", "pexels-photo-37951908/free-photo-of-young-scientist-in-laboratory-analyzing-chemical-solution.jpeg"),
+            "2027-ol-maths": ("5184957", "pexels-photo-5184957.jpeg"),
+            "2026-al-combined-maths": ("6238030", "pexels-photo-6238030.jpeg"),
+            "grade-5-paper-class": ("39910357", "pexels-photo-39910357/free-photo-of-engaged-student-in-classroom-setting.jpeg"),
+            "al-physics-problem-solving": ("8617773", "pexels-photo-8617773.jpeg"),
+            "maths-shortcuts-free": ("33904722", "pexels-photo-33904722/free-photo-of-female-student-reading-business-book-in-library.jpeg"),
+        }
+        for slug, (pid, file) in covers.items():
+            await s.execute(text("UPDATE classes SET cover_image_url = :u WHERE slug = :s AND cover_image_url IS NULL"),
+                            {"u": px.format(id=pid, file=file, w=960, h=600), "s": slug})
+        photos = {
+            "kasun-perera": ("36781276", "pexels-photo-36781276/free-photo-of-confident-man-standing-in-front-of-blackboard.jpeg"),
+            "dilini-fernando": ("7581115", "pexels-photo-7581115.jpeg"),
+            "ruwan-silva": ("6102858", "pexels-photo-6102858.jpeg"),
+        }
+        for slug, (pid, file) in photos.items():
+            await s.execute(text("UPDATE teacher_profiles SET photo_url = :u WHERE slug = :s AND photo_url IS NULL"),
+                            {"u": px.format(id=pid, file=file, w=480, h=480), "s": slug})
+    print("marketplace demo: dilini-maths (2 classes), Ruwan Silva at demo (1 class), 2 courses, 2 coupons, demo pictures")
 
 
 async def main() -> None:

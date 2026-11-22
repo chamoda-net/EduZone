@@ -954,6 +954,11 @@ httpOnly cookies.
   `loading.tsx`), the student frame `components/shell.tsx` (`SiteShell`; `bare` for full-bleed pages) and
   `ConsoleFrame` for consoles. Custom CSS helpers go in tokens.css inside `@layer components`, so Tailwind
   utilities still override them. Review new components on the dev-only `/design` page.
+- **Photography** (phase 9): marketing pages use real photos from Pexels (free licence) listed in
+  `apps/web/lib/photos.ts` and drawn by `components/photo.tsx` (a responsive `srcset` from Pexels' resizing CDN, no
+  next/image). Used by the home page (hero, how it works, results, teachers' band), subject tiles (`subjectPhoto()`),
+  teacher page banners and the sign-in panel. `seed_market.py` gives the demo classes, courses and teachers Pexels
+  covers and portraits. Before launch, copy them to our own storage (ROADMAP 4.5).
   If new classes don't show up in `next dev`, stop it and delete the app's `.next` (stale Turbopack cache).
 - **Backend calls happen only on the Next server** (`lib/api.ts`: Server Components and Server
   Actions), sending `X-Forwarded-Host` with the user's host. The browser never calls the API.

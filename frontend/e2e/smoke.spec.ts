@@ -212,6 +212,7 @@ test("a student saves a course, buys it with a shared coupon code", async ({ pag
   await expect(page.getByText("Rs. 1,500.00").first()).toBeVisible();
   await page.getByRole("button", { name: "Save to wishlist" }).first().click();
   await expect(page.getByRole("button", { name: "Remove from wishlist" }).first()).toBeVisible();
+  await expect(page.getByText("Saved to your wishlist")).toBeVisible(); // the heart fills at once; wait for the save itself
   await page.goto("/learn/wishlist");
   await expect(page.getByText("A/L Physics: Problem Solving Masterclass")).toBeVisible();
 

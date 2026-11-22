@@ -76,6 +76,9 @@ Stages 2 and 3 can overlap: provider sign-ups and legal review take calendar tim
       on phones (amounts no longer break, empty months collapse), coupon list alignment and a jump to the form,
       the refund offer moved below the course content, Today counting courses as classes. Still to review: the
       admin app's pages (needs an authenticator sign-in in the harness), and a console overview page.
+- [x] **Real photography (2026-11-23):** a photo hero with a live "starting soon" class card, "How it works" with
+      photos, photo subject tiles, a results band, a teachers' band, an FAQ, teacher page banners and a photo sign-in
+      panel; demo covers and teacher portraits. Photos from Pexels (`apps/web/lib/photos.ts`).
 - [x] **Admin sidebar:** grouped (Organizations / Catalogue / Money / People and records) with a thin dark
       scrollbar. **S**
 - [ ] **Uploads instead of links:** course covers and teacher photos are pasted links today. Upload them to Bunny
@@ -150,6 +153,8 @@ Stages 2 and 3 can overlap: provider sign-ups and legal review take calendar tim
       encoding. **S–M**
 - [ ] **DNS and certificates:** `eduzone.switchops.tech`, an API host, a wildcard `*.eduzone.switchops.tech` ready for
       company sites. **S**
+- [ ] **Photos:** copy the Pexels photos in `apps/web/lib/photos.ts` (and the demo covers) to Bunny Storage so the
+      site doesn't depend on another CDN. **S**
 - [ ] **Secrets:** in a secret manager. Never in the repo or the database (`JWT_SECRET`, `PAYOUT_ENCRYPTION_KEY`,
       Bunny keys, PayHere keys). **S**
 - [ ] **Behind a proxy or CDN:** make `client_ip()` read the trusted forwarded header (CLAUDE.md note), and set

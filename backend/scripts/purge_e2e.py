@@ -1,5 +1,5 @@
-"""Remove what the Playwright smoke suite creates: organizations (slug `e2e-...`, from "a new user applies to teach")
-and coupons (code `E2E-...`, from "a teacher creates a coupon").
+"""Remove what the Playwright smoke suite creates: organizations (slug `e2e-...`, from "a new user applies to teach"),
+coupons (code `E2E-...`, from "a teacher creates a coupon") and draft courses (`e2e-course-...`).
 
 Each run of that test opens a pending organization; the suite runs this after it finishes so the local database
 doesn't fill up with them. Also removes the applicants' teacher profiles when they belong to no other organization.
@@ -26,6 +26,14 @@ def main() -> None:
         """).rowcount
         if removed:
             print(f"removed {removed} e2e coupon(s)")
+        # Draft courses the "teacher starts a course" test makes (never published, so nothing was sold or watched).
+        drafts = [r[0] for r in conn.execute(
+            "SELECT id FROM classes WHERE kind = 'course' AND status = 'draft' AND slug LIKE 'e2e-course-%'")]
+        if drafts:
+            conn.execute("DELETE FROM lessons WHERE class_id = ANY(%s)", (drafts,))
+            conn.execute("DELETE FROM course_sections WHERE class_id = ANY(%s)", (drafts,))
+            conn.execute("DELETE FROM classes WHERE id = ANY(%s)", (drafts,))
+            print(f"removed {len(drafts)} e2e draft course(s)")
         ids = [r[0] for r in conn.execute("SELECT id FROM tenants WHERE slug LIKE 'e2e-%'")]
         if not ids:
             print("no e2e organizations to remove")

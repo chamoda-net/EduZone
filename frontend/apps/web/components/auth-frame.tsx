@@ -2,6 +2,8 @@ import { CalendarCheck, MonitorPlay, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Photo } from "@/components/photo";
+import { PHOTOS } from "@/lib/photos";
 import { getBranding } from "@/lib/session";
 import { t } from "@eduzone/lib/i18n";
 import { Logo } from "@eduzone/ui";
@@ -19,12 +21,10 @@ export async function AuthFrame({ title, subtitle, children, footer }: {
   return (
     <div className="grid min-h-dvh flex-1 lg:grid-cols-[1fr_1.05fr]">
       <aside className="ez-grain relative hidden flex-col justify-between overflow-hidden bg-brand-900 p-12 text-on-brand lg:flex">
-        <svg aria-hidden viewBox="0 0 600 600" className="absolute -right-48 -bottom-48 w-[640px] opacity-60">
-          {[110, 170, 230, 290].map((r) => (
-            <circle key={r} cx="300" cy="300" r={r} fill="none" stroke="var(--ez-brand-600)" />
-          ))}
-          <circle cx="300" cy="300" r="60" fill="var(--ez-gold-500)" opacity="0.25" />
-        </svg>
+        {/* A student studying, under the brand green so the words stay readable. */}
+        <Photo photo={PHOTOS.thinking} ratio={1.25} sizes="50vw" priority className="absolute inset-0 h-full object-[65%_center]" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-900/85 to-brand-900/40" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-brand-950/70 to-transparent" />
         <Link href="/" className="relative">
           <Logo name={name} sub={sub} />
         </Link>
