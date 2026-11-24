@@ -867,7 +867,7 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   name and subject, cursor; counts per status), detail (opening a `new` message makes it `open`; replies; how many
   earlier messages that address sent), `POST {id}/reply {body, close}` (stored, emailed as `Re: <subject> [<ref>]` with
   the original quoted; status replied or closed), `PATCH {id} {status, staff_note}`. Replies and changes are audited.
-- **Web:** `/contact` (header in the About page's family, open/closed by Colombo support hours, a guide to who helps
+- **Web:** `/contact` (header in the About page's family, a guide to who helps
   fastest, the form as an airmail letter with topic chips and a tip per topic, `?topic=` preselects, a receipt with
   the reference after sending, quick answers); "Contact" in the header. Admin app: `/inbox` and `/inbox/[id]`
   (conversation, reply composer, close/reopen, staff note). Tests: `tests/test_contact.py`.

@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, ChevronRight, Clock, CreditCard, Mail, MapPin, MessageCircleReply, PenLine, Plus } from "lucide-react";
+import { ArrowRight, BookOpen, ChevronRight, CreditCard, Mail, MapPin, MessageCircleReply, PenLine, Plus, Ticket } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
@@ -19,20 +19,11 @@ export const metadata: Metadata = {
 const SUPPORT_EMAIL = t("about.company.emailValue");
 const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 
-/** Support hours are 9:00 to 17:00, Monday to Friday, Sri Lanka time (+05:30, no daylight saving). */
-function openNow(now = new Date()): boolean {
-  const colombo = new Date(now.getTime() + (5 * 60 + 30) * 60_000);
-  const day = colombo.getUTCDay();
-  const hour = colombo.getUTCHours();
-  return day >= 1 && day <= 5 && hour >= 9 && hour < 17;
-}
-
 /** Contact: a quiet page header in the About page's family, a guide to who can help fastest beside the message form
  * (styled as an airmail letter), then quick answers. `?topic=` preselects a topic (e.g. `?topic=teaching`). */
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
   const [{ topic }, me] = await Promise.all([searchParams, getMe()]);
   const initial: Topic = (TOPICS as readonly string[]).includes(topic ?? "") ? (topic as Topic) : "payments";
-  const open = openNow();
 
   return (
     <SiteShell bare>
@@ -62,13 +53,10 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
             </div>
             <dl className="ez-rise grid gap-3 sm:grid-cols-2 lg:w-[30rem]" style={rise(3)}>
               <div className="flex gap-3 rounded-ez-lg border border-border bg-surface/80 p-4 shadow-ez-sm backdrop-blur">
-                <span className="relative mt-1.5 flex size-2.5 shrink-0">
-                  {open && <span className="absolute inset-0 animate-ping rounded-full bg-success/50" />}
-                  <span className={cx("relative size-2.5 rounded-full", open ? "bg-success" : "bg-subtle")} />
-                </span>
+                <Ticket className="mt-0.5 size-5 shrink-0 text-gold-strong" />
                 <div className="min-w-0">
-                  <dt className="text-sm font-semibold">{t(open ? "contact.openNow" : "contact.closedNow")}</dt>
-                  <dd className="mt-0.5 text-xs leading-relaxed text-muted">{t("contact.hours")}</dd>
+                  <dt className="text-sm font-semibold">{t("contact.ref")}</dt>
+                  <dd className="mt-0.5 text-xs leading-relaxed text-muted">{t("contact.refBody")}</dd>
                 </div>
               </div>
               <div className="flex gap-3 rounded-ez-lg border border-border bg-surface/80 p-4 shadow-ez-sm backdrop-blur">
@@ -103,9 +91,6 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
             <p className="mt-1.5 text-sm leading-relaxed text-muted">{t("contact.directBody")}</p>
             <div className="mt-4"><CopyEmail email={SUPPORT_EMAIL} /></div>
             <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5 text-sm">
-              <p className="flex items-start gap-2.5 text-muted">
-                <Clock className="mt-0.5 size-4 shrink-0 text-brand-600" />{t("contact.hours")}
-              </p>
               <p className="flex items-start gap-2.5 text-muted">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-brand-600" />
                 <span>{t("contact.companyLabel")} <span className="font-semibold text-foreground">{t("about.company.nameValue")}</span>, {t("about.company.countryValue")}</span>

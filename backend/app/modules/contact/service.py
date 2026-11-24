@@ -87,13 +87,11 @@ async def submit(body: ContactIn, *, user_id: UUID | None, ip: str | None, ua: s
     await _send(emails, str(body.email), f"We've got your message [{reference}]", "\n".join([
         f"Hi {first},",
         "",
-        "Thanks for writing to EduZone. A person on our team will read your message and reply to this email "
-        "address, usually within one working day (Monday to Friday, 9:00 to 17:00 Sri Lanka time).",
+        "Thanks for writing to EduZone. A person on our team will read your message and reply to this email address.",
         "",
         f"Your reference: {reference}",
         "",
-        "For a question about a class (times, tutes, Zoom), the teacher can often answer faster: their contact "
-        "details are on the class page.",
+        "Lesson times, Zoom links and tutes for your classes are in your student area, under My classes.",
         "",
         "What you sent:",
         f"Subject: {body.subject}",

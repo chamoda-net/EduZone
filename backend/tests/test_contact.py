@@ -1,7 +1,10 @@
 """The contact form and the support inbox: storing, the two emails, limits, the honeypot, staff replies."""
 
+import json
+import logging
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -10,7 +13,7 @@ from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.core.db import AdminSession, AppSession
-from app.integrations.email import get_email_sender
+from app.integrations.email import ConsoleEmailSender, FileEmailSender, get_email_sender
 from app.main import app
 from tests.conftest import FakeSms, Seed
 from tests.helpers import auth_headers, error_code
@@ -66,6 +69,27 @@ async def test_a_message_is_stored_and_both_emails_go_out(client: AsyncClient, m
     assert ref in str(inbox["subject"]) and "Payments and refunds" in str(inbox["subject"])
     assert receipt["to"] == sender and ref in str(receipt["subject"]) and "Hi Nimal" in str(receipt["body"])
     assert "> I paid for November" in str(receipt["body"])
+
+
+async def test_the_real_senders_deliver_both_emails(client: AsyncClient, sender: str, tmp_path: Path,
+                                                    caplog: pytest.LogCaptureFixture) -> None:
+    """The fake above can't show that a real sender accepts what we pass (a failed email is only logged)."""
+    outbox = tmp_path / "outbox.jsonl"
+    try:
+        app.dependency_overrides[get_email_sender] = lambda: FileEmailSender(outbox)
+        assert (await client.post(URL, json=form(sender))).status_code == 202
+        inbox, receipt = [json.loads(line) for line in outbox.read_text(encoding="utf-8").splitlines()]
+        assert inbox["to"] == get_settings().support_inbox_email and inbox["reply_to"] == sender
+        assert receipt["to"] == sender
+
+        caplog.set_level(logging.WARNING)
+        app.dependency_overrides[get_email_sender] = lambda: ConsoleEmailSender()
+        assert (await client.post(URL, json=form(sender))).status_code == 202
+        lines = [r.getMessage() for r in caplog.records if r.name == "eduzone.email"]
+        assert len(lines) == 2 and f"reply to {sender}" in lines[0] and f"Email to {sender}" in lines[1]
+        assert not [r for r in caplog.records if r.name == "eduzone.contact" and r.levelno >= logging.ERROR]
+    finally:
+        app.dependency_overrides.pop(get_email_sender, None)
 
 
 async def test_the_app_role_cannot_read_messages(client: AsyncClient, mail: Mail, sender: str) -> None:

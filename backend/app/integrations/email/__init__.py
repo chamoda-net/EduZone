@@ -20,8 +20,8 @@ class EmailSender(Protocol):
 class ConsoleEmailSender:
     """Local development only: writes the email to the log instead of sending it."""
 
-    async def send(self, to: str, subject: str, body: str) -> None:
-        logger.warning("Email to %s: %s\n%s", to, subject, body)
+    async def send(self, to: str, subject: str, body: str, *, reply_to: str | None = None) -> None:
+        logger.warning("Email to %s%s: %s\n%s", to, f" (reply to {reply_to})" if reply_to else "", subject, body)
 
 
 class FileEmailSender:
