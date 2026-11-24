@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     email_provider: Literal["console", "file"] = "console"
     email_outbox_path: Path = Path("email-outbox.jsonl")
     email_from: str = "EduZone <no-reply@eduzone.switchops.tech>"
+    # Where messages from the contact form go (also the address shown on the Contact page).
+    support_inbox_email: str = "support@eduzone.switchops.tech"
 
     # --- Teacher applications (CLAUDE.md section 2) -----------------------------------
     # Version of the teacher terms an applicant accepts (stored on the application).

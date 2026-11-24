@@ -374,3 +374,26 @@ export async function cancelCommissionChange(changeId: string): Promise<FormStat
   if (!res.ok) return { error: errorText(t, res.error) };
   return { ok: true, at: Date.now() };
 }
+
+// --- the support inbox (contact form) ------------------------------------------------------------
+
+export async function replyToContact(messageId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const res = await api(`/platform/contact/${messageId}/reply`, {
+    method: "POST", body: { body: text(fd, "body"), close: fd.get("close") === "on" },
+  });
+  revalidatePath(`/inbox/${messageId}`);
+  revalidatePath("/inbox");
+  if (!res.ok) return { error: errorText(t, res.error) };
+  return { ok: true, at: Date.now() };
+}
+
+export async function updateContact(messageId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const body: Record<string, string | null> = {};
+  if (fd.has("status")) body.status = text(fd, "status");
+  if (fd.has("staff_note")) body.staff_note = text(fd, "staff_note") || null;
+  const res = await api(`/platform/contact/${messageId}`, { method: "PATCH", body });
+  revalidatePath(`/inbox/${messageId}`);
+  revalidatePath("/inbox");
+  if (!res.ok) return { error: errorText(t, res.error) };
+  return { ok: true, at: Date.now() };
+}

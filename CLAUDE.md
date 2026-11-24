@@ -194,8 +194,8 @@ every server, demo accounts, a tour of every built feature.
 1. **Every business table has `tenant_id`.** Platform-level tables (`tenants`, `users`,
    `otp_codes`, `gateway_webhook_events`, `platform_admin_sessions`, `platform_admins`, the identity tables
    `user_sessions`, `user_devices`, `user_identities`, `email_verifications`, `recovery_tokens`,
-   `login_attempts`, `subjects`, `teacher_profiles`, `teacher_applications`, `cart_items`, `checkouts` and
-   `checkout_payments`) are the only exceptions. `teacher_applications` carries the `tenant_id` it opened;
+   `login_attempts`, `subjects`, `teacher_profiles`, `teacher_applications`, `cart_items`, `checkouts`,
+   `checkout_payments`, `contact_messages` and `contact_replies`) are the only exceptions. `teacher_applications` carries the `tenant_id` it opened;
    it and the three cart tables are guarded by user policies (the app role sees only the rows of
    `app.user_id`).
 2. **How a request finds its tenant (target):**
@@ -855,6 +855,22 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 - **Admin app pages:** `/subjects`, `/users`, `/users/[id]`, `/checkouts` (filter chips, "Needs a retry" count),
   `/checkouts/[id]` (retry banner), `/audit`; the organization page has a listing card and an audit link, and the
   list marks unlisted organizations. Types come from `Schema<"...">`. Tests: `tests/test_platform_ops.py`.
+
+### Contact form and support inbox (`app/modules/contact`, migration 0017)
+- **Send** (`POST /api/v1/market/contact`, no sign-in; a signed-in account is linked): name, email, optional phone
+  (E.164), topic, subject, message, and `website` (a honeypot: filled = looks sent, nothing stored or emailed). Stored
+  through `submit_contact_message()` (SECURITY DEFINER; the app role has no grant on the tables), which returns a
+  reference `EZ-XXXXXX`, or NULL past 3 messages an hour per address or account (429 `CONTACT_RATE_LIMITED`). Then two
+  emails: a copy to `SUPPORT_INBOX_EMAIL` with `reply_to` = the sender (`EmailSender.send` takes `reply_to`), and a
+  receipt to the sender with the reference. A failed email never loses the message.
+- **Inbox** (`/api/v1/platform/contact`): list (`status=active|new|open|replied|closed`, `q` over reference, email,
+  name and subject, cursor; counts per status), detail (opening a `new` message makes it `open`; replies; how many
+  earlier messages that address sent), `POST {id}/reply {body, close}` (stored, emailed as `Re: <subject> [<ref>]` with
+  the original quoted; status replied or closed), `PATCH {id} {status, staff_note}`. Replies and changes are audited.
+- **Web:** `/contact` (header in the About page's family, open/closed by Colombo support hours, a guide to who helps
+  fastest, the form as an airmail letter with topic chips and a tip per topic, `?topic=` preselects, a receipt with
+  the reference after sending, quick answers); "Contact" in the header. Admin app: `/inbox` and `/inbox/[id]`
+  (conversation, reply composer, close/reopen, staff note). Tests: `tests/test_contact.py`.
 
 ### Teacher onboarding (phase 5: `app/modules/onboarding`, `app/modules/platform/applications.py`)
 - **Apply** (`/api/v1/me/teacher-application`, signed in, **verified phone** else 403 `PHONE_NOT_VERIFIED`):

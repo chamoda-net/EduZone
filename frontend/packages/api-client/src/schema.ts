@@ -756,6 +756,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/market/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Message */
+        post: operations["send_message_api_v1_market_contact_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/market/course-categories": {
         parameters: {
             query?: never;
@@ -2205,6 +2222,58 @@ export interface paths {
         put?: never;
         /** Cancel Commission Change */
         post: operations["cancel_commission_change_api_v1_platform_commission_changes__change_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Messages */
+        get: operations["list_messages_api_v1_platform_contact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/contact/{message_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Message */
+        get: operations["get_message_api_v1_platform_contact__message_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_v1_platform_contact__message_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/platform/contact/{message_id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reply */
+        post: operations["reply_api_v1_platform_contact__message_id__reply_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4437,6 +4506,173 @@ export interface components {
              */
             lecture_id: string;
             progress: components["schemas"]["CourseProgress"];
+        };
+        /** ContactCounts */
+        ContactCounts: {
+            /** Closed */
+            closed: number;
+            /** New */
+            new: number;
+            /** Open */
+            open: number;
+            /** Replied */
+            replied: number;
+        };
+        /** ContactDetail */
+        ContactDetail: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Earlier */
+            earlier: number;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Ip */
+            ip: string | null;
+            /** Message */
+            message: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /** Reference */
+            reference: string;
+            /** Reply List */
+            reply_list: components["schemas"]["ContactReply"][];
+            /** Staff Note */
+            staff_note: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "open" | "replied" | "closed";
+            /** Subject */
+            subject: string;
+            /**
+             * Topic
+             * @enum {string}
+             */
+            topic: "classes" | "payments" | "account" | "teaching" | "institutes" | "courses" | "partnership" | "other";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** User Agent */
+            user_agent: string | null;
+            /** User Id */
+            user_id: string | null;
+            /** User Name */
+            user_name: string | null;
+        };
+        /**
+         * ContactIn
+         * @description A message from the Contact page. `website` is a honeypot: people never see it, so a value means a bot.
+         */
+        ContactIn: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Message */
+            message: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone?: string | null;
+            /** Subject */
+            subject: string;
+            /**
+             * Topic
+             * @enum {string}
+             */
+            topic: "classes" | "payments" | "account" | "teaching" | "institutes" | "courses" | "partnership" | "other";
+            /** Website */
+            website?: string | null;
+        };
+        /** ContactPage */
+        ContactPage: {
+            counts: components["schemas"]["ContactCounts"];
+            /** Items */
+            items: components["schemas"]["ContactRow"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** ContactReply */
+        ContactReply: {
+            /** Author Name */
+            author_name: string;
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** ContactRow */
+        ContactRow: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Last Reply At */
+            last_reply_at: string | null;
+            /** Name */
+            name: string;
+            /** Preview */
+            preview: string;
+            /** Reference */
+            reference: string;
+            /** Replies */
+            replies: number;
+            /** Signed In */
+            signed_in: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "open" | "replied" | "closed";
+            /** Subject */
+            subject: string;
+            /**
+             * Topic
+             * @enum {string}
+             */
+            topic: "classes" | "payments" | "account" | "teaching" | "institutes" | "courses" | "partnership" | "other";
+        };
+        /** ContactSent */
+        ContactSent: {
+            /** Reference */
+            reference: string;
+        };
+        /** ContactUpdate */
+        ContactUpdate: {
+            /** Staff Note */
+            staff_note?: string | null;
+            /** Status */
+            status?: ("new" | "open" | "replied" | "closed") | null;
         };
         /** CouponCreate */
         CouponCreate: {
@@ -6820,11 +7056,6 @@ export interface components {
             /** Password */
             password: string;
         };
-        /** ReplyIn */
-        ReplyIn: {
-            /** Reply */
-            reply?: string | null;
-        };
         /** ResourceCreate */
         ResourceCreate: {
             /**
@@ -7750,6 +7981,21 @@ export interface components {
             preferred_language?: ("en" | "si" | "ta") | null;
             /** School */
             school?: string | null;
+        };
+        /** ReplyIn */
+        app__modules__contact__schemas__ReplyIn: {
+            /** Body */
+            body: string;
+            /**
+             * Close
+             * @default false
+             */
+            close: boolean;
+        };
+        /** ReplyIn */
+        app__modules__courses__schemas__ReplyIn: {
+            /** Reply */
+            reply?: string | null;
         };
         /** ProfileUpdate */
         app__modules__market__schemas__ProfileUpdate: {
@@ -9204,6 +9450,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarketClassDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_message_api_v1_market_contact_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactSent"];
                 };
             };
             /** @description Validation Error */
@@ -10686,7 +10965,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReplyIn"];
+                "application/json": components["schemas"]["app__modules__courses__schemas__ReplyIn"];
             };
         };
         responses: {
@@ -12292,6 +12571,141 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommissionChange"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_messages_api_v1_platform_contact_get: {
+        parameters: {
+            query?: {
+                status?: ("active" | "new" | "open" | "replied" | "closed") | null;
+                q?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_message_api_v1_platform_contact__message_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_api_v1_platform_contact__message_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reply_api_v1_platform_contact__message_id__reply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__contact__schemas__ReplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDetail"];
                 };
             };
             /** @description Validation Error */
@@ -14123,7 +14537,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReplyIn"];
+                "application/json": components["schemas"]["app__modules__courses__schemas__ReplyIn"];
             };
         };
         responses: {

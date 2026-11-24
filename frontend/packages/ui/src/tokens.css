@@ -15,7 +15,7 @@
   --ez-on-brand: #fbfaf5;
 
   /* Gold: highlights only (marks, stars, "new", focus on dark) */
-  --ez-gold-600: #a8761d;
+  --ez-gold-600: #8a6118; /* gold text on light: at least 4.7:1 on white, paper, sunken and gold-100 */
   --ez-gold-500: #d4a03f;
   --ez-gold-300: #ecd08f;
   --ez-gold-100: #f8eed4;
@@ -33,7 +33,7 @@
   --ez-border-strong: #cfc6b4;
   --ez-text: #14201a;
   --ez-text-muted: #5c6862;
-  --ez-text-subtle: #8a938e;
+  --ez-text-subtle: #646c68; /* at least 4.6:1 on white, paper and sunken */
 
   /* Status (never themed) */
   --ez-success: #17703f;
@@ -239,6 +239,17 @@ textarea {
   animation-delay: calc(var(--i, 0) * 70ms), 1.6s;
 }
 
+/* An endless horizontal strip: the track holds its items twice and slides by half its width. Pauses on hover. */
+@keyframes ez-marquee {
+  to { transform: translateX(-50%); }
+}
+.ez-marquee {
+  animation: ez-marquee var(--ez-marquee-time, 60s) linear infinite;
+}
+.ez-marquee:hover {
+  animation-play-state: paused;
+}
+
 @keyframes ez-fade {
   from {
     opacity: 0;
@@ -279,6 +290,7 @@ textarea {
   .ez-rise,
   .ez-float,
   .ez-float-slow,
+  .ez-marquee,
   .ez-skeleton {
     animation: none;
   }

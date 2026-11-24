@@ -35,7 +35,7 @@ from tests.helpers import (
 class FakeEmail:
     sent: list[tuple[str, str, str]] = field(default_factory=list)
 
-    async def send(self, to: str, subject: str, body: str) -> None:
+    async def send(self, to: str, subject: str, body: str, *, reply_to: str | None = None) -> None:
         self.sent.append((to, subject, body))
 
     def last_link(self, to: str) -> str:

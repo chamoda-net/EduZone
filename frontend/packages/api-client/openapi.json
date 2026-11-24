@@ -2865,6 +2865,479 @@
         "title": "CompletionOut",
         "type": "object"
       },
+      "ContactCounts": {
+        "properties": {
+          "closed": {
+            "title": "Closed",
+            "type": "integer"
+          },
+          "new": {
+            "title": "New",
+            "type": "integer"
+          },
+          "open": {
+            "title": "Open",
+            "type": "integer"
+          },
+          "replied": {
+            "title": "Replied",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "new",
+          "open",
+          "replied",
+          "closed"
+        ],
+        "title": "ContactCounts",
+        "type": "object"
+      },
+      "ContactDetail": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "earlier": {
+            "title": "Earlier",
+            "type": "integer"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "reply_list": {
+            "items": {
+              "$ref": "#/components/schemas/ContactReply"
+            },
+            "title": "Reply List",
+            "type": "array"
+          },
+          "staff_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Note"
+          },
+          "status": {
+            "enum": [
+              "new",
+              "open",
+              "replied",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "topic": {
+            "enum": [
+              "classes",
+              "payments",
+              "account",
+              "teaching",
+              "institutes",
+              "courses",
+              "partnership",
+              "other"
+            ],
+            "title": "Topic",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "name",
+          "email",
+          "phone",
+          "topic",
+          "subject",
+          "message",
+          "status",
+          "staff_note",
+          "user_id",
+          "user_name",
+          "ip",
+          "user_agent",
+          "created_at",
+          "updated_at",
+          "reply_list",
+          "earlier"
+        ],
+        "title": "ContactDetail",
+        "type": "object"
+      },
+      "ContactIn": {
+        "additionalProperties": false,
+        "description": "A message from the Contact page. `website` is a honeypot: people never see it, so a value means a bot.",
+        "properties": {
+          "email": {
+            "format": "email",
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 5000,
+            "minLength": 10,
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "subject": {
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Subject",
+            "type": "string"
+          },
+          "topic": {
+            "enum": [
+              "classes",
+              "payments",
+              "account",
+              "teaching",
+              "institutes",
+              "courses",
+              "partnership",
+              "other"
+            ],
+            "title": "Topic",
+            "type": "string"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "topic",
+          "subject",
+          "message"
+        ],
+        "title": "ContactIn",
+        "type": "object"
+      },
+      "ContactPage": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/ContactCounts"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContactRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "counts"
+        ],
+        "title": "ContactPage",
+        "type": "object"
+      },
+      "ContactReply": {
+        "properties": {
+          "author_name": {
+            "title": "Author Name",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "author_name",
+          "body",
+          "created_at"
+        ],
+        "title": "ContactReply",
+        "type": "object"
+      },
+      "ContactRow": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_reply_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Reply At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "preview": {
+            "title": "Preview",
+            "type": "string"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "replies": {
+            "title": "Replies",
+            "type": "integer"
+          },
+          "signed_in": {
+            "title": "Signed In",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "new",
+              "open",
+              "replied",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "topic": {
+            "enum": [
+              "classes",
+              "payments",
+              "account",
+              "teaching",
+              "institutes",
+              "courses",
+              "partnership",
+              "other"
+            ],
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "name",
+          "email",
+          "topic",
+          "subject",
+          "preview",
+          "status",
+          "signed_in",
+          "replies",
+          "created_at",
+          "last_reply_at"
+        ],
+        "title": "ContactRow",
+        "type": "object"
+      },
+      "ContactSent": {
+        "properties": {
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference"
+        ],
+        "title": "ContactSent",
+        "type": "object"
+      },
+      "ContactUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "staff_note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Note"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "new",
+                  "open",
+                  "replied",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "ContactUpdate",
+        "type": "object"
+      },
       "CouponCreate": {
         "additionalProperties": false,
         "properties": {
@@ -10070,25 +10543,6 @@
         "title": "Register",
         "type": "object"
       },
-      "ReplyIn": {
-        "additionalProperties": false,
-        "properties": {
-          "reply": {
-            "anyOf": [
-              {
-                "maxLength": 2000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reply"
-          }
-        },
-        "title": "ReplyIn",
-        "type": "object"
-      },
       "ResourceCreate": {
         "additionalProperties": false,
         "properties": {
@@ -12828,6 +13282,46 @@
         "title": "ProfileUpdate",
         "type": "object"
       },
+      "app__modules__contact__schemas__ReplyIn": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "maxLength": 10000,
+            "minLength": 2,
+            "title": "Body",
+            "type": "string"
+          },
+          "close": {
+            "default": false,
+            "title": "Close",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "ReplyIn",
+        "type": "object"
+      },
+      "app__modules__courses__schemas__ReplyIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reply": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply"
+          }
+        },
+        "title": "ReplyIn",
+        "type": "object"
+      },
       "app__modules__market__schemas__ProfileUpdate": {
         "additionalProperties": false,
         "properties": {
@@ -15131,6 +15625,52 @@
           }
         },
         "summary": "Class Detail",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/contact": {
+      "post": {
+        "operationId": "send_message_api_v1_market_contact_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactSent"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send Message",
         "tags": [
           "market"
         ]
@@ -17606,7 +18146,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReplyIn"
+                "$ref": "#/components/schemas/app__modules__courses__schemas__ReplyIn"
               }
             }
           },
@@ -20283,6 +20823,274 @@
           }
         ],
         "summary": "Cancel Commission Change",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/contact": {
+      "get": {
+        "operationId": "list_messages_api_v1_platform_contact_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "new",
+                    "open",
+                    "replied",
+                    "closed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Messages",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/contact/{message_id}": {
+      "get": {
+        "operationId": "get_message_api_v1_platform_contact__message_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Message",
+        "tags": [
+          "platform"
+        ]
+      },
+      "patch": {
+        "operationId": "update_api_v1_platform_contact__message_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/contact/{message_id}/reply": {
+      "post": {
+        "operationId": "reply_api_v1_platform_contact__message_id__reply_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__contact__schemas__ReplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reply",
         "tags": [
           "platform"
         ]
@@ -23379,7 +24187,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReplyIn"
+                "$ref": "#/components/schemas/app__modules__courses__schemas__ReplyIn"
               }
             }
           },

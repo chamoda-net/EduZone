@@ -1,4 +1,4 @@
-import { BookOpen, Building2, ClipboardList, FolderTree, GraduationCap, History, LogOut, MessageSquareText, Percent, Receipt, RotateCcw, ShoppingCart, Users } from "lucide-react";
+import { BookOpen, Building2, ClipboardList, FolderTree, GraduationCap, History, Inbox, LogOut, MessageSquareText, Percent, Receipt, RotateCcw, ShoppingCart, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -36,6 +36,7 @@ export default async function PlatformConsoleLayout({ children }: LayoutProps<"/
         { href: "/payments", label: t("platform.nav.payments"), icon: <Receipt />, group: t("platform.navGroup.money") },
         { href: "/refunds", label: t("platform.nav.refunds"), icon: <RotateCcw />, group: t("platform.navGroup.money") },
         { href: "/commission", label: t("platform.nav.commission"), icon: <Percent />, group: t("platform.navGroup.money") },
+        { href: "/inbox", label: t("platform.nav.inbox"), icon: <Inbox />, group: t("platform.navGroup.system") },
         { href: "/users", label: t("platform.nav.users"), icon: <Users />, group: t("platform.navGroup.system") },
         { href: "/audit", label: t("platform.nav.audit"), icon: <History />, group: t("platform.navGroup.system") },
       ]}

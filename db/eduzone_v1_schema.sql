@@ -1460,3 +1460,36 @@ CREATE UNIQUE INDEX uq_commission_change_scheduled ON commission_changes (scope,
     NULLS NOT DISTINCT WHERE status = 'scheduled';
 -- commission_rate_for(tenant, kind) (SECURITY DEFINER, eduzone_admin only) and commission_rate(kind) (current tenant,
 -- for checkout): due tenant change > override > due platform change > default.
+
+-- =============================================================================
+-- Contact form and the support inbox (migration 0017). Platform-level, no tenant.
+-- The app role has no grant on either table: it submits only through submit_contact_message().
+-- =============================================================================
+CREATE TABLE contact_messages (              -- forced RLS, no policies: eduzone_admin only
+    id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    reference     text NOT NULL UNIQUE CHECK (reference ~ '^EZ-[A-Z2-9]{6}$'),   -- quoted by the sender
+    user_id       uuid REFERENCES users(id) ON DELETE SET NULL,                  -- signed in when sending
+    name          text NOT NULL CHECK (char_length(name) BETWEEN 2 AND 120),
+    email         text NOT NULL CHECK (char_length(email) BETWEEN 3 AND 254),
+    phone         text CHECK (char_length(phone) <= 20),                         -- E.164
+    topic         text NOT NULL CHECK (topic IN ('classes','payments','account','teaching','institutes',
+                                                 'courses','partnership','other')),
+    subject       text NOT NULL CHECK (char_length(subject) BETWEEN 3 AND 150),
+    message       text NOT NULL CHECK (char_length(message) BETWEEN 10 AND 5000),
+    status        text NOT NULL DEFAULT 'new' CHECK (status IN ('new','open','replied','closed')),
+    staff_note    text CHECK (char_length(staff_note) <= 2000),
+    ip            inet,
+    user_agent    text,
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    updated_at    timestamptz NOT NULL DEFAULT now(),
+    last_reply_at timestamptz
+);
+CREATE TABLE contact_replies (               -- forced RLS, no policies: eduzone_admin only
+    id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id  uuid NOT NULL REFERENCES contact_messages(id) ON DELETE CASCADE,
+    author_id   uuid REFERENCES users(id) ON DELETE SET NULL,
+    body        text NOT NULL CHECK (char_length(body) BETWEEN 2 AND 10000),
+    created_at  timestamptz NOT NULL DEFAULT now()
+);
+-- submit_contact_message(user, name, email, phone, topic, subject, message, ip, ua) RETURNS text
+-- (SECURITY DEFINER, eduzone_app may execute): the reference, or NULL past 3 messages an hour per email or account.

@@ -13,6 +13,7 @@ from app.modules.catalog.router import org_router as catalog_org_router
 from app.modules.courses import router as courses
 from app.modules.cart import router as cart
 from app.modules.checkout import router as checkout
+from app.modules.contact import router as contact
 from app.modules.onboarding.router import router as onboarding_router
 from app.modules.learn.router import router as learn_router
 from app.modules.learning import router as learning
@@ -72,6 +73,8 @@ api.include_router(checkout.student_router)
 api.include_router(checkout.webhook_router)
 api.include_router(checkout.dev_router)
 api.include_router(platform_router)
+api.include_router(contact.public_router)
+api.include_router(contact.admin_router)
 
 
 app = FastAPI(title="EduZone API", version="0.1.0", lifespan=lifespan)

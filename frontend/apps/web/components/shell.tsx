@@ -1,4 +1,4 @@
-import { BookOpen, Building2, Compass, GraduationCap, Heart, House, LayoutDashboard, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
+import { BookOpen, Building2, Compass, GraduationCap, Heart, House, Info, LayoutDashboard, Mail, LockKeyhole, Receipt, ShoppingCart, Smartphone, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -29,6 +29,8 @@ export async function SiteShell({ children, width = "lg", bare = false }: {
   } else {
     items.push({ href: "/institutes", label: t("nav.institutes"), icon: <Building2 /> });
   }
+  items.push({ href: "/about", label: t("nav.about"), icon: <Info /> });
+  items.push({ href: "/contact", label: t("nav.contact"), icon: <Mail /> });
   // Bottom tabs (phones, signed in): the student area plus browsing. The schedule is one tap away on Today.
   const tabs: NavItem[] = [
     { href: "/learn", label: t("nav.today"), icon: <House />, exact: true },

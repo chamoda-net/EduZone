@@ -11,9 +11,10 @@ logger = logging.getLogger("eduzone.email")
 
 
 class EmailSender(Protocol):
-    """One interface for every email provider. Plain text for now (links and codes only)."""
+    """One interface for every email provider. Plain text for now. `reply_to` sets where a reply goes (the
+    support inbox's copy of a contact message replies to the sender)."""
 
-    async def send(self, to: str, subject: str, body: str) -> None: ...
+    async def send(self, to: str, subject: str, body: str, *, reply_to: str | None = None) -> None: ...
 
 
 class ConsoleEmailSender:
@@ -29,8 +30,9 @@ class FileEmailSender:
     def __init__(self, path: Path) -> None:
         self.path = path
 
-    async def send(self, to: str, subject: str, body: str) -> None:
-        line = json.dumps({"to": to, "subject": subject, "body": body, "at": datetime.now(UTC).isoformat()})
+    async def send(self, to: str, subject: str, body: str, *, reply_to: str | None = None) -> None:
+        line = json.dumps({"to": to, "subject": subject, "body": body, "reply_to": reply_to,
+                           "at": datetime.now(UTC).isoformat()})
         await asyncio.to_thread(self._append, line)
 
     def _append(self, line: str) -> None:
