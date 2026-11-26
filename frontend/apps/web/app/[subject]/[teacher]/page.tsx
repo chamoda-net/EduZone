@@ -10,6 +10,7 @@ import { TeacherAvatar } from "@/components/teacher-avatar";
 import { jsonLd, market } from "@/lib/market";
 import { PHOTOS, subjectPhoto } from "@/lib/photos";
 import { siteOrigin } from "@/lib/site";
+import { OG_BASE } from "@/lib/seo";
 import { t } from "@eduzone/lib/i18n";
 import type { TeacherPage } from "@eduzone/lib/types";
 import { Badge, Container, buttonStyles } from "@eduzone/ui";
@@ -22,11 +23,11 @@ async function load(params: Promise<Params>): Promise<{ p: Params; data: Teacher
 }
 
 export async function generateMetadata({ params }: PageProps<"/[subject]/[teacher]">): Promise<Metadata> {
-  const { data } = await load(params);
+  const { p, data } = await load(params);
   const subject = data.subject?.name ?? "";
   const title = t("market.teacher.metaTitle", { name: data.teacher.display_name, subject });
   const description = data.teacher.headline ?? t("market.teacher.metaDescription", { name: data.teacher.display_name, subject });
-  return { title, description, openGraph: { title, description, type: "profile" } };
+  return { title, description, alternates: { canonical: `/${p.subject}/${p.teacher}` }, openGraph: { ...OG_BASE, title, description, type: "profile" } };
 }
 
 /** /<subject>/<teacher>: the page a teacher shares on WhatsApp, Facebook and posters. */

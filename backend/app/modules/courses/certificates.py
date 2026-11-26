@@ -22,6 +22,7 @@ from app.core.db import AppSession
 from app.core.errors import ApiError
 from app.core.tenancy import tenant_transaction
 from app.modules.auth.dependencies import UserContext
+from app.modules.courses.logo_art import draw_symbol, draw_wordmark
 from app.modules.courses.schemas import CertificateOut, CertificateVerify
 from app.modules.learning.access import ACTIVE_GRANT
 
@@ -119,7 +120,7 @@ def _hours(seconds: int) -> str:
 
 
 def render_pdf(c: CertificateVerify, verify_url: str) -> bytes:
-    """A4 landscape, EduZone's forest green and gold, with a QR code to the verify page."""
+    """A4 landscape, EduZone's logo, forest green and gold, with a QR code to the verify page."""
     from reportlab.graphics import renderPDF
     from reportlab.graphics.barcode import qr
     from reportlab.graphics.shapes import Drawing
@@ -127,14 +128,14 @@ def render_pdf(c: CertificateVerify, verify_url: str) -> bytes:
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.pdfgen import canvas
 
-    green, gold, ink, muted = HexColor("#14422c"), HexColor("#c79a2e"), HexColor("#17251d"), HexColor("#5c6b62")
+    green, gold, ink, muted = HexColor("#124a33"), HexColor("#d4a03f"), HexColor("#14201a"), HexColor("#5c6862")
     width, height = landscape(A4)
     buf = io.BytesIO()
     pdf = canvas.Canvas(buf, pagesize=(width, height))
     pdf.setTitle(f"Certificate {c.certificate_no}")
     pdf.setAuthor("EduZone")
 
-    pdf.setFillColor(HexColor("#fbf8f1"))
+    pdf.setFillColor(HexColor("#faf8f3"))
     pdf.rect(0, 0, width, height, stroke=0, fill=1)
     pdf.setStrokeColor(green)
     pdf.setLineWidth(10)
@@ -143,29 +144,28 @@ def render_pdf(c: CertificateVerify, verify_url: str) -> bytes:
     pdf.setLineWidth(1.5)
     pdf.rect(38, 38, width - 76, height - 76, stroke=1, fill=0)
 
-    pdf.setFillColor(green)
-    pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawCentredString(width / 2, height - 90, "EduZone")
-    pdf.setFillColor(gold)
-    pdf.setFont("Helvetica", 11)
-    pdf.drawCentredString(width / 2, height - 108, "CERTIFICATE OF COMPLETION")
+    draw_symbol(pdf, width / 2, height - 58, 84)
+    draw_wordmark(pdf, width / 2, height - 152, 120)
+    pdf.setFillColor(HexColor("#8a6118"))
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawCentredString(width / 2, height - 192, "CERTIFICATE OF COMPLETION", charSpace=2)
 
     pdf.setFillColor(muted)
     pdf.setFont("Helvetica", 13)
-    pdf.drawCentredString(width / 2, height - 170, "This is to certify that")
+    pdf.drawCentredString(width / 2, height - 226, "This is to certify that")
     pdf.setFillColor(ink)
     pdf.setFont("Times-Bold", 36)
-    pdf.drawCentredString(width / 2, height - 215, c.student_name)
+    pdf.drawCentredString(width / 2, height - 268, c.student_name)
     pdf.setFillColor(muted)
     pdf.setFont("Helvetica", 13)
-    pdf.drawCentredString(width / 2, height - 255, "has successfully completed the course")
+    pdf.drawCentredString(width / 2, height - 304, "has successfully completed the course")
     pdf.setFillColor(green)
     title_size = 24 if len(c.course_title) <= 50 else 18
     pdf.setFont("Times-Bold", title_size)
-    pdf.drawCentredString(width / 2, height - 292, c.course_title)
+    pdf.drawCentredString(width / 2, height - 338, c.course_title)
     pdf.setFillColor(muted)
     pdf.setFont("Helvetica", 12)
-    pdf.drawCentredString(width / 2, height - 318,
+    pdf.drawCentredString(width / 2, height - 364,
                           f"taught by {c.instructor_name} · {c.org_name} · {_hours(c.total_video_seconds)} of video")
 
     issued = c.issued_at.astimezone(ZoneInfo("Asia/Colombo")) if c.issued_at.tzinfo else c.issued_at.replace(tzinfo=UTC)

@@ -6,8 +6,8 @@ import { Alert, PageHeader } from "@eduzone/ui";
 
 /** About, terms, privacy, refunds, contact: required for payment gateway approval. Their final
  * wording is pending the legal review (CLAUDE.md section 2), so each shows a draft notice. */
-export function staticMetadata(title: MessageKey): Metadata {
-  return { title: `${t(title)} | EduZone` };
+export function staticMetadata(title: MessageKey, path: string): Metadata {
+  return { title: `${t(title)} | EduZone`, alternates: { canonical: path } };
 }
 
 export function StaticPage({ title, sections }: { title: MessageKey; sections: Array<[MessageKey, MessageKey]> }) {

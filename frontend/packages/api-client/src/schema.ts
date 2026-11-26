@@ -366,6 +366,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learn/classes/{class_id}/seat-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask For Seat */
+        post: operations["ask_for_seat_api_v1_learn_classes__class_id__seat_request_post"];
+        /** Withdraw Seat Request */
+        delete: operations["withdraw_seat_request_api_v1_learn_classes__class_id__seat_request_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learn/classes/{class_id}/seat-wait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Wait For Seat */
+        put: operations["wait_for_seat_api_v1_learn_classes__class_id__seat_wait_put"];
+        post?: never;
+        /** Stop Waiting */
+        delete: operations["stop_waiting_api_v1_learn_classes__class_id__seat_wait_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learn/courses": {
         parameters: {
             query?: never;
@@ -626,6 +662,43 @@ export interface paths {
         };
         /** Schedule */
         get: operations["schedule_api_v1_learn_schedule_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learn/seat-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Seat Requests */
+        get: operations["my_seat_requests_api_v1_learn_seat_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learn/seat-waits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Seat Waits
+         * @description Classes they asked to be told about; the ones with a seat open now come first.
+         */
+        get: operations["my_seat_waits_api_v1_learn_seat_waits_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -974,6 +1047,26 @@ export interface paths {
         get: operations["instructor_page_api_v1_market_instructors__slug__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/lessons/{lesson_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lesson Preview
+         * @description A tuition class's free-preview lesson with a video, for anyone (the class page's Preview).
+         */
+        post: operations["lesson_preview_api_v1_market_lessons__lesson_id__preview_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1401,6 +1494,23 @@ export interface paths {
         put?: never;
         /** Create Month */
         post: operations["create_month_api_v1_org_classes__class_id__months_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/org/classes/{class_id}/seats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Class Seats */
+        get: operations["class_seats_api_v1_org_classes__class_id__seats_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1916,6 +2026,24 @@ export interface paths {
         patch: operations["update_month_api_v1_org_months__month_id__patch"];
         trace?: never;
     };
+    "/api/v1/org/months/{month_id}/seat-keeps/{member_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Decide Keep */
+        put: operations["decide_keep_api_v1_org_months__month_id__seat_keeps__member_id__put"];
+        post?: never;
+        /** Clear Keep */
+        delete: operations["clear_keep_api_v1_org_months__month_id__seat_keeps__member_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/org/orders": {
         parameters: {
             query?: never;
@@ -1927,6 +2055,40 @@ export interface paths {
         get: operations["org_orders_api_v1_org_orders_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/org/seat-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Seat Requests */
+        get: operations["seat_requests_api_v1_org_seat_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/org/seat-requests/{request_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Seat Request */
+        post: operations["decide_seat_request_api_v1_org_seat_requests__request_id__decision_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3017,6 +3179,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teach/{tenant_slug}/classes/{class_id}/seats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Class Seats */
+        get: operations["class_seats_api_v1_teach__tenant_slug__classes__class_id__seats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teach/{tenant_slug}/classes/{class_id}/students": {
         parameters: {
             query?: never;
@@ -3526,6 +3705,24 @@ export interface paths {
         patch: operations["update_month_api_v1_teach__tenant_slug__months__month_id__patch"];
         trace?: never;
     };
+    "/api/v1/teach/{tenant_slug}/months/{month_id}/seat-keeps/{member_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Decide Keep */
+        put: operations["decide_keep_api_v1_teach__tenant_slug__months__month_id__seat_keeps__member_id__put"];
+        post?: never;
+        /** Clear Keep */
+        delete: operations["clear_keep_api_v1_teach__tenant_slug__months__month_id__seat_keeps__member_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teach/{tenant_slug}/orders": {
         parameters: {
             query?: never;
@@ -3537,6 +3734,40 @@ export interface paths {
         get: operations["org_orders_api_v1_teach__tenant_slug__orders_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teach/{tenant_slug}/seat-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Seat Requests */
+        get: operations["seat_requests_api_v1_teach__tenant_slug__seat_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teach/{tenant_slug}/seat-requests/{request_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Seat Request */
+        post: operations["decide_seat_request_api_v1_teach__tenant_slug__seat_requests__request_id__decision_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4301,8 +4532,30 @@ export interface components {
              * @enum {string}
              */
             pricing_model: "monthly" | "one_time" | "free";
+            /**
+             * Registration
+             * @default open
+             * @enum {string}
+             */
+            registration: "open" | "ask" | "closed";
+            /** Registration After Start */
+            registration_after_start?: ("open" | "ask" | "closed") | null;
+            /**
+             * Renewal Day
+             * @default 7
+             */
+            renewal_day: number;
+            /** Seat Limit */
+            seat_limit?: number | null;
+            /**
+             * Show Seat Count
+             * @default true
+             */
+            show_seat_count: boolean;
             /** Slug */
             slug?: string | null;
+            /** Starts On */
+            starts_on?: string | null;
             /** Subject */
             subject?: string | null;
             /** Subject Id */
@@ -4346,8 +4599,25 @@ export interface components {
             one_time_price_cents: number | null;
             /** Pricing Model */
             pricing_model: string;
+            /**
+             * Registration
+             * @enum {string}
+             */
+            registration: "open" | "ask" | "closed";
+            /** Registration After Start */
+            registration_after_start: ("open" | "ask" | "closed") | null;
+            /** Renewal Day */
+            renewal_day: number;
+            /** Seat Limit */
+            seat_limit: number | null;
+            /** Seats Enabled */
+            seats_enabled: boolean;
+            /** Show Seat Count */
+            show_seat_count: boolean;
             /** Slug */
             slug: string;
+            /** Starts On */
+            starts_on: string | null;
             /** Status */
             status: string;
             /** Subject */
@@ -4413,8 +4683,20 @@ export interface components {
             one_time_price_cents?: number | null;
             /** Pricing Model */
             pricing_model?: ("monthly" | "one_time" | "free") | null;
+            /** Registration */
+            registration?: ("open" | "ask" | "closed") | null;
+            /** Registration After Start */
+            registration_after_start?: ("open" | "ask" | "closed") | null;
+            /** Renewal Day */
+            renewal_day?: number | null;
+            /** Seat Limit */
+            seat_limit?: number | null;
+            /** Show Seat Count */
+            show_seat_count?: boolean | null;
             /** Slug */
             slug?: string | null;
+            /** Starts On */
+            starts_on?: string | null;
             /** Status */
             status?: ("draft" | "published" | "archived") | null;
             /** Subject */
@@ -5163,6 +5445,11 @@ export interface components {
         };
         /** GrantCreate */
         GrantCreate: {
+            /**
+             * Allow Over Limit
+             * @default false
+             */
+            allow_over_limit: boolean;
             /** Class Month Id */
             class_month_id?: string | null;
             /**
@@ -5300,6 +5587,38 @@ export interface components {
             /** Courses */
             courses: components["schemas"]["MarketCourse"][];
             instructor: components["schemas"]["InstructorOut"];
+        };
+        /** KeepIn */
+        KeepIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "keep" | "release";
+            /**
+             * Allow Over Limit
+             * @default false
+             */
+            allow_over_limit: boolean;
+            /** Keep Until */
+            keep_until?: string | null;
+        };
+        /**
+         * Lapsed
+         * @description A student of the previous month without a seat in this one.
+         */
+        Lapsed: {
+            /** Full Name */
+            full_name: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Phone */
+            phone: string | null;
+            /** Released */
+            released: boolean;
         };
         /** LateRequestCreate */
         LateRequestCreate: {
@@ -5737,6 +6056,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Is Full */
+            is_full: boolean;
             /** Medium */
             medium: string | null;
             /** Monthly Fee Cents */
@@ -5757,6 +6078,12 @@ export interface components {
             path: string;
             /** Pricing Model */
             pricing_model: string;
+            /** Registration */
+            registration: ("open" | "ask" | "closed") | null;
+            /** Seat Limit */
+            seat_limit: number | null;
+            /** Seats Left */
+            seats_left: number | null;
             /** Slug */
             slug: string;
             /** Students */
@@ -5893,6 +6220,11 @@ export interface components {
         };
         /** MarketLesson */
         MarketLesson: {
+            /**
+             * Can Preview
+             * @default false
+             */
+            can_preview: boolean;
             /** Class Month Id */
             class_month_id: string | null;
             /** Duration Minutes */
@@ -5910,6 +6242,11 @@ export interface components {
             scheduled_at: string | null;
             /** Title */
             title: string;
+            /**
+             * Video Seconds
+             * @default 0
+             */
+            video_seconds: number;
         };
         /** MarketMonth */
         MarketMonth: {
@@ -5922,11 +6259,15 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Is Full */
+            is_full: boolean;
             /**
              * Month Start
              * Format: date
              */
             month_start: string;
+            /** Seats Left */
+            seats_left: number | null;
             /** Status */
             status: string;
         };
@@ -6045,6 +6386,10 @@ export interface components {
              * Format: date
              */
             month_start: string;
+            /** Opened At */
+            opened_at: string | null;
+            /** Renew Until */
+            renew_until: string | null;
             /** Status */
             status: string;
         };
@@ -6077,11 +6422,14 @@ export interface components {
              */
             month_start: string;
             org: components["schemas"]["OrgRef"];
+            seat: components["schemas"]["SeatState"] | null;
         };
         /** MonthUpdate */
         MonthUpdate: {
             /** Fee Cents */
             fee_cents?: number | null;
+            /** Renew Until */
+            renew_until?: string | null;
             /** Status */
             status?: ("upcoming" | "open" | "closed") | null;
         };
@@ -6188,6 +6536,93 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** MySeatRequest */
+        MySeatRequest: {
+            /**
+             * Class Id
+             * Format: uuid
+             */
+            class_id: string;
+            /** Class Title */
+            class_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decision Note */
+            decision_note: string | null;
+            /** Held Until */
+            held_until: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Month Start */
+            month_start: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "rejected" | "expired";
+            /** Student Note */
+            student_note: string | null;
+        };
+        /** MySeatRequestRow */
+        MySeatRequestRow: {
+            /**
+             * Class Id
+             * Format: uuid
+             */
+            class_id: string;
+            /** Class Title */
+            class_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decision Note */
+            decision_note: string | null;
+            /** Held Until */
+            held_until: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Month Start */
+            month_start: string | null;
+            org: components["schemas"]["OrgRef"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "rejected" | "expired";
+            /** Student Note */
+            student_note: string | null;
+        };
+        /** MySeatWait */
+        MySeatWait: {
+            /** Available */
+            available: boolean;
+            /**
+             * Class Id
+             * Format: uuid
+             */
+            class_id: string;
+            /** Class Title */
+            class_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Needs Request */
+            needs_request: boolean;
+            org: components["schemas"]["OrgRef"];
         };
         /** NotifiedTenant */
         NotifiedTenant: {
@@ -7158,6 +7593,171 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /**
+         * Seat
+         * @description A taken seat and why.
+         */
+        Seat: {
+            /** Full Name */
+            full_name: string;
+            /** Held Until */
+            held_until: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "access" | "paying" | "accepted" | "kept";
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
+            /** Source */
+            source: string | null;
+        };
+        /** SeatDecision */
+        SeatDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Note */
+            note?: string | null;
+        };
+        /** SeatRequestIn */
+        SeatRequestIn: {
+            /** Class Month Id */
+            class_month_id?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * SeatRequestInfo
+         * @description The student's own request for a seat.
+         */
+        SeatRequestInfo: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decision Note */
+            decision_note: string | null;
+            /** Held Until */
+            held_until: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "rejected" | "expired";
+        };
+        /**
+         * SeatRequestRow
+         * @description A request as the class's staff see it.
+         */
+        SeatRequestRow: {
+            /**
+             * Class Id
+             * Format: uuid
+             */
+            class_id: string;
+            /** Class Month Id */
+            class_month_id: string | null;
+            /** Class Title */
+            class_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Decision Note */
+            decision_note: string | null;
+            /** Held Until */
+            held_until: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Month Start */
+            month_start: string | null;
+            /** Seats Free */
+            seats_free: number | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "rejected" | "expired" | "used" | "withdrawn";
+            /**
+             * Student Member Id
+             * Format: uuid
+             */
+            student_member_id: string;
+            /** Student Name */
+            student_name: string;
+            /** Student Note */
+            student_note: string | null;
+            /** Student Phone */
+            student_phone: string | null;
+        };
+        /**
+         * SeatState
+         * @description A class (or one open month of it) as this student finds it.
+         */
+        SeatState: {
+            /** Full */
+            full: boolean;
+            /** Kept Until */
+            kept_until: string | null;
+            /** Left */
+            left: number | null;
+            /** Limit */
+            limit: number | null;
+            /** Limited */
+            limited: boolean;
+            /** Paying Until */
+            paying_until: string | null;
+            /** Problem */
+            problem: ("CLASS_FULL" | "REGISTRATION_CLOSED" | "SEAT_REQUEST_REQUIRED") | null;
+            /**
+             * Registration
+             * @enum {string}
+             */
+            registration: "open" | "ask" | "closed";
+            request: components["schemas"]["SeatRequestInfo"] | null;
+        };
+        /** SeatsOut */
+        SeatsOut: {
+            /** Free */
+            free: number | null;
+            /** Lapsed */
+            lapsed: components["schemas"]["Lapsed"][];
+            /** Limit */
+            limit: number | null;
+            /** Over By */
+            over_by: number;
+            /**
+             * Registration
+             * @enum {string}
+             */
+            registration: "open" | "ask" | "closed";
+            /** Seats */
+            seats: components["schemas"]["Seat"][];
+            /** Taken */
+            taken: number;
+            /** Waiting */
+            waiting: number;
+        };
         /** SectionCreate */
         SectionCreate: {
             /** Sort Order */
@@ -7265,6 +7865,12 @@ export interface components {
             lessons: components["schemas"]["StudentLesson"][];
             /** Months */
             months: components["schemas"]["StudentMonth"][];
+            seat?: components["schemas"]["SeatState"] | null;
+            /**
+             * Waiting For Seat
+             * @default false
+             */
+            waiting_for_seat: boolean;
         };
         /** StudentLesson */
         StudentLesson: {
@@ -7351,6 +7957,7 @@ export interface components {
              * Format: date
              */
             month_start: string;
+            seat?: components["schemas"]["SeatState"] | null;
             /** Status */
             status: string;
         };
@@ -8705,6 +9312,130 @@ export interface operations {
             };
         };
     };
+    ask_for_seat_api_v1_learn_classes__class_id__seat_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeatRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MySeatRequest"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_seat_request_api_v1_learn_classes__class_id__seat_request_delete: {
+        parameters: {
+            query?: {
+                class_month_id?: string | null;
+            };
+            header?: never;
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wait_for_seat_api_v1_learn_classes__class_id__seat_wait_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_waiting_api_v1_learn_classes__class_id__seat_wait_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     my_courses_api_v1_learn_courses_get: {
         parameters: {
             query?: never;
@@ -9244,6 +9975,46 @@ export interface operations {
             };
         };
     };
+    my_seat_requests_api_v1_learn_seat_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MySeatRequestRow"][];
+                };
+            };
+        };
+    };
+    my_seat_waits_api_v1_learn_seat_waits_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MySeatWait"][];
+                };
+            };
+        };
+    };
     today_api_v1_learn_today_get: {
         parameters: {
             query?: never;
@@ -9369,6 +10140,7 @@ export interface operations {
                 medium?: ("si" | "ta" | "en") | null;
                 max_fee?: number | null;
                 format?: ("live" | "recorded") | null;
+                seats?: "available" | null;
                 sort?: "popular" | "newest" | "price";
                 cursor?: string | null;
                 limit?: number;
@@ -9819,6 +10591,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InstructorPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lesson_preview_api_v1_market_lessons__lesson_id__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoursePreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -10800,6 +11603,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MonthOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    class_seats_api_v1_org_classes__class_id__seats_get: {
+        parameters: {
+            query?: {
+                month_id?: string | null;
+            };
+            header?: never;
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatsOut"];
                 };
             };
             /** @description Validation Error */
@@ -12039,6 +12875,76 @@ export interface operations {
             };
         };
     };
+    decide_keep_api_v1_org_months__month_id__seat_keeps__member_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month_id: string;
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_keep_api_v1_org_months__month_id__seat_keeps__member_id__delete: {
+        parameters: {
+            query?: {
+                allow_over_limit?: boolean;
+            };
+            header?: never;
+            path: {
+                month_id: string;
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     org_orders_api_v1_org_orders_get: {
         parameters: {
             query?: {
@@ -12059,6 +12965,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrgOrderPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    seat_requests_api_v1_org_seat_requests_get: {
+        parameters: {
+            query?: {
+                status?: "pending" | "approved" | "rejected" | "expired" | "used";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatRequestRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_seat_request_api_v1_org_seat_requests__request_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeatDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatRequestRow"];
                 };
             };
             /** @description Validation Error */
@@ -14385,6 +15357,39 @@ export interface operations {
             };
         };
     };
+    class_seats_api_v1_teach__tenant_slug__classes__class_id__seats_get: {
+        parameters: {
+            query?: {
+                month_id?: string | null;
+            };
+            header?: never;
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     class_students_api_v1_teach__tenant_slug__classes__class_id__students_get: {
         parameters: {
             query?: {
@@ -15611,6 +16616,76 @@ export interface operations {
             };
         };
     };
+    decide_keep_api_v1_teach__tenant_slug__months__month_id__seat_keeps__member_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month_id: string;
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_keep_api_v1_teach__tenant_slug__months__month_id__seat_keeps__member_id__delete: {
+        parameters: {
+            query?: {
+                allow_over_limit?: boolean;
+            };
+            header?: never;
+            path: {
+                month_id: string;
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     org_orders_api_v1_teach__tenant_slug__orders_get: {
         parameters: {
             query?: {
@@ -15631,6 +16706,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrgOrderPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    seat_requests_api_v1_teach__tenant_slug__seat_requests_get: {
+        parameters: {
+            query?: {
+                status?: "pending" | "approved" | "rejected" | "expired" | "used";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatRequestRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_seat_request_api_v1_teach__tenant_slug__seat_requests__request_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeatDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatRequestRow"];
                 };
             };
             /** @description Validation Error */

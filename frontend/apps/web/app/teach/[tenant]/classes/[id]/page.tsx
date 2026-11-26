@@ -18,7 +18,6 @@ import {
   deleteClass,
   deleteLesson,
   deleteMonth,
-  grantAccess,
   revokeAccess,
   setClassStatus,
   setLessonPublished,
@@ -30,6 +29,8 @@ import { ClassForm } from "../class-form";
 import { attachFile, removeFile } from "../../media/actions";
 import { AddMonthForm, LessonForm } from "./add-forms";
 import { AttachFileForm } from "./lesson-files";
+import { GrantButton } from "./seat-forms";
+import { SeatsCard } from "./seats-card";
 
 export default async function ClassDetailPage({ params, searchParams }: PageProps<"/teach/[tenant]/classes/[id]">) {
   const base = await teachHref();
@@ -141,6 +142,8 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
           <AddMonthForm action={createMonth.bind(null, c.id)} suggested={nextMonth(months)} />
         </Card>
       )}
+
+      <SeatsCard c={c} months={months} month={rosterMonth} />
 
       <Card className="flex flex-col gap-4">
         <h2 className="font-display text-xl font-semibold">{t("lessons.title")}</h2>
@@ -276,16 +279,8 @@ export default async function ClassDetailPage({ params, searchParams }: PageProp
                   ) : (
                     <>
                       <Badge tone="archived">{t("students.noAccess")}</Badge>
-                      <ActionButton
-                        action={grantAccess.bind(null, c.id, s.member_id, rosterMonth?.id ?? null, "manual")}
-                        label={t("students.giveAccess")}
-                        small
-                      />
-                      <ActionButton
-                        action={grantAccess.bind(null, c.id, s.member_id, rosterMonth?.id ?? null, "scholarship")}
-                        label={t("students.scholarship")}
-                        small
-                      />
+                      <GrantButton classId={c.id} memberId={s.member_id} monthId={rosterMonth?.id ?? null} source="manual" label={t("students.giveAccess")} />
+                      <GrantButton classId={c.id} memberId={s.member_id} monthId={rosterMonth?.id ?? null} source="scholarship" label={t("students.scholarship")} />
                     </>
                   )}
                 </div>

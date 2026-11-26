@@ -4,6 +4,7 @@ past months, open lessons and their files. All access decisions come from access
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ApiError
@@ -31,6 +32,7 @@ from app.modules.learning.schemas import (
 )
 from app.modules.media import repository as media_repo
 from app.modules.media.service import signed_url
+from app.modules.seats import service as seats
 
 
 def _not_found(what: str = "Class") -> ApiError:
@@ -99,16 +101,26 @@ async def class_view(session: AsyncSession, auth: AuthContext, slug: str) -> Stu
     requests = await repo.late_requests(session, auth.member_id, c.id)
     months = await repo.class_months(session, c.id)
     lessons = await access.class_lessons_for_student(session, auth.member_id, c.id)
+    waiting = auth.member_id is not None and (await session.execute(
+        text("SELECT 1 FROM seat_waits WHERE class_id = :c AND student_member_id = :m"),
+        {"c": c.id, "m": auth.member_id})).first() is not None
+    open_now = c.status == "published"
+    months_seats = {m.id: await seats.state(session, c.id, m.id, auth.member_id) for m in months
+                    if open_now and m.status == "open" and m.id not in grants}
     return StudentClassView(
         klass=_public_class(c),
         enrolled=enrollment is not None and enrollment.status == "active",
         has_class_access=None in grants,
         months=[
             StudentMonth(**_month(m, c.currency).model_dump(),
-                         access=_month_access(m, m.id in grants, c.allow_late_months, requests.get(m.id)))
+                         access=_month_access(m, m.id in grants, c.allow_late_months, requests.get(m.id)),
+                         seat=months_seats.get(m.id))
             for m in months
         ],
         lessons=[StudentLesson(**_lesson(lesson).model_dump(), unlocked=lesson.unlocked) for lesson in lessons],
+        seat=(await seats.state(session, c.id, None, auth.member_id)
+              if open_now and c.pricing_model != "monthly" and None not in grants else None),
+        waiting_for_seat=waiting,
     )
 
 
@@ -117,11 +129,16 @@ async def enroll(session: AsyncSession, auth: AuthContext, slug: str) -> Student
     if c is None:
         raise _not_found()
     auth = await ensure_student_member(session, auth)  # joining makes them a member here
+    if c.pricing_model == "free":
+        # Free classes: joining is all it takes, and it takes a seat.
+        await seats.lock(session, c.id)
+        await seats.check(session, c.id, None, auth.member_id)
+        if await access.active_grant_for(session, auth.member_id, c.id, None) is None:
+            await repo.insert_grant(session, member_id=auth.member_id, class_id=c.id, month_id=None,
+                                    source="free", granted_by=None)
     await repo.upsert_enrollment(session, auth.member_id, c.id)
-    # Free classes: joining is all it takes.
-    if c.pricing_model == "free" and await access.active_grant_for(session, auth.member_id, c.id, None) is None:
-        await repo.insert_grant(session, member_id=auth.member_id, class_id=c.id, month_id=None,
-                                source="free", granted_by=None)
+    if c.pricing_model == "free":
+        await seats.seated(session, c.id, None, auth.member_id)
     return await class_view(session, auth, slug)
 
 
@@ -130,6 +147,8 @@ async def leave(session: AsyncSession, auth: AuthContext, slug: str) -> None:
     if c is None:
         raise _not_found()
     await repo.leave(session, auth.member_id, c.id)  # access already paid for is kept
+    if c.pricing_model == "free":
+        await repo.end_free_access(session, auth.member_id, c.id)
 
 
 async def my_classes(session: AsyncSession, auth: AuthContext) -> list[MyClass]:

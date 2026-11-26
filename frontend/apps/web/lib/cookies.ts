@@ -12,6 +12,10 @@ export const DEVICE_COOKIE = `${PREFIX}ez_device`;
 /** Short-lived note that the session ended because the account signed in elsewhere. */
 export const NOTICE_COOKIE = `${PREFIX}ez_notice`;
 
+/** The email just typed, so the next form (create account, reset, sign in) starts with it. A cookie
+ * rather than a query parameter: addresses must not end up in URLs and logs. */
+export const EMAIL_COOKIE = `${PREFIX}ez_email`;
+
 const REFRESH_MAX_AGE = 30 * 24 * 60 * 60; // matches the backend's refresh_token_ttl_days
 const DEVICE_MAX_AGE = 5 * 365 * 24 * 60 * 60;
 
@@ -31,6 +35,7 @@ export const accessCookie = (expiresIn: number) => base(expiresIn);
 export const refreshCookie = () => base(REFRESH_MAX_AGE);
 export const deviceCookie = () => base(DEVICE_MAX_AGE);
 export const noticeCookie = () => base(10 * 60);
+export const emailCookie = () => base(5 * 60);
 
 export type TokenPair = {
   access_token: string;

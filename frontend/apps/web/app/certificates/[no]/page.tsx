@@ -1,4 +1,4 @@
-import { Award, BadgeCheck, Download, ShieldAlert } from "lucide-react";
+import { BadgeCheck, Download, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 
 import type { Schema } from "@eduzone/api-client";
@@ -7,7 +7,7 @@ import { formatLength } from "@/lib/courses";
 import { market } from "@/lib/market";
 import { formatDateTime } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
-import { buttonStyles, cx } from "@eduzone/ui";
+import { LogoMark, buttonStyles, cx } from "@eduzone/ui";
 
 type Verify = Schema<"CertificateVerify">;
 
@@ -37,7 +37,7 @@ export default async function VerifyCertificatePage({ params }: PageProps<"/cert
 
       <section className="relative overflow-hidden rounded-ez-lg border-[6px] border-brand-800 bg-surface p-8 text-center shadow-ez-lg sm:p-12">
         <div aria-hidden className="pointer-events-none absolute inset-3 rounded border border-gold/60" />
-        <Award className="mx-auto size-10 text-gold" />
+        <LogoMark detailed className="mx-auto h-24" />
         <p className="mt-2 text-xs font-bold tracking-[0.2em] text-gold-strong uppercase">{t("cert.verifyTitle")}</p>
         <p className="mt-6 text-sm text-muted">{t("cert.awardedTo")}</p>
         <p className="font-display text-3xl font-semibold sm:text-4xl">{c.student_name}</p>

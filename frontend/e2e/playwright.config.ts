@@ -9,6 +9,9 @@ export const WEB_PORT = 3010;
 export const OUTBOX = path.resolve(__dirname, ".outbox.jsonl");
 export const EMAIL_OUTBOX = path.resolve(__dirname, ".email-outbox.jsonl");
 
+/** Shared by the test API and web server: the API then counts each visitor, not the web server. */
+const WEB_SERVER_KEY = "e2e-only-key-e2e-only-key-e2e-only-key";
+
 const backend = path.resolve(__dirname, "../../backend");
 const venvBin = process.platform === "win32" ? ".venv/Scripts" : ".venv/bin";
 
@@ -35,7 +38,10 @@ export default defineConfig({
       env: {
         // Videos play from a local test stream instead of Bunny (local only).
         DEV_VIDEO_STREAM_URL: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+        WEB_SERVER_KEY,
+        LOGIN_MAX_FAILURES_PER_IP: "5", // smoke.spec.ts: one visitor's limit isn't another's
         SMS_PROVIDER: "file",
+        SEATS_ENABLED: "true",
         SMS_OUTBOX_PATH: OUTBOX,
         EMAIL_PROVIDER: "file",
         EMAIL_OUTBOX_PATH: EMAIL_OUTBOX,
@@ -53,7 +59,7 @@ export default defineConfig({
       url: `http://localhost:${WEB_PORT}`,
       reuseExistingServer: false,
       timeout: 120_000,
-      env: { API_URL: `http://localhost:${API_PORT}`, NEXT_DIST_DIR: ".next-e2e" },
+      env: { API_URL: `http://localhost:${API_PORT}`, NEXT_DIST_DIR: ".next-e2e", WEB_SERVER_KEY },
     },
   ],
 });

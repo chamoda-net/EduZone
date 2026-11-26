@@ -13,7 +13,8 @@ import { Container } from "@eduzone/ui";
 
 export async function generateMetadata({ params }: PageProps<"/institutes/[slug]">): Promise<Metadata> {
   const { institute } = await market<InstitutePage>(`/institutes/${(await params).slug}`);
-  return { title: `${institute.name} | EduZone`, description: t("market.institute.metaDescription", { name: institute.name }) };
+  return { title: `${institute.name} | EduZone`, description: t("market.institute.metaDescription", { name: institute.name }),
+           alternates: { canonical: `/institutes/${institute.slug}` } };
 }
 
 /** /institutes/<slug>: an institute's teachers and classes, by subject. */

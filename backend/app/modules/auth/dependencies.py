@@ -1,3 +1,4 @@
+import secrets
 from dataclasses import dataclass, replace
 from ipaddress import ip_address
 from typing import Annotated
@@ -7,6 +8,7 @@ from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.db import AppSession
 from app.core.errors import ApiError
 from app.core.tenancy import TenantSession
@@ -88,13 +90,30 @@ async def ensure_student_member(session: AsyncSession, auth: AuthContext) -> Aut
     return replace(auth, member_id=member.id, role=member.role)
 
 
-def client_ip(request: Request) -> str | None:
-    # Direct peer address. Behind a proxy/CDN this must read the trusted forwarded header instead.
-    host = request.client.host if request.client else None
+def _address(raw: str | None) -> str | None:
     try:
-        return str(ip_address(host)) if host else None
+        addr = ip_address((raw or "").strip())
     except ValueError:
         return None
+    # ::ffff:192.0.2.1 and 192.0.2.1 are one visitor.
+    return str(getattr(addr, "ipv4_mapped", None) or addr)
+
+
+def peer_ip(request: Request) -> str | None:
+    """Who is connected to us. The only address that decides access (the platform network allowlist)."""
+    return _address(request.client.host if request.client else None)
+
+
+def client_ip(request: Request) -> str | None:
+    """The visitor's address, for rate limits and records. The browser never calls us, our web server does: it names
+    the visitor, and only a request carrying the shared key is believed. Never use this to allow anything."""
+    key = get_settings().web_server_key
+    sent = request.headers.get("x-eduzone-web-key", "")
+    if key and secrets.compare_digest(sent.encode(), key.encode()):
+        visitor = _address(request.headers.get("x-eduzone-client-ip"))
+        if visitor:
+            return visitor
+    return peer_ip(request)
 
 
 def user_agent(request: Request) -> str | None:

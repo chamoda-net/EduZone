@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { AuthFrame } from "@/components/auth-frame";
+import { rememberedEmail } from "@/lib/session";
 import { t } from "@eduzone/lib/i18n";
 
 import { RecoverRequestForm } from "./recover-forms";
 
-export default function RecoverPage() {
+export default async function RecoverPage() {
   return (
     <AuthFrame
       title={t("recover.title")}
@@ -16,7 +17,7 @@ export default function RecoverPage() {
         </Link>
       }
     >
-      <RecoverRequestForm />
+      <RecoverRequestForm email={await rememberedEmail()} />
     </AuthFrame>
   );
 }

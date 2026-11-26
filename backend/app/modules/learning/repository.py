@@ -130,14 +130,23 @@ async def insert_late_request(session: AsyncSession, member_id: UUID, month_id: 
 
 
 async def insert_grant(session: AsyncSession, *, member_id: UUID, class_id: UUID, month_id: UUID | None,
-                       source: str, granted_by: UUID | None, order_item_id: UUID | None = None) -> UUID:
+                       source: str, granted_by: UUID | None, order_item_id: UUID | None = None,
+                       takes_seat: bool = True) -> UUID:
     return (await session.execute(text("""
         INSERT INTO access_grants
-            (tenant_id, student_member_id, class_id, class_month_id, source, granted_by, order_item_id)
-        VALUES (current_tenant_id(), :m, :c, :mo, :src, :by, :item)
+            (tenant_id, student_member_id, class_id, class_month_id, source, granted_by, order_item_id, takes_seat)
+        VALUES (current_tenant_id(), :m, :c, :mo, :src, :by, :item, :seat)
         RETURNING id
     """), {"m": member_id, "c": class_id, "mo": month_id, "src": source, "by": granted_by,
-           "item": order_item_id})).scalar_one()
+           "item": order_item_id, "seat": takes_seat})).scalar_one()
+
+
+async def end_free_access(session: AsyncSession, member_id: UUID, class_id: UUID) -> None:
+    """Leaving a free class ends the access joining gave (never what staff gave): the seat is free again."""
+    await session.execute(text("""
+        UPDATE access_grants SET revoked_at = now(), revoke_reason = 'left'
+        WHERE class_id = :c AND student_member_id = :m AND source = 'free' AND revoked_at IS NULL
+    """), {"c": class_id, "m": member_id})
 
 
 # --- resources and views --------------------------------------------------------------

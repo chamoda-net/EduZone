@@ -9,7 +9,7 @@ import { Button, CodeInput, ErrorText, Field, Input, PasswordInput, buttonStyles
 
 import { completeRecovery, requestRecovery, startRecovery, type RecoveryStartState } from "../login/actions";
 
-export function RecoverRequestForm() {
+export function RecoverRequestForm({ email }: { email?: string }) {
   const t = useT();
   const [state, submit, pending] = useActionState(requestRecovery, {});
 
@@ -27,7 +27,7 @@ export function RecoverRequestForm() {
   return (
     <form action={submit} className="flex flex-col gap-4">
       <Field label={t("auth.email")}>
-        <Input name="email" type="email" autoComplete="email" required defaultValue={state.email} autoFocus />
+        <Input name="email" type="email" autoComplete="email" required defaultValue={state.email ?? email} autoFocus />
       </Field>
       <ErrorText>{state.error}</ErrorText>
       <Button size="lg" loading={pending}>

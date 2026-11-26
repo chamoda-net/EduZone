@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
+from app.modules.seats.schemas import Registration
+
 
 class SubjectRef(BaseModel):
     slug: str
@@ -44,6 +46,11 @@ class MarketClass(BaseModel):
     has_recorded: bool
     has_free_preview: bool
     students: int
+    # Seats of the open month (or of the class); None: no limit, hidden by the teacher, or no open month.
+    seat_limit: int | None
+    seats_left: int | None
+    is_full: bool
+    registration: Registration | None    # for new students; None: nothing to join now
     path: str                            # /<subject>/<teacher>/<class>
 
 
@@ -59,6 +66,8 @@ class MarketMonth(BaseModel):
     status: str
     fee_cents: int | None
     currency: str
+    seats_left: int | None               # open months of a class that shows its numbers
+    is_full: bool
 
 
 class MarketLesson(BaseModel):
@@ -69,6 +78,8 @@ class MarketLesson(BaseModel):
     scheduled_at: datetime | None
     duration_minutes: int | None
     is_free_preview: bool
+    video_seconds: int = 0
+    can_preview: bool = False            # a free preview with a ready video: anyone may watch it (POST /lessons/{id}/preview)
 
 
 class TeacherCard(BaseModel):
@@ -146,6 +157,7 @@ class SitemapOut(BaseModel):
 
 Sort = Literal["popular", "newest", "price"]
 Format = Literal["live", "recorded"]
+SeatFilter = Literal["available"]
 
 
 # --- the teacher's own profile (console) ------------------------------------------------

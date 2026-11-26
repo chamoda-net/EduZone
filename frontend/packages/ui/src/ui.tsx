@@ -21,7 +21,7 @@ export {
   StatTile,
 } from "./surfaces";
 export { ClassCover } from "./cover";
-export { Avatar, Logo, LogoMark, initials } from "./identity";
+export { Avatar, Logo, LogoMark, Wordmark, initials } from "./identity";
 export { FilterChips, type Chip } from "./chips";
 export { Dialog, DialogClose } from "./dialog";
 export { Toaster, toast } from "./toast";

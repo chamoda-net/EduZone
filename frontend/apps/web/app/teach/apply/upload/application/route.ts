@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 
 import { API_URL } from "@/lib/api";
 import { ACCESS_COOKIE } from "@/lib/cookies";
+import { visitorHeaders } from "@/lib/visitor";
 
 /** The teacher application (fields + ID document): streams the multipart body straight through to the API,
  * so the document is never held in a Server Action payload. POST applies, PUT resubmits. Excluded from
@@ -22,6 +23,7 @@ async function forward(request: Request, method: "POST" | "PUT"): Promise<Respon
       headers: {
         "content-type": request.headers.get("content-type") ?? "",
         "x-forwarded-host": host,
+        ...visitorHeaders(request.headers),
         authorization: `Bearer ${token}`,
       },
       body: request.body,

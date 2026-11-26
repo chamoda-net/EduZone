@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, CalendarX2, CircleCheck, GraduationCap, Hourglass } from "lucide-react";
+import { Armchair, ArrowRight, BookOpen, CalendarDays, CalendarX2, CircleCheck, GraduationCap, Hourglass } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -9,6 +9,7 @@ import { MyCourseCard } from "@/components/my-course-card";
 import { PayButton } from "@/components/pay-button";
 import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
+import { deadline } from "@/lib/seats";
 import { getMe } from "@/lib/session";
 import { formatMoney, formatMonth } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
@@ -19,10 +20,15 @@ import { Badge, CardTitle, EmptyState, ErrorText, PageHeader, buttonStyles } fro
 export default async function TodayPage() {
   const me = await getMe();
   if (!me) redirect("/login?next=/learn");
-  const [res, coursesRes] = await Promise.all([
+  const [res, coursesRes, requestsRes, waitsRes] = await Promise.all([
     api<Today>("/learn/today"),
     api<Schema<"MyCourse">[]>("/learn/courses"),
+    api<Schema<"MySeatRequestRow">[]>("/learn/seat-requests"),
+    api<Schema<"MySeatWait">[]>("/learn/seat-waits"),
   ]);
+  // Seats worth acting on now: accepted requests to pay for, and classes where one opened.
+  const accepted = requestsRes.ok ? requestsRes.data.filter((r) => r.status === "approved") : [];
+  const opened = waitsRes.ok ? waitsRes.data.filter((w) => w.available) : [];
   const courses = coursesRes.ok ? coursesRes.data : [];
   const first = me.full_name.split(/\s+/)[0];
 
@@ -53,6 +59,18 @@ export default async function TodayPage() {
           <Lane label={t("learnCourses.continueLane")}>
             {courses.slice(0, 4).map((c, i) => <MyCourseCard key={c.id} c={c} index={i} />)}
           </Lane>
+        </section>
+      )}
+      {accepted.length + opened.length > 0 && (
+        <section className="flex flex-col gap-3" aria-label={t("seat.today.title")}>
+          {accepted.map((r) => (
+            <SeatBanner key={r.id} href={`/learn/classes/${r.class_id}`} title={t("seat.today.accepted", { title: r.class_title })}
+                        body={r.held_until ? t("seat.payBy", { when: deadline(r.held_until) }) : r.org.name} />
+          ))}
+          {opened.map((w) => (
+            <SeatBanner key={w.class_id} href={`/learn/classes/${w.class_id}`} body={w.org.name}
+                        title={t(w.needs_request ? "seat.today.openedAsk" : "seat.today.opened", { title: w.class_title })} />
+          ))}
         </section>
       )}
       {!res.ok && <ErrorText>{errorText(t, res.error)}</ErrorText>}
@@ -111,8 +129,16 @@ export default async function TodayPage() {
                       </Badge>
                     </div>
                     {m.approved_late && <p className="text-xs font-medium text-info">{t("learn.today.pastMonth")}</p>}
-                    <PayButton block classId={m.class_id} monthId={m.month_id}
-                               label={t("pay.button", { amount: formatMoney(m.fee_cents, m.currency) })} />
+                    {m.seat?.kept_until && <p className="flex gap-2 text-sm font-medium text-success"><Armchair className="mt-0.5 size-4 shrink-0" />{t("seat.kept", { when: deadline(m.seat.kept_until) })}</p>}
+                    {m.seat?.problem ? (
+                      <>
+                        <p className="text-sm text-muted">{t(`errors.${m.seat.problem}`)}</p>
+                        <Link href={`/learn/classes/${m.class_id}`} className={buttonStyles("secondary", "md", "w-full")}>{t("seat.today.go")}</Link>
+                      </>
+                    ) : (
+                      <PayButton block classId={m.class_id} monthId={m.month_id}
+                                 label={t("pay.button", { amount: formatMoney(m.fee_cents, m.currency) })} />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -121,5 +147,18 @@ export default async function TodayPage() {
         </div>
       )}
     </SiteShell>
+  );
+}
+
+function SeatBanner({ href, title, body }: { href: string; title: string; body: string }) {
+  return (
+    <Link href={href} className="ez-rise group flex items-center gap-4 rounded-ez-lg border border-gold/40 bg-gold-100/60 p-4 shadow-ez-sm hover:border-gold">
+      <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gold text-brand-950"><Armchair className="size-5" /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{title}</span>
+        <span className="block text-sm text-muted">{body}</span>
+      </span>
+      <ArrowRight className="size-5 shrink-0 text-brand transition group-hover:translate-x-0.5" />
+    </Link>
   );
 }

@@ -1,4 +1,21 @@
 import { cx, hashString } from "./cx";
+import {
+  BOOK,
+  BOOK_SMALL,
+  KEYLINE,
+  LEAVES,
+  LEAVES_LIT,
+  LEAVES_LIT_SMALL,
+  LEAVES_SMALL,
+  SHIELD,
+  SHIELD_RIM,
+  SHIELD_RIM_SMALL,
+  STEM,
+  STEM_SMALL,
+  SYMBOL_BOX,
+  WORDMARK,
+  WORDMARK_BOX,
+} from "./logo-paths";
 
 const AVATAR_TONES = [
   "bg-brand-100 text-brand-800",
@@ -31,26 +48,47 @@ export function Avatar({ name, size = "md", className }: { name: string; size?: 
   );
 }
 
-/** EduZone mark (placeholder until the brand is announced): an open book whose pages form a leaf. */
-export function LogoMark({ className }: { className?: string }) {
+/** The Scholar Shield, EduZone's mark (docs/brand/logo/GUIDELINES.md): a laurel sprig growing out of an open book.
+ * The default is the simple cut, made for 16 to 40 px; `detailed` is the full shield, for 48 px and larger. On dark
+ * panels (`.ez-grain` sets --ez-logo-rim) the shield gets a gold edge so it stays visible. */
+export function LogoMark({ className, detailed = false }: { className?: string; detailed?: boolean }) {
   return (
-    <svg viewBox="0 0 40 40" aria-hidden className={cx("size-9", className)}>
-      <rect width="40" height="40" rx="11" fill="var(--ez-brand-800)" />
-      <path d="M20 29c-3.5-2.6-7.6-3.6-12-3.2V11.4c4.4-.4 8.5.6 12 3.2v14.4Z" fill="var(--ez-brand-300)" />
-      <path d="M20 29c3.5-2.6 7.6-3.6 12-3.2V11.4c-4.4-.4-8.5.6-12 3.2v14.4Z" fill="var(--ez-gold-500)" />
-      <path d="M20 14.6V29" stroke="var(--ez-brand-800)" strokeWidth="1.4" />
-      <path d="M23.5 22.5c2-2.4 4.4-3.6 6.5-3.8" stroke="var(--ez-brand-800)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+    <svg viewBox={SYMBOL_BOX} aria-hidden data-logo-mark className={cx("w-auto", className ?? (detailed ? "h-24" : "h-10"))}>
+      <path d={SHIELD} fill="var(--ez-logo-rim, var(--ez-brand-700))" />
+      <path d={detailed ? SHIELD_RIM : SHIELD_RIM_SMALL} fill="var(--ez-brand-700)" />
+      {detailed && <path d={KEYLINE} fillRule="evenodd" fill="var(--ez-gold-500)" />}
+      <path d={detailed ? STEM : STEM_SMALL} fill="var(--ez-gold-500)" />
+      <path d={detailed ? LEAVES : LEAVES_SMALL} fill="var(--ez-gold-500)" />
+      <path d={detailed ? LEAVES_LIT : LEAVES_LIT_SMALL} fill="var(--ez-gold-300)" />
+      <path d={detailed ? BOOK : BOOK_SMALL} fill="var(--ez-on-brand)" />
     </svg>
   );
 }
 
+/** The name as drawn in the logo (outlined Fraunces capitals), in the current text colour. */
+export function Wordmark({ className = "h-4" }: { className?: string }) {
+  return (
+    <svg viewBox={WORDMARK_BOX} aria-hidden fill="currentColor" className={cx("w-auto", className)}>
+      <path d={WORDMARK} />
+    </svg>
+  );
+}
+
+/** Mark and name. EduZone's own name is the drawn wordmark; an organization's name is plain text beside the mark. */
 export function Logo({ name = "EduZone", sub, className }: { name?: string; sub?: string; className?: string }) {
   return (
     <span className={cx("flex min-w-0 items-center gap-2.5", className)}>
-      <LogoMark className="shrink-0" />
+      <LogoMark className="h-10 shrink-0" />
       <span className="flex min-w-0 flex-col leading-none">
-        <span className="truncate font-display text-[1.2rem] font-semibold tracking-tight">{name}</span>
-        {sub && <span className="mt-1 truncate text-[0.7rem] font-semibold tracking-[0.12em] text-muted uppercase">{sub}</span>}
+        {name === "EduZone" ? (
+          <>
+            <span className="sr-only">{name}</span>
+            <Wordmark className="h-4 shrink-0 self-start" />
+          </>
+        ) : (
+          <span className="truncate font-display text-[1.2rem] font-semibold tracking-tight">{name}</span>
+        )}
+        {sub && <span className="mt-1.5 truncate text-[0.7rem] font-semibold tracking-[0.12em] uppercase opacity-70">{sub}</span>}
       </span>
     </span>
   );

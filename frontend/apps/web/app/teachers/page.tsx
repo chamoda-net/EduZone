@@ -9,7 +9,8 @@ import { t } from "@eduzone/lib/i18n";
 import type { TeacherOut } from "@eduzone/lib/types";
 import { Badge, PageHeader } from "@eduzone/ui";
 
-export const metadata: Metadata = { title: "Teachers | EduZone", description: "Sri Lankan teachers for Grade 5, O/L and A/L." };
+export const metadata: Metadata = { title: "Teachers | EduZone", description: "Sri Lankan teachers for Grade 5, O/L and A/L.",
+  alternates: { canonical: "/teachers" } };
 
 /** Every teacher with a public class. */
 export default async function TeachersPage() {

@@ -17,8 +17,11 @@ import { CouponForm } from "./coupon-form";
 
 export const metadata: Metadata = { title: "Cart | EduZone", robots: { index: false } };
 
-const KNOWN_PROBLEMS = ["ALREADY_HAS_ACCESS", "LATE_APPROVAL_REQUIRED", "MONTH_NOT_OPEN", "UNAVAILABLE", "FREE_CLASS"] as const;
+const KNOWN_PROBLEMS = ["ALREADY_HAS_ACCESS", "LATE_APPROVAL_REQUIRED", "MONTH_NOT_OPEN", "UNAVAILABLE", "FREE_CLASS",
+  "CLASS_FULL", "REGISTRATION_CLOSED", "SEAT_REQUEST_REQUIRED"] as const;
 type KnownProblem = (typeof KNOWN_PROBLEMS)[number];
+const SEAT_PROBLEMS = ["CLASS_FULL", "REGISTRATION_CLOSED", "SEAT_REQUEST_REQUIRED"] as const;
+const isSeat = (code: string | null): code is (typeof SEAT_PROBLEMS)[number] => (SEAT_PROBLEMS as readonly (string | null)[]).includes(code);
 const isKnown = (code: string): code is KnownProblem => (KNOWN_PROBLEMS as readonly string[]).includes(code);
 
 /** /cart: months and courses from any teacher, paid together. Grouped by who receives the money. */
@@ -168,7 +171,12 @@ function CartRow({ item }: { item: CartItem }) {
         {problem && (
           <p className="flex items-start gap-2 text-sm font-medium text-warning">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-            {problem}
+            <span>
+              {problem}{" "}
+              {isSeat(item.problem) && (
+                <Link href={`/learn/classes/${item.class_id}`} className="font-semibold text-brand underline underline-offset-2">{t(`cart.seatAction.${item.problem}`)}</Link>
+              )}
+            </span>
           </p>
         )}
       </div>

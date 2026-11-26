@@ -15,6 +15,7 @@ import { coursePrice, courseSale, formatLength } from "@/lib/courses";
 import { jsonLd, market } from "@/lib/market";
 import { getMe } from "@/lib/session";
 import { siteOrigin } from "@/lib/site";
+import { OG_BASE } from "@/lib/seo";
 import { formatDateTime, formatMoney } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
 import { ClassCover, Container } from "@eduzone/ui";
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: PageProps<"/course/[slug]">):
   const d = await load(params);
   const title = t("market.course.metaTitle", { title: d.course.title });
   const description = t("market.course.metaDescription", { subtitle: d.course.subtitle ?? "", teacher: d.course.teacher_name }).trim();
-  return { title, description, openGraph: { title, description, images: d.course.cover_image_url ? [d.course.cover_image_url] : undefined } };
+  return { title, description, alternates: { canonical: `/course/${d.course.slug}` }, openGraph: { ...OG_BASE, title, description, images: d.course.cover_image_url ? [d.course.cover_image_url] : undefined } };
 }
 
 const lectureIcon = { recorded: PlayCircle, document: FileText, article: ScrollText } as const;

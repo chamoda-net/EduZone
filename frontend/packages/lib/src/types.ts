@@ -42,6 +42,28 @@ export type ClassStatus = "draft" | "published" | "archived";
 export type MonthStatus = "upcoming" | "open" | "closed";
 export type LessonType = "live" | "recorded" | "document";
 
+/** May new students join? */
+export type Registration = "open" | "ask" | "closed";
+export type SeatProblem = "CLASS_FULL" | "REGISTRATION_CLOSED" | "SEAT_REQUEST_REQUIRED";
+export type SeatRequestInfo = {
+  status: "pending" | "approved" | "rejected" | "expired";
+  held_until: string | null;
+  decision_note: string | null;
+  created_at: string;
+};
+/** A class (or one open month) as this student finds it. Numbers are null when there is no limit or they are hidden. */
+export type SeatState = {
+  limited: boolean;
+  limit: number | null;
+  left: number | null;
+  full: boolean;
+  registration: Registration;
+  problem: SeatProblem | null;
+  paying_until: string | null;
+  kept_until: string | null;
+  request: SeatRequestInfo | null;
+};
+
 export type ClassItem = {
   id: string;
   teacher_member_id: string;
@@ -60,6 +82,14 @@ export type ClassItem = {
   currency: string;
   allow_late_months: boolean;
   max_video_views: number | null;
+  /** Seats (docs/SEATS.md): null limit = no limit. */
+  seat_limit: number | null;
+  show_seat_count: boolean;
+  registration: Registration;
+  starts_on: string | null;
+  registration_after_start: Registration | null;
+  renewal_day: number;
+  seats_enabled: boolean;
   status: ClassStatus;
   created_at: string;
   updated_at: string;
@@ -75,6 +105,9 @@ export type Month = {
   effective_fee_cents: number;
   currency: string;
   status: MonthStatus;
+  opened_at: string | null;
+  /** Returning students' seats are kept until then. */
+  renew_until: string | null;
   created_at: string;
 };
 
@@ -178,7 +211,7 @@ export type MonthAccess =
   | "rejected"
   | "unavailable";
 
-export type StudentMonth = PublicMonth & { access: MonthAccess };
+export type StudentMonth = PublicMonth & { access: MonthAccess; seat: SeatState | null };
 export type StudentLesson = PublicLesson & { unlocked: boolean };
 
 export type StudentClassView = {
@@ -187,6 +220,8 @@ export type StudentClassView = {
   has_class_access: boolean;
   months: StudentMonth[];
   lessons: StudentLesson[];
+  seat: SeatState | null;
+  waiting_for_seat: boolean;
 };
 
 export type MyClass = { class: PublicClass; enrolled_at: string; unlocked_months: number };
@@ -307,6 +342,7 @@ export type MonthToPay = {
   fee_cents: number;
   currency: string;
   approved_late: boolean;
+  seat: SeatState | null;
   org: OrgRef;
 };
 
@@ -557,12 +593,25 @@ export type MarketClass = {
   has_recorded: boolean;
   has_free_preview: boolean;
   students: number;
+  /** Seats of the open month (or class): null = no limit, hidden, or nothing open. */
+  seat_limit: number | null;
+  seats_left: number | null;
+  is_full: boolean;
+  registration: Registration | null;
   /** /<subject>/<teacher>/<class> */
   path: string;
 };
 
 export type MarketClassPage = { items: MarketClass[]; total: number; next_cursor: string | null };
-export type MarketMonth = { id: string; month_start: string; status: MonthStatus; fee_cents: number | null; currency: string };
+export type MarketMonth = {
+  id: string;
+  month_start: string;
+  status: MonthStatus;
+  fee_cents: number | null;
+  currency: string;
+  seats_left: number | null;
+  is_full: boolean;
+};
 export type MarketLesson = {
   id: string;
   class_month_id: string | null;
@@ -571,6 +620,8 @@ export type MarketLesson = {
   scheduled_at: string | null;
   duration_minutes: number | null;
   is_free_preview: boolean;
+  video_seconds: number;
+  can_preview: boolean;               // a free preview with a ready video: plays for anyone on the class page
 };
 export type TeacherCard = { slug: string; display_name: string; headline: string | null; photo_url: string | null };
 export type MarketClassDetail = {

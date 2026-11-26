@@ -52,9 +52,14 @@ from app.modules.auth.tokens import (
 )
 
 
-def _invalid_login() -> ApiError:
-    # One message for unknown email and wrong password, so it doesn't reveal who has an account.
-    return ApiError("LOGIN_INVALID", "The email or password is wrong.", 400)
+def _login_failure(user: Any) -> ApiError:
+    # Says exactly what is wrong (a decision: registering already tells whether an email has an account).
+    # What stops people testing lists of emails is the throttling in login() and register().
+    if user is None:
+        return ApiError("LOGIN_EMAIL_UNKNOWN", "There is no account with this email. Check the spelling.", 400)
+    if user.password_hash is None:
+        return ApiError("LOGIN_NO_PASSWORD", "This account has no password yet.", 400)
+    return ApiError("LOGIN_PASSWORD_WRONG", "That password is wrong.", 400)
 
 
 def _link_invalid() -> ApiError:
@@ -128,16 +133,25 @@ async def register(body: Register, ip: str | None, ua: str | None, emails: Email
     if len(body.password) < s.password_min_length:
         raise ApiError("PASSWORD_TOO_SHORT", f"Use at least {s.password_min_length} characters.", 422)
     link = new_link_token()
+    taken = False
     async with AppSession() as session, session.begin():
         await repo.lock_email(session, body.email)
+        # A taken email counts as a failed attempt, together with wrong sign-ins from the same address.
+        recent = await repo.recent_failures(session, body.email, ip, s.login_window_minutes)
+        if recent.by_email >= s.login_max_failures_per_email or recent.by_ip >= s.login_max_failures_per_ip:
+            raise ApiError("REGISTER_RATE_LIMITED", "Too many attempts. Wait a few minutes and try again.", 429)
         if await repo.get_user_by_email(session, body.email) is not None:
-            raise ApiError("EMAIL_TAKEN", "An account with this email already exists. Sign in instead.", 409)
-        user_id = await repo.create_user(session, email=body.email, password_hash=hash_password(body.password),
-                                         full_name=body.full_name, email_verified=False)
-        await repo.trust_device(session, user_id, body.device_id, ua)
-        tokens = await _start_session(session, user_id, body.device_id, ip, ua)
-        await repo.insert_email_verification(session, user_id, body.email, hash_link_token(link),
-                                             s.email_verification_ttl_hours)
+            taken = True  # raised after commit, so the attempt is counted
+            await repo.record_attempt(session, body.email, ip, False)
+        else:
+            user_id = await repo.create_user(session, email=body.email, password_hash=hash_password(body.password),
+                                             full_name=body.full_name, email_verified=False)
+            await repo.trust_device(session, user_id, body.device_id, ua)
+            tokens = await _start_session(session, user_id, body.device_id, ip, ua)
+            await repo.insert_email_verification(session, user_id, body.email, hash_link_token(link),
+                                                 s.email_verification_ttl_hours)
+    if taken:
+        raise ApiError("EMAIL_TAKEN", "An account with this email already exists. Sign in instead.", 409)
     await _send_verification_email(emails, body.email, body.full_name, link, site_url)
     return tokens
 
@@ -154,7 +168,7 @@ async def login(body: Login, ip: str | None, ua: str | None, sms: SmsSender) -> 
         ok = verify_password(user.password_hash if user else None, body.password)
         await repo.record_attempt(session, body.email, ip, ok)
         if not ok:
-            failure = _invalid_login()  # raised after commit, so the failed attempt is counted
+            failure = _login_failure(user)  # raised after commit, so the failed attempt is counted
         else:
             if needs_rehash(user.password_hash):
                 await repo.set_password(session, user.id, hash_password(body.password))

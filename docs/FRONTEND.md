@@ -273,9 +273,10 @@ who are not technical. Design every screen against these rules:
 ### Brand
 Decided 2026-10-30: **deep forest green** as the brand colour, **warm gold** for emphasis only (marks,
 "new", highlights on dark), on an **ivory "paper"** page background. Direction: scholarly and modern,
-calm and trustworthy for parents, premium enough to compete with global platforms. The final logo is
-still to come; `LogoMark` in `packages/ui` is a placeholder (an open book whose pages form a leaf).
-All components read colours from tokens only, so a logo or shade change needs no code changes.
+calm and trustworthy for parents, premium enough to compete with global platforms. The logo is the
+**Scholar Shield** (a laurel sprig growing out of an open book; files and rules in `docs/brand/logo`, full brand guide
+in `docs/BRANDING.md`): `Logo`, `LogoMark` (`detailed` from 48 px) and `Wordmark` in `packages/ui`.
+All components read colours from tokens only, so a shade change needs no code changes.
 Teachers and institutes get **no own colours** on the marketplace (section 2 of CLAUDE.md).
 
 ### Tokens
@@ -418,6 +419,6 @@ and player · status never by colour alone · respects reduced-motion (watermark
 | Teacher branding | No logo/colour; marketable profile at `/<subject>/<teacher>` ✅ |
 | Company staff | Free to staff, no checkout, no phone verification ✅ |
 | Sign-in | Google or email + password; SMS only at registration, new device, recovery ✅ |
-| EduZone brand | **Open** — placeholder tokens until announced |
+| EduZone brand | Decided: forest green and gold, Scholar Shield logo ✅ (trademark search still to do) |
 | Institute URL | `/institutes/<slug>` (assumed) |
 | Sinhala at pilot | **Open** — depends on pilot teachers |

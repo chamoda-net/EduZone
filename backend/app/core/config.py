@@ -59,6 +59,9 @@ class Settings(BaseSettings):
     login_window_minutes: int = 15
     login_max_failures_per_email: int = 8
     login_max_failures_per_ip: int = 30
+    # Shared with the web server (its WEB_SERVER_KEY): a request carrying it may name the visitor's address, so limits
+    # count per visitor and not per web server. At least 32 characters. Required outside ENVIRONMENT=local (main.py).
+    web_server_key: str | None = Field(default=None, min_length=32)
     # A sign-in from an unknown device must be confirmed by SMS within this time.
     device_challenge_ttl_seconds: int = 10 * 60
     email_verification_ttl_hours: int = 48
@@ -120,6 +123,15 @@ class Settings(BaseSettings):
     # Gateway fee booked at sale time, in basis points; trued up from the settlement report.
     # Set from the merchant agreement.
     gateway_fee_estimate_bps: int = Field(default=300, ge=0, le=10000)
+
+    # --- Seats (docs/SEATS.md) ----------------------------------------------------------
+    # Teachers can limit seats and close registration only when this is on (off until the screens exist).
+    seats_enabled: bool = False
+    # How long a seat is held while a student pays, and how many unfinished holds a day per student and class.
+    seat_hold_minutes: int = Field(default=15, ge=1, le=120)
+    seat_holds_per_day: int = Field(default=3, ge=1, le=50)
+    # How long an accepted student has to pay.
+    seat_request_hold_hours: int = Field(default=48, ge=1, le=336)
     # A commission increase must be announced at least this many days before it applies (docs/COURSES.md C.10).
     commission_notice_days: int = Field(default=30, ge=0, le=365)
     # Public base URL of this API (the gateway calls {api_public_url}/api/v1/webhooks/<gateway>).

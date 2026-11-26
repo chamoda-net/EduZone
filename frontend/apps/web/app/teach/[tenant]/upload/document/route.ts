@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 
 import { API_URL } from "@/lib/api";
 import { ACCESS_COOKIE } from "@/lib/cookies";
+import { visitorHeaders } from "@/lib/visitor";
 
 /** PDF upload into a workspace: streams the multipart body straight through to the API, so a
  * 50 MB file is never held in a Server Action payload. Excluded from proxy.ts (see its matcher). */
@@ -21,6 +22,7 @@ export async function POST(request: Request, { params }: RouteContext<"/teach/[t
   const headers: Record<string, string> = {
     "content-type": request.headers.get("content-type") ?? "",
     "x-forwarded-host": host,
+    ...visitorHeaders(request.headers),
   };
   if (token) headers.authorization = `Bearer ${token}`;
 

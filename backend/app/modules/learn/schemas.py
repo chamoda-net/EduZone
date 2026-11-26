@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from app.modules.learning.schemas import OrgRef
+from app.modules.seats.schemas import MySeatRequest, SeatState, SeatWait
 
 
 class UpcomingLesson(BaseModel):
@@ -31,6 +32,7 @@ class MonthToPay(BaseModel):
     fee_cents: int
     currency: str
     approved_late: bool
+    seat: SeatState | None               # open months: can they pay, and until when a seat is kept
     org: OrgRef
 
 
@@ -39,6 +41,14 @@ class Today(BaseModel):
     to_pay: list[MonthToPay]
     pending_requests: int
     classes: int
+
+
+class MySeatRequestRow(MySeatRequest):
+    org: OrgRef
+
+
+class MySeatWait(SeatWait):
+    org: OrgRef
 
 
 class MyRequest(BaseModel):

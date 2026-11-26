@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { getMe } from "@/lib/session";
 import { t, type MessageKey } from "@eduzone/lib/i18n";
-import { Container, cx } from "@eduzone/ui";
+import { Container, LogoMark, cx } from "@eduzone/ui";
 import { SiteShell } from "@/components/shell";
 
 import { ContactForm, CopyEmail } from "./contact-form";
@@ -14,6 +14,7 @@ import { TOPICS, type Topic } from "./topics";
 export const metadata: Metadata = {
   title: `${t("static.contact.title")} | EduZone`,
   description: t("contact.meta"),
+  alternates: { canonical: "/contact" },
 };
 
 const SUPPORT_EMAIL = t("about.company.emailValue");
@@ -152,8 +153,8 @@ function Letter({ children }: { children: ReactNode }) {
       <div aria-hidden className="absolute top-7 right-6 rotate-6 sm:top-8 sm:right-8">
         <div className="bg-[radial-gradient(circle,transparent_3px,var(--ez-bg)_3.5px)] bg-[size:10px_10px] bg-[position:-5px_-5px] p-[5px] drop-shadow-[0_2px_4px_rgb(20_32_26/0.15)]">
           <div className="ez-grain flex h-[4.5rem] w-[3.75rem] flex-col items-center justify-between bg-brand-900 px-1 py-2 text-on-brand">
-            <span className="font-display text-xl leading-none font-semibold italic text-gold-300">Ez</span>
-            <span className="text-[0.5rem] font-bold tracking-[0.18em] uppercase">Sri Lanka</span>
+            <LogoMark className="h-8" />
+            <span className="text-center text-[0.5rem] leading-tight font-bold tracking-[0.18em] uppercase">Sri Lanka</span>
           </div>
         </div>
       </div>

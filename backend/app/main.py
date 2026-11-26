@@ -5,6 +5,7 @@ from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel
 from sqlalchemy import text
 
+from app.core.config import get_settings
 from app.core.db import AppSession, dispose_engines
 from app.core.errors import install_error_handlers
 from app.integrations.bunny import close_bunny_http
@@ -22,11 +23,20 @@ from app.modules.ledger.router import org_router as ledger_org_router
 from app.modules.media.router import org_router as media_org_router
 from app.modules.media.router import webhook_router as media_webhook_router
 from app.modules.platform.router import router as platform_router
+from app.modules.seats.router import org_router as seats_org_router
 from app.modules.tenants.router import public_router as tenants_public_router
+
+
+def check_settings() -> None:
+    """Without the key every visitor counts as our web server, and a few wrong passwords would block sign-in for all."""
+    s = get_settings()
+    if s.environment != "local" and not s.web_server_key:
+        raise RuntimeError("Set WEB_SERVER_KEY (the same value on the API and the web server).")
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    check_settings()
     yield
     await close_bunny_http()
     await dispose_engines()
@@ -50,7 +60,7 @@ async def health() -> HealthResponse:
 # Staff console. `/teach/{tenant_slug}/...` takes the tenant from the path (migration phase 3);
 # the same routes under `/org/...` take it from the host (pre-migration tenant sites).
 STAFF_ROUTERS = (catalog_org_router, courses.org_router, media_org_router, learning.org_router, checkout.org_router,
-                 ledger_org_router)
+                 ledger_org_router, seats_org_router)
 for staff_router in STAFF_ROUTERS:
     api.include_router(staff_router, prefix="/teach/{tenant_slug}")
     api.include_router(staff_router, prefix="/org")

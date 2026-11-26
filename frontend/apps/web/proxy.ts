@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { visitorHeaders } from "./lib/visitor";
 import { WORKSPACE_HEADER } from "./lib/workspace-header";
 
 import { CART_COOKIE, parseGuestCart } from "./lib/cart-cookie";
@@ -58,6 +59,7 @@ async function refreshSession(request: NextRequest): Promise<CookieChange[]> {
         "content-type": "application/json",
         "x-forwarded-host": request.headers.get("host") ?? "",
         "user-agent": request.headers.get("user-agent") ?? "",
+        ...visitorHeaders(request.headers),
       },
       body: JSON.stringify({ refresh_token: refresh }),
       cache: "no-store",
@@ -97,7 +99,7 @@ async function mergeGuestCart(request: NextRequest): Promise<CookieChange[]> {
     try {
       const res = await fetch(`${API_URL}/api/v1/me/cart/merge`, {
         method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${access}` },
+        headers: { "content-type": "application/json", authorization: `Bearer ${access}`, ...visitorHeaders(request.headers) },
         body: JSON.stringify({ items }),
         cache: "no-store",
       });

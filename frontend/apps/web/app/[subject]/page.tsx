@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: PageProps<"/[subject]">): Pro
   return {
     title: `${subject.name} classes | EduZone`,
     description: t("market.subject.metaDescription", { subject: subject.name }),
+    alternates: { canonical: `/${subject.slug}` },
   };
 }
 

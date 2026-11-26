@@ -1,8 +1,9 @@
-import { ArrowUpRight, MonitorPlay, Users, Video } from "lucide-react";
+import { Armchair, ArrowUpRight, MonitorPlay, Users, Video } from "lucide-react";
 import Link from "next/link";
 
 import { TeacherAvatar } from "@/components/teacher-avatar";
 import { classMeta, priceParts } from "@/lib/catalog";
+import { seatBadge } from "@/lib/seats";
 import { formatMonth } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
 import type { MarketClass } from "@eduzone/lib/types";
@@ -16,6 +17,7 @@ export function MarketClassCard({ c, index = 0 }: { c: MarketClass; index?: numb
     one_time_price_cents: c.one_time_price_cents,
     currency: c.currency,
   });
+  const seat = seatBadge(c);
   return (
     <Link
       href={c.path}
@@ -30,7 +32,7 @@ export function MarketClassCard({ c, index = 0 }: { c: MarketClass; index?: numb
           label={c.exam ? t(`exam.${c.exam}`) : null}
           className="transition duration-500 ease-ez group-hover:scale-[1.03]"
         />
-        {c.open_month_start && (
+        {c.open_month_start && !c.is_full && c.registration !== "closed" && (
           <Badge tone="gold" className="absolute bottom-3 left-3 shadow-ez-sm">
             {t("market.card.joinMonth", { month: formatMonth(c.open_month_start) })}
           </Badge>
@@ -55,6 +57,7 @@ export function MarketClassCard({ c, index = 0 }: { c: MarketClass; index?: numb
           {c.has_live && <Badge tone="brand"><Video className="size-3" />{t("market.card.live")}</Badge>}
           {c.has_recorded && <Badge tone="info"><MonitorPlay className="size-3" />{t("market.card.recorded")}</Badge>}
           {c.has_free_preview && <Badge tone="gold">{t("class.freePreview")}</Badge>}
+          {seat && <Badge tone={seat.tone}><Armchair className="size-3" />{seat.label}</Badge>}
         </div>
         <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-4">
           <p className="flex min-w-0 flex-wrap items-baseline gap-x-1">

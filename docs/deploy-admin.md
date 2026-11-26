@@ -25,7 +25,8 @@ Three walls, each enough on its own to stop a stranger:
 
 Note on addresses: the API sees the **admin server's** address, not the staff member's, because the browser never
 calls the API (the Next server does). So the allowlist names the admin server, and the IP stored in
-`audit_logs` for platform actions is the admin server's. Who did it is always recorded (`actor_user_id`).
+`audit_logs` for platform actions is the admin server's. Who did it is always recorded (`actor_user_id`). Never give the
+admin app the web server's `WEB_SERVER_KEY`: platform routes ignore it, so a leaked key can't open the admin API.
 
 ## Build and run
 

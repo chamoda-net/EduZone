@@ -7,10 +7,12 @@ import { api } from "./api";
 import {
   ACCESS_COOKIE,
   DEVICE_COOKIE,
+  EMAIL_COOKIE,
   NOTICE_COOKIE,
   REFRESH_COOKIE,
   accessCookie,
   deviceCookie,
+  emailCookie,
   refreshCookie,
   type TokenPair,
 } from "./cookies";
@@ -49,6 +51,16 @@ export async function saveSession(tokens: TokenPair): Promise<void> {
   const jar = await cookies();
   jar.set(ACCESS_COOKIE, tokens.access_token, accessCookie(tokens.expires_in));
   jar.set(REFRESH_COOKIE, tokens.refresh_token, refreshCookie());
+  jar.delete(EMAIL_COOKIE);
+}
+
+/** Remembers the typed email for the next identity form (a few minutes, this browser). */
+export async function rememberEmail(email: string): Promise<void> {
+  if (email && email.length <= 254) (await cookies()).set(EMAIL_COOKIE, email, emailCookie());
+}
+
+export async function rememberedEmail(): Promise<string | undefined> {
+  return (await cookies()).get(EMAIL_COOKIE)?.value;
 }
 
 export async function clearSession(): Promise<void> {

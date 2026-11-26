@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EduZone brand board</title>
+<style>
+  @font-face { font-family: Fraunces; src: url(fraunces-latin.woff2) format("woff2"); font-weight: 100 900; }
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1800px; background: #faf8f3; color: #14201a; font: 17px/1.5 "Instrument Sans", "Segoe UI", sans-serif; }
+  h2, .f { font-family: Fraunces, Georgia, serif; font-weight: 600; }
+  .eye { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #17603f; }
+  .hero { height: 620px; background: radial-gradient(circle at 78% 8%, rgb(212 160 63 / .2), transparent 42%), radial-gradient(circle at 8% 100%, rgb(35 128 90 / .38), transparent 45%), #06190f; display: grid; place-items: center; }
+  .hero img { width: 1010px; }
+  .pad { padding: 72px 90px; }
+  .row { display: grid; gap: 28px; }
+  .tile { border-radius: 20px; border: 1px solid #e5dfd2; background: #fff; display: grid; place-items: center; overflow: hidden; position: relative; }
+  .tile small { position: absolute; left: 22px; bottom: 16px; font-size: 13px; color: #5c6862; }
+  .dark { background: #0a2a1d; border-color: #0a2a1d; } .dark small { color: #8cc3a5; }
+  .green { background: #124a33; border-color: #124a33; } .green small { color: #d8ece0; }
+  .gold { background: #d4a03f; border-color: #d4a03f; } .gold small { color: #06190f; }
+  .sw { border-radius: 16px; height: 150px; padding: 18px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 14px; border: 1px solid rgb(0 0 0 / .06); }
+  .sw b { font-size: 16px; }
+  .scene { height: 620px; border-radius: 24px; position: relative; overflow: hidden; }
+  /* certificate */
+  .cert { width: 760px; height: 500px; background: #faf8f3; border: 9px solid #124a33; outline: 1.5px solid #d4a03f; outline-offset: -20px; text-align: center; padding: 42px 60px; box-shadow: 0 34px 70px -24px rgb(0 0 0 / .55); }
+  .cert p { color: #5c6862; font-size: 15px; }
+  /* phone */
+  .phone { width: 300px; height: 560px; background: #fff; border: 9px solid #14201a; border-radius: 42px; overflow: hidden; box-shadow: 0 34px 70px -24px rgb(20 32 26 / .5); }
+  .bar { height: 64px; border-bottom: 1px solid #e5dfd2; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #faf8f3; }
+  .card { margin: 14px; border: 1px solid #e5dfd2; border-radius: 16px; padding: 14px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 99px; padding: 2px 10px; }
+  .btn { display: block; text-align: center; border-radius: 12px; background: #124a33; color: #fbfaf5; font-weight: 600; font-size: 14px; padding: 11px; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<div class="hero"><img src="../svg/eduzone-horizontal-reversed.svg" alt=""></div>
+
+<div class="pad">
+  <p class="eye">The idea</p>
+  <h2 style="font-size:46px;line-height:1.15;max-width:1180px;margin:8px 0 44px">A laurel sprig grows straight out of an open book, on a gold-lined academic shield.</h2>
+
+  <div class="row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="tile" style="height:360px"><img height="240" src="../svg/eduzone-symbol-color.svg" alt=""><small>Symbol</small></div>
+    <div class="tile" style="height:360px"><img width="300" src="../svg/eduzone-stacked-color.svg" alt=""><small>Stacked</small></div>
+    <div class="tile dark" style="height:360px"><img width="300" src="../svg/eduzone-stacked-reversed.svg" alt=""><small>On dark</small></div>
+    <div class="tile" style="height:360px"><img height="240" src="../svg/eduzone-symbol-small-color.svg" alt=""><small>Small cut, for 16 to 40 px</small></div>
+    <div class="tile" style="height:220px"><img width="300" src="../svg/eduzone-horizontal-black.svg" alt=""><small>Black</small></div>
+    <div class="tile" style="height:220px;background:#edf6f0"><img width="300" src="../svg/eduzone-horizontal-green.svg" alt=""><small>One colour, green</small></div>
+    <div class="tile green" style="height:220px"><img width="300" src="../svg/eduzone-horizontal-white.svg" alt=""><small>White on green</small></div>
+    <div class="tile gold" style="height:220px"><img width="300" src="../svg/eduzone-horizontal-black.svg" alt=""><small>Black on gold</small></div>
+  </div>
+
+  <div class="row" style="grid-template-columns:1.15fr 1fr;margin-top:72px">
+    <div>
+      <p class="eye" style="margin-bottom:16px">App icon and small sizes</p>
+      <div class="tile" style="height:230px;grid-auto-flow:column;gap:34px;justify-content:center;background:#fff">
+        <img height="128" src="../svg/eduzone-app-icon.svg" alt=""><img height="64" src="../svg/eduzone-favicon.svg" alt=""><img height="48" src="../svg/eduzone-favicon.svg" alt=""><img height="32" src="../svg/eduzone-favicon.svg" alt=""><img height="16" src="../svg/eduzone-favicon.svg" alt="">
+        <img height="64" src="../svg/eduzone-symbol-small-color.svg" alt=""><img height="40" src="../svg/eduzone-symbol-small-color.svg" alt=""><img height="24" src="../svg/eduzone-symbol-small-color.svg" alt="">
+      </div>
+    </div>
+    <div>
+      <p class="eye" style="margin-bottom:16px">Colours</p>
+      <div class="row" style="grid-template-columns:repeat(4,1fr);gap:14px">
+        <div class="sw" style="background:#124a33;color:#fbfaf5;height:230px"><b>Forest</b>#124A33</div>
+        <div class="sw" style="background:#0e3a28;color:#fbfaf5;height:230px"><b>Deep</b>#0E3A28</div>
+        <div class="sw" style="background:linear-gradient(#ecd08f 0 38%,#d4a03f 38%);color:#06190f;height:230px"><b>Gold</b>#D4A03F<br>#ECD08F</div>
+        <div class="sw" style="background:#fbfaf5;height:230px"><b>Ivory</b>#FBFAF5</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pad" style="padding-top:0">
+  <p class="eye" style="margin-bottom:16px">In use (illustrations)</p>
+  <div class="row" style="grid-template-columns:1.5fr 1fr">
+    <div class="scene" style="background:#0a2a1d;display:grid;place-items:center">
+      <div class="cert">
+        <img height="118" src="../svg/eduzone-symbol-color.svg" alt="">
+        <p style="letter-spacing:.16em;font-size:12px;font-weight:700;color:#8a6118;margin-top:6px">CERTIFICATE OF COMPLETION</p>
+        <p style="margin-top:16px">This is to certify that</p>
+        <p class="f" style="font-size:40px;line-height:1.2;color:#14201a">Student Name</p>
+        <p>has successfully completed the course</p>
+        <p class="f" style="font-size:23px;color:#124a33;margin-top:4px">Course Title</p>
+        <img height="44" style="margin-top:24px" src="../svg/eduzone-wordmark-color.svg" alt="">
+      </div>
+    </div>
+    <div class="scene" style="background:linear-gradient(160deg,#f8eed4,#ecd08f);display:grid;place-items:center">
+      <div class="phone">
+        <div class="bar"><img height="38" src="../svg/eduzone-horizontal-color.svg" alt=""><span style="width:30px;height:30px;border-radius:50%;background:#d8ece0"></span></div>
+        <div style="padding:18px 16px 2px"><p class="eye" style="font-size:10px">Today</p><p class="f" style="font-size:25px">Good evening</p></div>
+        <div class="card"><span class="pill" style="background:#e3f3e8;color:#17703f">Paid</span><p style="font-weight:600;margin-top:6px">Live class</p><p style="font-size:13px;color:#5c6862">Tonight, 7:00 PM</p><span class="btn">Join on Zoom</span></div>
+        <div class="card"><span class="pill" style="background:#f8eed4;color:#8a6118">Unpaid</span><p style="font-weight:600;margin-top:6px">December</p><p style="font-size:13px;color:#5c6862">Rs. 2,000.00</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="grid-template-columns:repeat(3,1fr);margin-top:28px">
+    <div class="scene" style="height:380px;background:#e5dfd2;display:grid;place-items:center">
+      <div style="width:380px;height:220px;border-radius:14px;background:#0e3a28;display:grid;place-items:center;box-shadow:0 26px 50px -20px rgb(20 32 26 / .6)"><img width="250" src="../svg/eduzone-stacked-reversed.svg" alt=""></div>
+    </div>
+    <div class="scene" style="height:380px;background:#d8ece0;display:grid;place-items:center">
+      <div style="width:350px;background:#fff;border-radius:14px;padding:24px;box-shadow:0 26px 50px -20px rgb(20 32 26 / .4)">
+        <img height="44" src="../svg/eduzone-horizontal-color.svg" alt=""><p class="f" style="font-size:24px;margin-top:14px">Receipt</p>
+        <p style="display:flex;justify-content:space-between;border-top:1px solid #e5dfd2;margin-top:10px;padding-top:10px;font-size:14px"><span style="color:#5c6862">November</span><b>Rs. 2,000.00</b></p>
+        <p style="display:flex;justify-content:space-between;border-top:1px solid #e5dfd2;margin-top:10px;padding-top:10px;font-size:14px"><span style="color:#5c6862">Status</span><span class="pill" style="background:#e3f3e8;color:#17703f;font-size:12px">Paid</span></p>
+      </div>
+    </div>
+    <div class="scene" style="height:380px;background:linear-gradient(150deg,#23805a,#0e3a28);display:grid;place-items:center">
+      <div style="text-align:center;color:#fbfaf5;font-weight:600"><img height="190" style="filter:drop-shadow(0 20px 30px rgb(0 0 0 / .35))" src="../svg/eduzone-app-icon.svg" alt=""><p style="margin-top:14px">EduZone</p></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.modules.seats.schemas import SeatState
+
 
 class OrgRef(BaseModel):
     """The organization (tenant) something belongs to, for pages that span tenants (/learn)."""
@@ -78,6 +80,7 @@ MonthAccess = Literal[
 
 class StudentMonth(PublicMonth):
     access: MonthAccess
+    seat: SeatState | None = None        # open months they haven't got (docs/SEATS.md)
 
 
 class StudentLesson(PublicLesson):
@@ -90,6 +93,8 @@ class StudentClassView(BaseModel):
     has_class_access: bool               # one-time / free classes: a class-level grant
     months: list[StudentMonth]
     lessons: list[StudentLesson]
+    seat: SeatState | None = None        # one-time and free classes they haven't got
+    waiting_for_seat: bool = False       # on the notify list
 
 
 class MyClass(BaseModel):
@@ -191,6 +196,7 @@ class GrantCreate(BaseModel):
     student_member_id: UUID
     class_month_id: UUID | None = None   # required for monthly classes
     source: Literal["manual", "scholarship"] = "manual"
+    allow_over_limit: bool = False       # give access although every seat is taken
 
 
 class GrantRevoke(BaseModel):

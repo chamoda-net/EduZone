@@ -9,6 +9,7 @@ import pytest
 from httpx import AsyncClient, Response
 from sqlalchemy import text
 
+from app.core.config import get_settings
 from app.core.db import AdminSession
 from app.core.tenancy import tenant_transaction
 from app.integrations.email import get_email_sender
@@ -161,13 +162,29 @@ async def test_register_needs_a_known_site(client: AsyncClient, mail: FakeEmail,
 
 # --- password sign-in --------------------------------------------------------------------
 
-async def test_wrong_password_and_unknown_email_look_the_same(client: AsyncClient, seed: Seed, sms: FakeSms,
-                                                              phones: Phones) -> None:
-    email = await ensure_account(phones())
+async def test_failed_sign_in_says_what_is_wrong(client: AsyncClient, seed: Seed, emails: Callable[[], str],
+                                                 mail: FakeEmail) -> None:
+    email = emails()
+    assert error_code(await password_login(client, seed.a, email)) == "LOGIN_EMAIL_UNKNOWN"
+    assert (await register(client, seed.a, email)).status_code == 201
     wrong = await password_login(client, seed.a, email, "Not-the-password")
-    unknown = await password_login(client, seed.a, f"nobody-{uuid4().hex[:6]}@example.com")
-    assert wrong.status_code == unknown.status_code == 400
-    assert error_code(wrong) == error_code(unknown) == "LOGIN_INVALID"
+    assert wrong.status_code == 400 and error_code(wrong) == "LOGIN_PASSWORD_WRONG"
+    async with AdminSession() as s, s.begin():
+        await s.execute(text("UPDATE users SET password_hash = NULL WHERE email = :e"), {"e": email})
+    assert error_code(await password_login(client, seed.a, email)) == "LOGIN_NO_PASSWORD"
+
+
+async def test_testing_emails_is_throttled(client: AsyncClient, seed: Seed, emails: Callable[[], str],
+                                           mail: FakeEmail, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Create account and sign-in share one limit, so neither can be used to check a list of emails."""
+    taken, fresh = emails(), emails()
+    assert (await register(client, seed.a, taken)).status_code == 201
+    monkeypatch.setattr(get_settings(), "login_max_failures_per_ip", 2)  # each test has its own address
+    assert error_code(await register(client, seed.a, taken)) == "EMAIL_TAKEN"
+    assert error_code(await password_login(client, seed.a, fresh)) == "LOGIN_EMAIL_UNKNOWN"
+    blocked = await register(client, seed.a, taken)
+    assert blocked.status_code == 429 and error_code(blocked) == "REGISTER_RATE_LIMITED"
+    assert error_code(await password_login(client, seed.a, fresh)) == "LOGIN_RATE_LIMITED"
 
 
 async def test_failed_sign_ins_are_throttled(client: AsyncClient, seed: Seed, sms: FakeSms, phones: Phones) -> None:
@@ -383,7 +400,7 @@ async def test_recovery_with_email_link_and_sms(client: AsyncClient, seed: Seed,
     assert done.status_code == 200 and done.json()["access_token"]
 
     assert (await me(client, seed.a, old["access_token"])).status_code == 401      # everywhere signed out
-    assert error_code(await password_login(client, seed.a, email)) == "LOGIN_INVALID"
+    assert error_code(await password_login(client, seed.a, email)) == "LOGIN_PASSWORD_WRONG"
     fresh = await password_login(client, seed.a, email, "A-new-password-1", device="device-new")
     assert fresh.json()["status"] == "signed_in"                                    # this device is now known
     reused = await client.post("/api/v1/auth/recovery/start", json={"token": token})
@@ -435,7 +452,7 @@ async def test_google_takes_back_an_unverified_email(client: AsyncClient, seed: 
     resp = await client.post("/api/v1/auth/google", json={"id_token": "x" * 40, "device_id": "device-real"})
     assert resp.status_code == 200
     assert (await me(client, seed.a, squatter["access_token"])).status_code == 401
-    assert error_code(await password_login(client, seed.a, email, device="device-squat")) == "LOGIN_INVALID"
+    assert error_code(await password_login(client, seed.a, email, device="device-squat")) == "LOGIN_NO_PASSWORD"
 
 
 async def test_google_needs_a_verified_email(client: AsyncClient, google: FakeGoogle) -> None:

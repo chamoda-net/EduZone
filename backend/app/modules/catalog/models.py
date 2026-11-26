@@ -28,6 +28,13 @@ class ClassModel(Base):
     one_time_price_cents: Mapped[int | None]
     allow_late_months: Mapped[bool]
     max_video_views: Mapped[int | None] = mapped_column(SmallInteger)
+    # Seats (docs/SEATS.md); courses always have the defaults.
+    seat_limit: Mapped[int | None]
+    show_seat_count: Mapped[bool] = mapped_column(server_default=FetchedValue())
+    registration: Mapped[str] = mapped_column(server_default=FetchedValue())
+    starts_on: Mapped[date | None]
+    registration_after_start: Mapped[str | None]
+    renewal_day: Mapped[int] = mapped_column(SmallInteger, server_default=FetchedValue())
     status: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=FetchedValue())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=FetchedValue())
@@ -42,6 +49,8 @@ class ClassMonth(Base):
     month_start: Mapped[date]
     fee_cents: Mapped[int | None]
     status: Mapped[str]
+    opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    renew_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))   # kept seats (docs/SEATS.md)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=FetchedValue())
 
 

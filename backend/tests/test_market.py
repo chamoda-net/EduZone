@@ -79,6 +79,37 @@ async def test_only_public_classes_are_listed(client: AsyncClient, seed: Seed, s
     assert gone.status_code == 404
 
 
+async def test_free_preview_lesson_plays_for_anyone(client: AsyncClient, seed: Seed, sms: FakeSms) -> None:
+    """A free-preview lesson with a ready video plays without signing in; other lessons don't."""
+    from app.core.tenancy import tenant_transaction
+    from tests.test_courses import ready_video
+
+    teacher = await auth_headers(client, sms, seed.a, seed.a.teacher_phone)
+    k = await published(client, teacher)
+    made = await client.post(f"/api/v1/org/classes/{k['class']['id']}/lessons", headers=teacher, json={
+        "class_month_id": k["months"]["open"]["id"], "title": "Sample lesson", "lesson_type": "recorded",
+        "is_free_preview": True, "is_published": True})
+    assert made.status_code == 201, made.text
+    lesson_id = made.json()["id"]
+    video = await ready_video(seed.a, 600)
+    async with tenant_transaction(seed.a.id) as s:
+        await s.execute(text("INSERT INTO lesson_resources (tenant_id, lesson_id, media_asset_id) VALUES (:t, :l, :a)"),
+                        {"t": seed.a.id, "l": lesson_id, "a": video})
+
+    slug = await profile_slug(seed.a.teacher_phone)
+    detail = (await client.get(f"/api/v1/market/classes/physics/{slug}/{k['class']['slug']}")).json()
+    by_id = {lesson["id"]: lesson for lesson in detail["lessons"]}
+    assert by_id[lesson_id]["can_preview"] is True and by_id[lesson_id]["video_seconds"] == 600
+    doc_preview = k["lessons"]["preview"]["id"]                       # a free preview without a video
+    assert by_id[doc_preview]["can_preview"] is False
+
+    played = await client.post(f"/api/v1/market/lessons/{lesson_id}/preview")
+    assert played.status_code == 200, played.text
+    assert played.json()["title"] == "Sample lesson" and played.json()["url"]
+    for other in (doc_preview, k["lessons"]["open"]["id"], k["lessons"]["hidden"]["id"]):
+        assert (await client.post(f"/api/v1/market/lessons/{other}/preview")).status_code == 404
+
+
 async def test_public_views_expose_public_fields_only() -> None:
     """The app role reads the views across tenants, but tenant tables stay closed to it."""
     async with AppSession() as s:

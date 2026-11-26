@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import {
   DEMO_PASSWORD,
@@ -21,7 +21,8 @@ test("anyone can browse the marketplace: search, class, teacher", async ({ page 
   await expect(page).toHaveURL(/\/classes\?q=chemistry/);
   await page.getByRole("link", { name: /2027 A\/L Chemistry/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "2027 A/L Chemistry - Theory" })).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("link", { name: "Sign in to join" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Join .+ · Rs. / })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Already in this class? Sign in" })).toBeVisible();
   await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Ruwan Silva" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Ruwan Silva" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: "WhatsApp" })).toBeVisible();
@@ -32,7 +33,7 @@ test("student registers, opens a class from the marketplace, joins and pays", as
   await expect(page.getByText("You're all set")).toBeVisible();
 
   await page.goto(CLASS);
-  await page.getByRole("link", { name: "Join or pay" }).click();
+  await page.getByRole("link", { name: "Open in my classes" }).click();
   await expect(page).toHaveURL(/\/learn\/classes\//, { timeout: 30_000 });
   await page.getByRole("button", { name: "Join class" }).click();
   await expect(page.getByText("You are in this class")).toBeVisible();
@@ -63,6 +64,27 @@ test("signing in on a second device signs out the first", async ({ page, browser
 
   await page.goto("/learn/classes");
   await expect(page.getByText("You were signed out")).toBeVisible();
+});
+
+test("wrong sign-ins from one address don't block another", async ({ browser, baseURL }) => {
+  const net = () => Math.floor(Math.random() * 256);
+  const visitor = async (ip: string) => (await browser.newContext({ baseURL, extraHTTPHeaders: { "x-forwarded-for": ip } })).newPage();
+  const fail = async (page: Page, n: number) => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(`e2e-nobody-${Date.now()}-${n}@example.com`);
+    await page.getByLabel("Password", { exact: true }).fill("not-a-password");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    return page.locator("form").getByRole("alert").innerText();
+  };
+  // The second address is what a proxy adds; the first is the visitor's own invention and must not count.
+  const real = `10.${net()}.${net()}.1`;
+  const first = await visitor(`198.51.100.1, ${real}`);
+  for (let n = 0; n < 5; n += 1) expect(await fail(first, n)).toContain("no account with this email");
+  expect(await fail(first, 5)).toContain("Too many attempts");
+  const disguised = await visitor(`198.51.100.2, ${real}`);
+  expect(await fail(disguised, 6)).toContain("Too many attempts");
+  const second = await visitor(`198.51.100.1, 10.${net()}.${net()}.2`);
+  expect(await fail(second, 7)).toContain("no account with this email");
 });
 
 test("teacher signs in, sees their class and their public profile", async ({ page }) => {
@@ -128,7 +150,7 @@ test("a guest fills a cart from two teachers, signs up and pays once", async ({ 
 test("a student opens a recorded lesson in our own player", async ({ page }) => {
   await signIn(page, "student.demo@example.com", DEMO_PASSWORD, "+94770000003");
   await page.goto(CLASS);
-  await page.getByRole("link", { name: "Join or pay" }).click();
+  await page.getByRole("link", { name: "Open in my classes" }).click();
   await page.getByRole("link", { name: /Recording: Motion in one dimension/ }).click();
   await expect(page).toHaveURL(/\/learn\/lessons\//, { timeout: 30_000 }); // first compile can be slow
   await expect(page.getByRole("heading", { name: "Recording: Motion in one dimension" })).toBeVisible();

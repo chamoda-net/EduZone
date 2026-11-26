@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { api } from "@/lib/api";
 import type { TokenPair } from "@/lib/cookies";
-import { clearSession, deviceId, saveSession } from "@/lib/session";
+import { clearSession, deviceId, rememberEmail, saveSession } from "@/lib/session";
 import { errorText, t } from "@eduzone/lib/i18n";
 import type { DeviceCheck, LoginResult, Me, OtpRequested, RecoveryStarted } from "@eduzone/lib/types";
 
@@ -36,12 +36,15 @@ async function finish(tokens: TokenPair, next: string | null): Promise<never> {
 
 // --- Sign in ------------------------------------------------------------------------------
 
-export type SignInState = { error?: string; email?: string; check?: DeviceCheck; next?: string; at?: number };
+export type SignInState = { error?: string; errorCode?: string; email?: string; check?: DeviceCheck; next?: string; at?: number };
 
 async function afterLogin(
   res: Awaited<ReturnType<typeof api<LoginResult>>>, email: string, next: string | null,
 ): Promise<SignInState> {
-  if (!res.ok) return { error: errorText(t, res.error), email, next: next ?? undefined };
+  if (!res.ok) {
+    await rememberEmail(email);
+    return { error: errorText(t, res.error), errorCode: res.error.code, email, next: next ?? undefined, at: Date.now() };
+  }
   if (res.data.status === "device_check") {
     return { check: res.data.device_check, email, next: next ?? undefined, at: Date.now() };
   }
@@ -88,7 +91,7 @@ export async function resendDeviceCode(challenge: string): Promise<{ error?: str
 
 // --- Register -----------------------------------------------------------------------------
 
-export type RegisterState = { error?: string; name?: string; email?: string };
+export type RegisterState = { error?: string; errorCode?: string; at?: number; name?: string; email?: string };
 
 export async function register(_: RegisterState, form: FormData): Promise<RegisterState> {
   const name = field(form, "full_name");
@@ -98,7 +101,10 @@ export async function register(_: RegisterState, form: FormData): Promise<Regist
     token: null,
     body: { full_name: name, email, password: String(form.get("password") ?? ""), device_id: await deviceId() },
   });
-  if (!res.ok) return { error: errorText(t, res.error), name, email };
+  if (!res.ok) {
+    await rememberEmail(email);
+    return { error: errorText(t, res.error), errorCode: res.error.code, at: Date.now(), name, email };
+  }
   await saveSession(res.data);
   redirect(`/verify-phone?next=${encodeURIComponent(safeNext(form.get("next")) ?? "/")}`);
 }

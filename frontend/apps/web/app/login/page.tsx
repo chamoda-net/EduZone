@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AuthFrame } from "@/components/auth-frame";
-import { getSession, isStaff } from "@/lib/session";
+import { getSession, isStaff, rememberedEmail } from "@/lib/session";
 import { t } from "@eduzone/lib/i18n";
 import { Alert } from "@eduzone/ui";
 
@@ -30,7 +30,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     >
       <div className="flex flex-col gap-5">
         {endedElsewhere && <Alert tone="warning" title={t("auth.elsewhere.title")}>{t("auth.elsewhere.body")}</Alert>}
-        <LoginForm next={nextPath} />
+        <LoginForm next={nextPath} email={await rememberedEmail()} />
       </div>
     </AuthFrame>
   );

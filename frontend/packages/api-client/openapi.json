@@ -2096,6 +2096,57 @@
             "title": "Pricing Model",
             "type": "string"
           },
+          "registration": {
+            "default": "open",
+            "enum": [
+              "open",
+              "ask",
+              "closed"
+            ],
+            "title": "Registration",
+            "type": "string"
+          },
+          "registration_after_start": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "ask",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration After Start"
+          },
+          "renewal_day": {
+            "default": 7,
+            "maximum": 28.0,
+            "minimum": 1.0,
+            "title": "Renewal Day",
+            "type": "integer"
+          },
+          "seat_limit": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seat Limit"
+          },
+          "show_seat_count": {
+            "default": true,
+            "title": "Show Seat Count",
+            "type": "boolean"
+          },
           "slug": {
             "anyOf": [
               {
@@ -2108,6 +2159,18 @@
               }
             ],
             "title": "Slug"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
           },
           "subject": {
             "anyOf": [
@@ -2271,9 +2334,69 @@
             "title": "Pricing Model",
             "type": "string"
           },
+          "registration": {
+            "enum": [
+              "open",
+              "ask",
+              "closed"
+            ],
+            "title": "Registration",
+            "type": "string"
+          },
+          "registration_after_start": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "ask",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration After Start"
+          },
+          "renewal_day": {
+            "title": "Renewal Day",
+            "type": "integer"
+          },
+          "seat_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seat Limit"
+          },
+          "seats_enabled": {
+            "title": "Seats Enabled",
+            "type": "boolean"
+          },
+          "show_seat_count": {
+            "title": "Show Seat Count",
+            "type": "boolean"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
           },
           "status": {
             "title": "Status",
@@ -2335,6 +2458,13 @@
           "currency",
           "allow_late_months",
           "max_video_views",
+          "seat_limit",
+          "show_seat_count",
+          "registration",
+          "starts_on",
+          "registration_after_start",
+          "renewal_day",
+          "seats_enabled",
           "status",
           "created_at",
           "updated_at"
@@ -2576,6 +2706,75 @@
             ],
             "title": "Pricing Model"
           },
+          "registration": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "ask",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration"
+          },
+          "registration_after_start": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "ask",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration After Start"
+          },
+          "renewal_day": {
+            "anyOf": [
+              {
+                "maximum": 28.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewal Day"
+          },
+          "seat_limit": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seat Limit"
+          },
+          "show_seat_count": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Seat Count"
+          },
           "slug": {
             "anyOf": [
               {
@@ -2588,6 +2787,18 @@
               }
             ],
             "title": "Slug"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
           },
           "status": {
             "anyOf": [
@@ -4964,6 +5175,11 @@
       "GrantCreate": {
         "additionalProperties": false,
         "properties": {
+          "allow_over_limit": {
+            "default": false,
+            "title": "Allow Over Limit",
+            "type": "boolean"
+          },
           "class_month_id": {
             "anyOf": [
               {
@@ -5362,6 +5578,78 @@
           "classes"
         ],
         "title": "InstructorPage",
+        "type": "object"
+      },
+      "KeepIn": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "keep",
+              "release"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "allow_over_limit": {
+            "default": false,
+            "title": "Allow Over Limit",
+            "type": "boolean"
+          },
+          "keep_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keep Until"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "KeepIn",
+        "type": "object"
+      },
+      "Lapsed": {
+        "description": "A student of the previous month without a seat in this one.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "member_id": {
+            "format": "uuid",
+            "title": "Member Id",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "released": {
+            "title": "Released",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "member_id",
+          "full_name",
+          "phone",
+          "released"
+        ],
+        "title": "Lapsed",
         "type": "object"
       },
       "LateRequestCreate": {
@@ -6707,6 +6995,10 @@
             "title": "Id",
             "type": "string"
           },
+          "is_full": {
+            "title": "Is Full",
+            "type": "boolean"
+          },
           "medium": {
             "anyOf": [
               {
@@ -6783,6 +7075,44 @@
             "title": "Pricing Model",
             "type": "string"
           },
+          "registration": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "ask",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration"
+          },
+          "seat_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seat Limit"
+          },
+          "seats_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seats Left"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -6849,6 +7179,10 @@
           "has_recorded",
           "has_free_preview",
           "students",
+          "seat_limit",
+          "seats_left",
+          "is_full",
+          "registration",
           "path"
         ],
         "title": "MarketClass",
@@ -7283,6 +7617,11 @@
       },
       "MarketLesson": {
         "properties": {
+          "can_preview": {
+            "default": false,
+            "title": "Can Preview",
+            "type": "boolean"
+          },
           "class_month_id": {
             "anyOf": [
               {
@@ -7334,6 +7673,11 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "video_seconds": {
+            "default": 0,
+            "title": "Video Seconds",
+            "type": "integer"
           }
         },
         "required": [
@@ -7370,10 +7714,25 @@
             "title": "Id",
             "type": "string"
           },
+          "is_full": {
+            "title": "Is Full",
+            "type": "boolean"
+          },
           "month_start": {
             "format": "date",
             "title": "Month Start",
             "type": "string"
+          },
+          "seats_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seats Left"
           },
           "status": {
             "title": "Status",
@@ -7385,7 +7744,9 @@
           "month_start",
           "status",
           "fee_cents",
-          "currency"
+          "currency",
+          "seats_left",
+          "is_full"
         ],
         "title": "MarketMonth",
         "type": "object"
@@ -7698,6 +8059,30 @@
             "title": "Month Start",
             "type": "string"
           },
+          "opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "renew_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renew Until"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -7711,6 +8096,8 @@
           "effective_fee_cents",
           "currency",
           "status",
+          "opened_at",
+          "renew_until",
           "created_at"
         ],
         "title": "MonthOut",
@@ -7752,6 +8139,16 @@
           },
           "org": {
             "$ref": "#/components/schemas/OrgRef"
+          },
+          "seat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeatState"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -7762,6 +8159,7 @@
           "fee_cents",
           "currency",
           "approved_late",
+          "seat",
           "org"
         ],
         "title": "MonthToPay",
@@ -7782,6 +8180,18 @@
               }
             ],
             "title": "Fee Cents"
+          },
+          "renew_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renew Until"
           },
           "status": {
             "anyOf": [
@@ -8055,6 +8465,233 @@
           "updated_at"
         ],
         "title": "MyReview",
+        "type": "object"
+      },
+      "MySeatRequest": {
+        "properties": {
+          "class_id": {
+            "format": "uuid",
+            "title": "Class Id",
+            "type": "string"
+          },
+          "class_title": {
+            "title": "Class Title",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "held_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held Until"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "month_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month Start"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "student_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Note"
+          }
+        },
+        "required": [
+          "status",
+          "held_until",
+          "decision_note",
+          "created_at",
+          "id",
+          "class_id",
+          "class_title",
+          "month_start",
+          "student_note"
+        ],
+        "title": "MySeatRequest",
+        "type": "object"
+      },
+      "MySeatRequestRow": {
+        "properties": {
+          "class_id": {
+            "format": "uuid",
+            "title": "Class Id",
+            "type": "string"
+          },
+          "class_title": {
+            "title": "Class Title",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "held_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held Until"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "month_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month Start"
+          },
+          "org": {
+            "$ref": "#/components/schemas/OrgRef"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "student_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Note"
+          }
+        },
+        "required": [
+          "status",
+          "held_until",
+          "decision_note",
+          "created_at",
+          "id",
+          "class_id",
+          "class_title",
+          "month_start",
+          "student_note",
+          "org"
+        ],
+        "title": "MySeatRequestRow",
+        "type": "object"
+      },
+      "MySeatWait": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "class_id": {
+            "format": "uuid",
+            "title": "Class Id",
+            "type": "string"
+          },
+          "class_title": {
+            "title": "Class Title",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "needs_request": {
+            "title": "Needs Request",
+            "type": "boolean"
+          },
+          "org": {
+            "$ref": "#/components/schemas/OrgRef"
+          }
+        },
+        "required": [
+          "class_id",
+          "class_title",
+          "created_at",
+          "available",
+          "needs_request",
+          "org"
+        ],
+        "title": "MySeatWait",
         "type": "object"
       },
       "NotifiedTenant": {
@@ -10821,6 +11458,528 @@
         "title": "ReviewSummary",
         "type": "object"
       },
+      "Seat": {
+        "description": "A taken seat and why.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "held_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held Until"
+          },
+          "kind": {
+            "enum": [
+              "access",
+              "paying",
+              "accepted",
+              "kept"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "member_id": {
+            "format": "uuid",
+            "title": "Member Id",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "since": {
+            "format": "date-time",
+            "title": "Since",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "member_id",
+          "full_name",
+          "phone",
+          "kind",
+          "source",
+          "since",
+          "held_until"
+        ],
+        "title": "Seat",
+        "type": "object"
+      },
+      "SeatDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "SeatDecision",
+        "type": "object"
+      },
+      "SeatRequestIn": {
+        "additionalProperties": false,
+        "properties": {
+          "class_month_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Month Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "SeatRequestIn",
+        "type": "object"
+      },
+      "SeatRequestInfo": {
+        "description": "The student's own request for a seat.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "held_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held Until"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "held_until",
+          "decision_note",
+          "created_at"
+        ],
+        "title": "SeatRequestInfo",
+        "type": "object"
+      },
+      "SeatRequestRow": {
+        "description": "A request as the class's staff see it.",
+        "properties": {
+          "class_id": {
+            "format": "uuid",
+            "title": "Class Id",
+            "type": "string"
+          },
+          "class_month_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Month Id"
+          },
+          "class_title": {
+            "title": "Class Title",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "held_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held Until"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "month_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month Start"
+          },
+          "seats_free": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seats Free"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "expired",
+              "used",
+              "withdrawn"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "student_member_id": {
+            "format": "uuid",
+            "title": "Student Member Id",
+            "type": "string"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "student_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Note"
+          },
+          "student_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Phone"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "student_member_id",
+          "student_name",
+          "student_phone",
+          "class_id",
+          "class_title",
+          "class_month_id",
+          "month_start",
+          "student_note",
+          "decision_note",
+          "created_at",
+          "decided_at",
+          "held_until",
+          "seats_free"
+        ],
+        "title": "SeatRequestRow",
+        "type": "object"
+      },
+      "SeatState": {
+        "description": "A class (or one open month of it) as this student finds it.",
+        "properties": {
+          "full": {
+            "title": "Full",
+            "type": "boolean"
+          },
+          "kept_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kept Until"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "limited": {
+            "title": "Limited",
+            "type": "boolean"
+          },
+          "paying_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paying Until"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "enum": [
+                  "CLASS_FULL",
+                  "REGISTRATION_CLOSED",
+                  "SEAT_REQUEST_REQUIRED"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "registration": {
+            "enum": [
+              "open",
+              "ask",
+              "closed"
+            ],
+            "title": "Registration",
+            "type": "string"
+          },
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeatRequestInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "limited",
+          "limit",
+          "left",
+          "full",
+          "registration",
+          "problem",
+          "paying_until",
+          "kept_until",
+          "request"
+        ],
+        "title": "SeatState",
+        "type": "object"
+      },
+      "SeatsOut": {
+        "properties": {
+          "free": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free"
+          },
+          "lapsed": {
+            "items": {
+              "$ref": "#/components/schemas/Lapsed"
+            },
+            "title": "Lapsed",
+            "type": "array"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "over_by": {
+            "title": "Over By",
+            "type": "integer"
+          },
+          "registration": {
+            "enum": [
+              "open",
+              "ask",
+              "closed"
+            ],
+            "title": "Registration",
+            "type": "string"
+          },
+          "seats": {
+            "items": {
+              "$ref": "#/components/schemas/Seat"
+            },
+            "title": "Seats",
+            "type": "array"
+          },
+          "taken": {
+            "title": "Taken",
+            "type": "integer"
+          },
+          "waiting": {
+            "title": "Waiting",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit",
+          "taken",
+          "free",
+          "over_by",
+          "registration",
+          "seats",
+          "lapsed",
+          "waiting"
+        ],
+        "title": "SeatsOut",
+        "type": "object"
+      },
       "SectionCreate": {
         "additionalProperties": false,
         "properties": {
@@ -11142,6 +12301,21 @@
             },
             "title": "Months",
             "type": "array"
+          },
+          "seat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeatState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waiting_for_seat": {
+            "default": false,
+            "title": "Waiting For Seat",
+            "type": "boolean"
           }
         },
         "required": [
@@ -11399,6 +12573,16 @@
             "format": "date",
             "title": "Month Start",
             "type": "string"
+          },
+          "seat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeatState"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "title": "Status",
@@ -14315,6 +15499,200 @@
         ]
       }
     },
+    "/api/v1/learn/classes/{class_id}/seat-request": {
+      "delete": {
+        "operationId": "withdraw_seat_request_api_v1_learn_classes__class_id__seat_request_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "class_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Class Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "class_month_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Class Month Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw Seat Request",
+        "tags": [
+          "learn"
+        ]
+      },
+      "post": {
+        "operationId": "ask_for_seat_api_v1_learn_classes__class_id__seat_request_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "class_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Class Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MySeatRequest"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ask For Seat",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/classes/{class_id}/seat-wait": {
+      "delete": {
+        "operationId": "stop_waiting_api_v1_learn_classes__class_id__seat_wait_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "class_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Class Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stop Waiting",
+        "tags": [
+          "learn"
+        ]
+      },
+      "put": {
+        "operationId": "wait_for_seat_api_v1_learn_classes__class_id__seat_wait_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "class_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Class Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Wait For Seat",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
     "/api/v1/learn/courses": {
       "get": {
         "operationId": "my_courses_api_v1_learn_courses_get",
@@ -15169,6 +16547,67 @@
         ]
       }
     },
+    "/api/v1/learn/seat-requests": {
+      "get": {
+        "operationId": "my_seat_requests_api_v1_learn_seat_requests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MySeatRequestRow"
+                  },
+                  "title": "Response My Seat Requests Api V1 Learn Seat Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Seat Requests",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
+    "/api/v1/learn/seat-waits": {
+      "get": {
+        "description": "Classes they asked to be told about; the ones with a seat open now come first.",
+        "operationId": "my_seat_waits_api_v1_learn_seat_waits_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MySeatWait"
+                  },
+                  "title": "Response My Seat Waits Api V1 Learn Seat Waits Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Seat Waits",
+        "tags": [
+          "learn"
+        ]
+      }
+    },
     "/api/v1/learn/today": {
       "get": {
         "operationId": "today_api_v1_learn_today_get",
@@ -15452,6 +16891,23 @@
                 }
               ],
               "title": "Format"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seats",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "const": "available",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seats"
             }
           },
           {
@@ -16328,6 +17784,50 @@
           }
         },
         "summary": "Instructor Page",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/v1/market/lessons/{lesson_id}/preview": {
+      "post": {
+        "description": "A tuition class's free-preview lesson with a video, for anyone (the class page's Preview).",
+        "operationId": "lesson_preview_api_v1_market_lessons__lesson_id__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoursePreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lesson Preview",
         "tags": [
           "market"
         ]
@@ -17892,6 +19392,71 @@
         "summary": "Create Month",
         "tags": [
           "org: catalog"
+        ]
+      }
+    },
+    "/api/v1/org/classes/{class_id}/seats": {
+      "get": {
+        "operationId": "class_seats_api_v1_org_classes__class_id__seats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "class_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Class Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Class Seats",
+        "tags": [
+          "org: seats"
         ]
       }
     },
@@ -19864,6 +21429,140 @@
         ]
       }
     },
+    "/api/v1/org/months/{month_id}/seat-keeps/{member_id}": {
+      "delete": {
+        "operationId": "clear_keep_api_v1_org_months__month_id__seat_keeps__member_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "month_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Month Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Member Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "allow_over_limit",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Allow Over Limit",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Keep",
+        "tags": [
+          "org: seats"
+        ]
+      },
+      "put": {
+        "operationId": "decide_keep_api_v1_org_months__month_id__seat_keeps__member_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "month_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Month Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Member Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeepIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Keep",
+        "tags": [
+          "org: seats"
+        ]
+      }
+    },
     "/api/v1/org/orders": {
       "get": {
         "operationId": "org_orders_api_v1_org_orders_get",
@@ -19943,6 +21642,123 @@
         "summary": "Org Orders",
         "tags": [
           "org: payments"
+        ]
+      }
+    },
+    "/api/v1/org/seat-requests": {
+      "get": {
+        "operationId": "seat_requests_api_v1_org_seat_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "pending",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected",
+                "expired",
+                "used"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SeatRequestRow"
+                  },
+                  "title": "Response Seat Requests Api V1 Org Seat Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Seat Requests",
+        "tags": [
+          "org: seats"
+        ]
+      }
+    },
+    "/api/v1/org/seat-requests/{request_id}/decision": {
+      "post": {
+        "operationId": "decide_seat_request_api_v1_org_seat_requests__request_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatRequestRow"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Seat Request",
+        "tags": [
+          "org: seats"
         ]
       }
     },
@@ -23936,6 +25752,71 @@
         ]
       }
     },
+    "/api/v1/teach/{tenant_slug}/classes/{class_id}/seats": {
+      "get": {
+        "operationId": "class_seats_api_v1_teach__tenant_slug__classes__class_id__seats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "class_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Class Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Class Seats",
+        "tags": [
+          "org: seats"
+        ]
+      }
+    },
     "/api/v1/teach/{tenant_slug}/classes/{class_id}/students": {
       "get": {
         "operationId": "class_students_api_v1_teach__tenant_slug__classes__class_id__students_get",
@@ -25905,6 +27786,140 @@
         ]
       }
     },
+    "/api/v1/teach/{tenant_slug}/months/{month_id}/seat-keeps/{member_id}": {
+      "delete": {
+        "operationId": "clear_keep_api_v1_teach__tenant_slug__months__month_id__seat_keeps__member_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "month_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Month Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Member Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "allow_over_limit",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Allow Over Limit",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Keep",
+        "tags": [
+          "org: seats"
+        ]
+      },
+      "put": {
+        "operationId": "decide_keep_api_v1_teach__tenant_slug__months__month_id__seat_keeps__member_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "month_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Month Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Member Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeepIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Keep",
+        "tags": [
+          "org: seats"
+        ]
+      }
+    },
     "/api/v1/teach/{tenant_slug}/orders": {
       "get": {
         "operationId": "org_orders_api_v1_teach__tenant_slug__orders_get",
@@ -25984,6 +27999,123 @@
         "summary": "Org Orders",
         "tags": [
           "org: payments"
+        ]
+      }
+    },
+    "/api/v1/teach/{tenant_slug}/seat-requests": {
+      "get": {
+        "operationId": "seat_requests_api_v1_teach__tenant_slug__seat_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "pending",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected",
+                "expired",
+                "used"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SeatRequestRow"
+                  },
+                  "title": "Response Seat Requests Api V1 Teach  Tenant Slug  Seat Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Seat Requests",
+        "tags": [
+          "org: seats"
+        ]
+      }
+    },
+    "/api/v1/teach/{tenant_slug}/seat-requests/{request_id}/decision": {
+      "post": {
+        "operationId": "decide_seat_request_api_v1_teach__tenant_slug__seat_requests__request_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatRequestRow"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Seat Request",
+        "tags": [
+          "org: seats"
         ]
       }
     },

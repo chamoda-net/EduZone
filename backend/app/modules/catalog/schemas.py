@@ -11,6 +11,7 @@ PricingModel = Literal["monthly", "one_time", "free"]
 ClassStatus = Literal["draft", "published", "archived"]
 MonthStatus = Literal["upcoming", "open", "closed"]
 LessonType = Literal["live", "recorded", "document"]
+Registration = Literal["open", "ask", "closed"]      # may new students join? (docs/SEATS.md)
 
 Cents = Annotated[int, Field(ge=0, le=10**12)]
 
@@ -72,12 +73,19 @@ class ClassCreate(BaseModel):
     one_time_price_cents: Cents | None = None
     allow_late_months: bool = True
     max_video_views: int | None = Field(default=None, ge=1, le=1000)
+    seat_limit: int | None = Field(default=None, ge=1, le=10_000)      # None = no limit
+    show_seat_count: bool = True
+    registration: Registration = "open"
+    starts_on: date | None = None
+    registration_after_start: Registration | None = None     # replaces `registration` from starts_on
+    renewal_day: int = Field(default=7, ge=1, le=28)          # returning students' seats are kept until this day
     teacher_member_id: UUID | None = None       # defaults to the caller
 
 
 class ClassUpdate(_Patch):
     non_nullable: ClassVar[tuple[str, ...]] = (
-        "title", "slug", "pricing_model", "allow_late_months", "status", "teacher_member_id",
+        "title", "slug", "pricing_model", "allow_late_months", "status", "teacher_member_id", "show_seat_count",
+        "registration", "renewal_day",
     )
 
     title: str | None = Field(default=None, min_length=1, max_length=200)
@@ -94,6 +102,12 @@ class ClassUpdate(_Patch):
     one_time_price_cents: Cents | None = None
     allow_late_months: bool | None = None
     max_video_views: int | None = Field(default=None, ge=1, le=1000)
+    seat_limit: int | None = Field(default=None, ge=1, le=10_000)
+    show_seat_count: bool | None = None
+    registration: Registration | None = None
+    starts_on: date | None = None
+    registration_after_start: Registration | None = None
+    renewal_day: int | None = Field(default=None, ge=1, le=28)
     status: ClassStatus | None = None
     teacher_member_id: UUID | None = None
 
@@ -118,6 +132,13 @@ class ClassOut(BaseModel):
     currency: str
     allow_late_months: bool
     max_video_views: int | None
+    seat_limit: int | None
+    show_seat_count: bool
+    registration: Registration
+    starts_on: date | None
+    registration_after_start: Registration | None
+    renewal_day: int
+    seats_enabled: bool                         # may seats be set up now (SEATS_ENABLED)
     status: str
     created_at: datetime
     updated_at: datetime
@@ -143,6 +164,7 @@ class MonthUpdate(_Patch):
 
     fee_cents: Cents | None = None
     status: MonthStatus | None = None
+    renew_until: AwareDatetime | None = None    # open months: until when returning students' seats are kept
 
 
 class MonthOut(BaseModel):
@@ -153,6 +175,8 @@ class MonthOut(BaseModel):
     effective_fee_cents: int
     currency: str
     status: str
+    opened_at: datetime | None
+    renew_until: datetime | None
     created_at: datetime
 
 

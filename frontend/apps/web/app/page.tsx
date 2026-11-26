@@ -1,4 +1,5 @@
 import { ArrowRight, CalendarCheck, Check, ChevronDown, CreditCard, FileText, GraduationCap, MonitorPlay, PlayCircle, Radio, Search, ShieldCheck, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -12,11 +13,22 @@ import { SubjectTile } from "@/components/subject-tile";
 import { api, userHost } from "@/lib/api";
 import { PHOTOS } from "@/lib/photos";
 import { isMainHost, mainOrigin } from "@/lib/site";
+import { OG_BASE } from "@/lib/seo";
 import { errorText, t } from "@eduzone/lib/i18n";
 import type { MarketClass, MarketHome } from "@eduzone/lib/types";
 import { Container, ErrorText, buttonStyles } from "@eduzone/ui";
 
-const FAQ = ["pay", "join", "missed", "phone", "courses"] as const;
+const FAQ = ["pay", "join", "missed", "phone", "devices", "courses"] as const;
+// The live totals strip shows once the numbers inspire confidence; below these, no numbers at all.
+const STATS_MIN_CLASSES = 20;
+const STATS_MIN_TEACHERS = 10;
+
+export const metadata: Metadata = {
+  title: { absolute: t("home.meta.title") },
+  description: t("home.meta.description"),
+  alternates: { canonical: "/" },
+  openGraph: { ...OG_BASE, title: t("home.meta.title"), description: t("home.meta.description"), url: "/" },
+};
 
 /** The marketplace home. A tenant's old subdomain now points to its classes on the main site. */
 export default async function Home() {
@@ -83,6 +95,10 @@ export default async function Home() {
       <Faq />
     </SiteShell>
   );
+}
+
+function showStats(data: MarketHome): boolean {
+  return data.classes >= STATS_MIN_CLASSES && data.teachers >= STATS_MIN_TEACHERS;
 }
 
 function SectionHead({ eyebrow, title, href, body }: { eyebrow: string; title: string; href?: string; body?: string }) {
@@ -236,8 +252,8 @@ function Hero({ data }: { data: MarketHome | null }) {
         </div>
       </Container>
 
-      {/* The platform in numbers (live totals from the marketplace). */}
-      {data && (
+      {/* The platform in numbers (live totals from the marketplace), once they are worth showing. */}
+      {data && showStats(data) && (
         <div className="border-t border-white/10 bg-black/15">
           <Container>
             <dl className="grid grid-cols-2 divide-white/10 py-6 sm:grid-cols-4 sm:divide-x">
@@ -310,14 +326,14 @@ function Results({ data }: { data: MarketHome }) {
           <div className="overflow-hidden rounded-[2rem] shadow-ez-lg">
             <Photo photo={PHOTOS.graduate} ratio={0.8} sizes="(min-width: 1024px) 560px, 92vw" className="aspect-[100/80] object-[50%_30%]" />
           </div>
-          <div className="absolute -bottom-6 left-4 right-4 grid grid-cols-3 gap-px overflow-hidden rounded-ez-lg border border-border bg-border shadow-ez-lg sm:left-8 sm:right-8">
+          {showStats(data) && <div className="absolute -bottom-6 left-4 right-4 grid grid-cols-3 gap-px overflow-hidden rounded-ez-lg border border-border bg-border shadow-ez-lg sm:left-8 sm:right-8">
             {[[data.classes, t("home.results.classes")], [data.teachers, t("home.results.teachers")], [subjects, t("home.results.subjects")]].map(([n, label]) => (
               <div key={String(label)} className="bg-surface px-3 py-3 text-center">
                 <p className="font-display text-2xl font-semibold text-brand tabular-nums sm:text-3xl">{n}</p>
                 <p className="text-xs text-muted">{label}</p>
               </div>
             ))}
-          </div>
+          </div>}
         </div>
         <div className="flex flex-col gap-5 pt-8 lg:pt-0">
           <p className="text-xs font-bold tracking-[0.14em] text-brand-600 uppercase">{t("home.results.eyebrow")}</p>

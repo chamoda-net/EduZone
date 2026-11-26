@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AuthFrame } from "@/components/auth-frame";
-import { getMe } from "@/lib/session";
+import { getMe, rememberedEmail } from "@/lib/session";
 import { t } from "@eduzone/lib/i18n";
 
 import { RegisterForm } from "./register-form";
@@ -26,7 +26,7 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
         </p>
       }
     >
-      <RegisterForm next={nextPath} />
+      <RegisterForm next={nextPath} email={await rememberedEmail()} />
     </AuthFrame>
   );
 }

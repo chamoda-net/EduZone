@@ -3,6 +3,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 
 import { ACCESS_COOKIE } from "./cookies";
+import { visitorHeaders } from "./visitor";
 import { WORKSPACE_HEADER } from "./workspace-header";
 
 export const API_URL = process.env.API_URL ?? "http://localhost:8000";
@@ -38,6 +39,7 @@ export async function api<T>(path: string, { method = "GET", body, token }: Opti
     accept: "application/json",
     // fetch() can't override Host, so the user's host travels in X-Forwarded-Host.
     "x-forwarded-host": host,
+    ...visitorHeaders(await headers()),
   };
   // The browser's, so a session and a trusted device are recorded as "Chrome · Android", not as this server.
   if (userAgent) requestHeaders["user-agent"] = userAgent;

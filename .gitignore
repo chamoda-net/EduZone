@@ -33,3 +33,6 @@ private-storage/
 
 # Local dev database (tools/dev-db)
 tools/dev-db/data/
+
+# The local panel's files (codes, emails, settings)
+tools/panel/run/

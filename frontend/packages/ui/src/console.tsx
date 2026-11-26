@@ -41,7 +41,7 @@ export function ConsoleFrame({
               </div>
             )}
           </NavDrawer>
-          <div className="min-w-0 text-foreground [&_svg]:size-8">{brand}</div>
+          <div className="min-w-0 text-foreground [&_[data-logo-mark]]:h-8">{brand}</div>
         </header>
         <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">{children}</main>
       </div>

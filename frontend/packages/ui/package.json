@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/ui.tsx",
     "./action-button": "./src/action-button.tsx",
+    "./logo-paths": "./src/logo-paths.ts",
     "./tokens.css": "./src/tokens.css"
   },
   "peerDependencies": {

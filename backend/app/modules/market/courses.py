@@ -228,18 +228,37 @@ async def preview(slug: str, lecture_id: UUID | None) -> CoursePreviewOut:
             if lec is None:
                 raise ApiError("NOT_FOUND", "This lecture has no free preview.", status_code=404)
             title = lec.title
-    async with tenant_transaction(c.tenant_id) as session:
-        if lecture_id is None:
+    return await _sign_preview(c.tenant_id, title, class_id=c.id if lecture_id is None else None, lesson_id=lecture_id)
+
+
+async def lesson_preview(lesson_id: UUID) -> CoursePreviewOut:
+    """A signed stream of a tuition class's published free-preview lesson, for anyone (no sign-in, no view counted, no
+    watermark), like a course's free-preview lectures. Only a lesson the public views show with a ready video."""
+    async with AppSession() as session:
+        r = (await session.execute(text("""
+            SELECT l.title, pc.tenant_id FROM public_lessons l JOIN public_classes pc ON pc.id = l.class_id
+            WHERE l.id = :l AND l.is_free_preview AND l.video_seconds > 0
+        """), {"l": lesson_id})).one_or_none()
+    if r is None:
+        raise ApiError("NOT_FOUND", "This lesson has no free preview.", status_code=404)
+    return await _sign_preview(r.tenant_id, r.title, class_id=None, lesson_id=lesson_id)
+
+
+async def _sign_preview(tenant_id: UUID, title: str, *, class_id: UUID | None, lesson_id: UUID | None) -> CoursePreviewOut:
+    """Signs the promo video of a class (class_id) or the first ready video of a lesson, in that tenant's transaction:
+    the only step of a public preview that needs the tenant."""
+    async with tenant_transaction(tenant_id) as session:
+        if class_id is not None:
             asset_id = (await session.execute(text("""
                 SELECT a.id FROM classes cl JOIN media_assets a ON a.id = cl.promo_media_id
                 WHERE cl.id = :c AND a.kind = 'video' AND a.status = 'ready'
-            """), {"c": c.id})).scalar_one_or_none()
+            """), {"c": class_id})).scalar_one_or_none()
         else:
             asset_id = (await session.execute(text("""
                 SELECT a.id FROM lesson_resources r JOIN media_assets a ON a.id = r.media_asset_id
                 WHERE r.lesson_id = :l AND a.kind = 'video' AND a.status = 'ready'
                 ORDER BY r.sort_order, r.created_at LIMIT 1
-            """), {"l": lecture_id})).scalar_one_or_none()
+            """), {"l": lesson_id})).scalar_one_or_none()
         if asset_id is None:
             raise ApiError("NOT_FOUND", "There is no preview video.", status_code=404)
         asset = await media_repo.get_asset(session, asset_id)

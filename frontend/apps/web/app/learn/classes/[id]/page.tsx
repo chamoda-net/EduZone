@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, FileText, Lock, MonitorPlay, ShieldCheck, Video } from "lucide-react";
+import { Armchair, ArrowLeft, ChevronRight, FileText, Lock, MonitorPlay, ShieldCheck, Video } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -8,21 +8,24 @@ import { SiteShell } from "@/components/shell";
 import { api } from "@/lib/api";
 import { getCart, inCart } from "@/lib/cart";
 import { classMeta, priceParts } from "@/lib/catalog";
+import { deadline } from "@/lib/seats";
 import { getMe } from "@/lib/session";
 import { formatDateTime, formatMoney, formatMonth } from "@eduzone/lib/format";
 import { errorText, t } from "@eduzone/lib/i18n";
 import type {
   LessonType,
   MonthAccess,
+  SeatState,
   StudentClassView,
   StudentLesson,
   StudentMonth,
 } from "@eduzone/lib/types";
 import { ActionButton } from "@eduzone/ui/action-button";
-import { Avatar, Badge, ClassCover, Container, ErrorText, StatusPill, cx, type PillState } from "@eduzone/ui";
+import { Avatar, Badge, ClassCover, Container, ErrorText, StatusPill, buttonStyles, cx, type PillState } from "@eduzone/ui";
 
 import { joinClass, leaveClass, requestLateMonth } from "@/app/learn/actions";
 import { RequestLateForm } from "./request-form";
+import { SeatPanel } from "./seat-panel";
 
 const pillOf: Record<MonthAccess, PillState> = {
   granted: "paid",
@@ -56,7 +59,14 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
   const c = view.class;
   const monthly = c.pricing_model === "monthly";
   const price = priceParts(t, c);
-  const nextToPay = view.months.find((m) => m.access === "buy" || m.access === "approved");
+  const nextToPay = view.months.find((m) => m.access === "approved" || (m.access === "buy" && !m.seat?.problem));
+  // Joining a monthly class without paying takes no seat: when it can't be joined now, it is only following it.
+  const openMonths = view.months.filter((m) => m.access === "buy");
+  const blocked = monthly && openMonths.length > 0 && openMonths.every((m) => m.seat?.problem);
+  // Only paying takes a seat, so a class with limited seats (or that asks first) leads with paying, not with joining.
+  const seated = monthly && openMonths.some((m) => m.seat && (m.seat.limited || m.seat.registration !== "open"));
+  const seatMonth = blocked ? openMonths[0] : null;
+  const freeBlocked = c.pricing_model === "free" && Boolean(view.seat?.problem);
   const cart = await getCart();
 
   return (
@@ -99,11 +109,27 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
                   {price.unit && <span className="text-muted">{price.unit}</span>}
                 </p>
 
-                {!view.enrolled && (
+                {!monthly && view.seat && <Seat classId={c.id} monthId={null} seat={view.seat} waiting={view.waiting_for_seat} />}
+                {seatMonth?.seat?.problem && (
+                  <a href={`#month-${seatMonth.id}`} className={buttonStyles("primary", "lg", "w-full")}>
+                    <Armchair className="size-4.5" />
+                    {seatMonth.seat.problem !== "SEAT_REQUEST_REQUIRED" ? t("seat.notifyMe")
+                      : seatMonth.seat.request?.status === "pending" ? t("class.access.pending") : t("seat.askButton")}
+                  </a>
+                )}
+                {seated && !blocked && nextToPay && !view.enrolled && (
+                  <PayButton block classId={c.id} monthId={nextToPay.id} label={t("seat.payNow", { month: formatMonth(nextToPay.month_start) })} />
+                )}
+                {!view.enrolled && !freeBlocked && (seated ? (
+                  <div className="flex flex-col gap-1.5 [&_button]:w-full [&_form]:flex [&_form]:w-full">
+                    <ActionButton action={joinClass.bind(null, c.id)} label={t("seat.follow")} />
+                    <p className="text-xs text-muted">{t("seat.followHint")}</p>
+                  </div>
+                ) : (
                   <div className="[&_button]:w-full [&_form]:flex [&_form]:w-full">
                     <ActionButton action={joinClass.bind(null, c.id)} label={t("class.join")} variant="primary" />
                   </div>
-                )}
+                ))}
                 {view.enrolled && (
                   <p className="flex items-center gap-2 rounded-ez bg-success-bg px-3 py-2.5 text-sm font-semibold text-success">
                     <span className="size-2 rounded-full bg-success" />
@@ -111,7 +137,7 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
                   </p>
                 )}
                 {view.has_class_access && <Badge tone="success" dot>{t("class.classAccess")}</Badge>}
-                {c.pricing_model === "one_time" && !view.has_class_access && c.one_time_price_cents !== null && (
+                {c.pricing_model === "one_time" && !view.has_class_access && !view.seat?.problem && c.one_time_price_cents !== null && (
                   <>
                     <PayButton
                       block
@@ -148,7 +174,8 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
               <SectionTitle title={t("class.months")} hint={t("class.monthsHint")} />
               <ul className="flex flex-col gap-3">
                 {view.months.map((m, i) => (
-                  <MonthRow key={m.id} m={m} i={i} classId={c.id} enrolled={view.enrolled} carted={inCart(cart, c.id, m.id)} />
+                  <MonthRow key={m.id} m={m} i={i} classId={c.id} enrolled={view.enrolled} carted={inCart(cart, c.id, m.id)}
+                            waiting={view.waiting_for_seat} follow={seated} />
                 ))}
               </ul>
             </section>
@@ -177,7 +204,7 @@ export default async function LearnClassPage({ params }: PageProps<"/learn/class
 
           {view.enrolled && (
             <div className="self-start">
-              <ActionButton action={leaveClass.bind(null, c.id)} label={t("class.leave")} variant="ghost" small confirm={t("class.confirmLeave")} />
+              <ActionButton action={leaveClass.bind(null, c.id)} label={t("class.leave")} variant="ghost" small confirm={t(c.pricing_model === "free" ? "class.confirmLeaveFree" : "class.confirmLeave")} />
             </div>
           )}
         </div>
@@ -196,23 +223,37 @@ function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-function MonthRow({ m, i, classId, enrolled, carted }: {
+/** The seat panel with its times written out. */
+function Seat({ classId, monthId, seat, waiting }: { classId: string; monthId: string | null; seat: SeatState; waiting: boolean }) {
+  return (
+    <SeatPanel classId={classId} monthId={monthId} seat={seat} waiting={waiting}
+               deadlines={{ kept: seat.kept_until ? deadline(seat.kept_until) : null,
+                            accepted: seat.request?.held_until ? deadline(seat.request.held_until) : null }} />
+  );
+}
+
+function MonthRow({ m, i, classId, enrolled, carted, waiting, follow }: {
   m: StudentMonth;
   i: number;
   classId: string;
   enrolled: boolean;
   carted: boolean;
+  waiting: boolean;
+  follow: boolean;
 }) {
+  const seat = m.access === "buy" ? m.seat : null;
   const date = new Date(m.month_start);
   const paid = m.access === "granted";
   return (
     <li
+      id={`month-${m.id}`}
       className={cx(
-        "ez-rise flex flex-wrap items-center gap-4 rounded-ez-lg border bg-surface p-4 shadow-ez-sm sm:flex-nowrap",
+        "ez-rise flex scroll-mt-24 flex-col gap-4 rounded-ez-lg border bg-surface p-4 shadow-ez-sm",
         paid ? "border-success/30" : "border-border",
       )}
       style={{ "--i": i } as React.CSSProperties}
     >
+      <div className="flex flex-wrap items-center gap-4 sm:flex-nowrap">
       <div
         className={cx(
           "grid size-14 shrink-0 place-items-center rounded-ez text-center leading-none",
@@ -226,11 +267,18 @@ function MonthRow({ m, i, classId, enrolled, carted }: {
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{formatMonth(m.month_start)}</p>
-        <p className="text-sm text-muted tabular-nums">{formatMoney(m.fee_cents, m.currency)}</p>
+        <p className="text-sm text-muted tabular-nums">
+          {formatMoney(m.fee_cents, m.currency)}
+          {seat && seat.left !== null && !seat.full && <> · {t("seat.left", { count: seat.left })}</>}
+        </p>
       </div>
       <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:flex-col sm:items-end">
-        {<StatusPill state={pillOf[m.access]}>{t(`class.access.${m.access}`)}</StatusPill>}
-        {(m.access === "buy" || m.access === "approved") && (
+        {seat?.problem
+          ? <StatusPill state={seat.problem === "SEAT_REQUEST_REQUIRED" ? "pending" : "closed"}>
+              {t(seat.problem === "CLASS_FULL" ? "seat.full" : seat.problem === "REGISTRATION_CLOSED" ? "seat.closed" : "seat.ask")}
+            </StatusPill>
+          : <StatusPill state={pillOf[m.access]}>{t(`class.access.${m.access}`)}</StatusPill>}
+        {(m.access === "approved" || (m.access === "buy" && !seat?.problem)) && (
           <div className="flex flex-wrap items-start gap-2">
             <AddToCartButton classId={classId} monthId={m.id} small inCart={carted} />
             <PayButton classId={classId} monthId={m.id} small label={t("pay.button", { amount: formatMoney(m.fee_cents, m.currency) })} />
@@ -240,9 +288,11 @@ function MonthRow({ m, i, classId, enrolled, carted }: {
           (enrolled ? (
             <RequestLateForm action={requestLateMonth.bind(null, classId, m.id)} />
           ) : (
-            <span className="text-xs text-muted">{t("class.joinFirst")}</span>
+            <span className="text-xs text-muted">{t(follow ? "seat.followFirst" : "class.joinFirst")}</span>
           ))}
       </div>
+      </div>
+      {seat && <Seat classId={classId} monthId={m.id} seat={seat} waiting={waiting} />}
     </li>
   );
 }

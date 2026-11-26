@@ -25,6 +25,7 @@ from app.modules.market.schemas import (
     MarketMonth,
     ProfileOut,
     ProfileUpdate,
+    SeatFilter,
     SitemapOut,
     Sort,
     SubjectOut,
@@ -36,7 +37,12 @@ from app.modules.market.schemas import (
 )
 
 _CARD_FIELDS = [f for f in MarketClass.model_fields if f != "path"]
-_CARD = ", ".join(f"pc.{f}" for f in _CARD_FIELDS)
+_SEAT_FIELDS = {"seat_limit": "ps.seat_limit", "seats_left": "ps.seats_left", "registration": "ps.registration",
+                "is_full": "COALESCE(ps.is_full, false) AS is_full"}
+_CARD = ", ".join(_SEAT_FIELDS.get(f, f"pc.{f}") for f in _CARD_FIELDS)
+# The class with the seats of its open month (or of the class itself).
+_CARDS = """public_classes pc
+            LEFT JOIN public_seats ps ON ps.class_id = pc.id AND ps.class_month_id IS NOT DISTINCT FROM pc.open_month_id"""
 
 
 def _card(r: Any) -> MarketClass:
@@ -60,8 +66,8 @@ def _tsquery(q: str) -> str | None:
 async def search_classes(
     *, q: str | None = None, exam: str | None = None, subject: str | None = None, year: int | None = None,
     medium: str | None = None, max_fee: int | None = None, fmt: Format | None = None,
-    teacher: str | None = None, org: str | None = None, sort: Sort = "popular", cursor: str | None = None,
-    limit: int = 24,
+    teacher: str | None = None, org: str | None = None, seats: SeatFilter | None = None, sort: Sort = "popular",
+    cursor: str | None = None, limit: int = 24,
 ) -> MarketClassPage:
     where = ["true"]
     params: dict[str, Any] = {}
@@ -81,14 +87,18 @@ async def search_classes(
         where.append("pc.has_live")
     elif fmt == "recorded":
         where.append("pc.has_recorded")
+    counted = "public_classes pc"
+    if seats == "available":                    # a new student can join or ask to
+        where.append("ps.class_id IS NOT NULL AND NOT ps.is_full AND ps.registration <> 'closed'")
+        counted = _CARDS
     order = {"popular": "pc.students DESC, pc.created_at DESC", "newest": "pc.created_at DESC",
              "price": f"{price} ASC, pc.students DESC"}[sort]
     offset = _decode_offset(cursor)
     sql_where = " AND ".join(where)
     async with AppSession() as session:
-        total = (await session.execute(text(f"SELECT count(*) FROM public_classes pc WHERE {sql_where}"), params)).scalar_one()
+        total = (await session.execute(text(f"SELECT count(*) FROM {counted} WHERE {sql_where}"), params)).scalar_one()
         rows = (await session.execute(text(f"""
-            SELECT {_CARD} FROM public_classes pc WHERE {sql_where}
+            SELECT {_CARD} FROM {_CARDS} WHERE {sql_where}
             ORDER BY {order}, pc.id LIMIT :limit OFFSET :offset
         """), {**params, "limit": limit + 1, "offset": offset})).all()
     more = len(rows) > limit
@@ -127,10 +137,10 @@ async def home() -> Home:
     async with AppSession() as session:
         subjects_ = await _subjects(session)
         popular = (await session.execute(text(f"""
-            SELECT {_CARD} FROM public_classes pc ORDER BY pc.students DESC, pc.created_at DESC LIMIT 8
+            SELECT {_CARD} FROM {_CARDS} ORDER BY pc.students DESC, pc.created_at DESC LIMIT 8
         """))).all()
         starting = (await session.execute(text(f"""
-            SELECT {_CARD} FROM public_classes pc
+            SELECT {_CARD} FROM {_CARDS}
             WHERE pc.open_month_start = date_trunc('month', now() AT TIME ZONE 'Asia/Colombo')::date
             ORDER BY pc.students DESC LIMIT 8
         """))).all()
@@ -208,18 +218,21 @@ async def institute_page(slug: str) -> InstitutePage:
 async def class_detail(subject_slug: str, teacher_slug: str, class_slug: str) -> MarketClassDetail:
     async with AppSession() as session:
         r = (await session.execute(text(f"""
-            SELECT {_CARD}, pc.description, pc.teacher_headline FROM public_classes pc
+            SELECT {_CARD}, pc.description, pc.teacher_headline FROM {_CARDS}
             WHERE pc.subject_slug = :s AND pc.teacher_slug = :t AND pc.slug = :c
             ORDER BY pc.students DESC LIMIT 1
         """), {"s": subject_slug, "t": teacher_slug, "c": class_slug})).one_or_none()
         if r is None:
             raise _not_found("Class")
         months = (await session.execute(text("""
-            SELECT id, month_start, status, fee_cents, currency FROM public_class_months
-            WHERE class_id = :c ORDER BY month_start
+            SELECT m.id, m.month_start, m.status, m.fee_cents, m.currency, ps.seats_left,
+                   COALESCE(ps.is_full, false) AS is_full
+            FROM public_class_months m LEFT JOIN public_seats ps ON ps.class_id = m.class_id AND ps.class_month_id = m.id
+            WHERE m.class_id = :c ORDER BY m.month_start
         """), {"c": r.id})).all()
         lessons = (await session.execute(text("""
-            SELECT l.id, l.class_month_id, l.title, l.lesson_type, l.scheduled_at, l.duration_minutes, l.is_free_preview
+            SELECT l.id, l.class_month_id, l.title, l.lesson_type, l.scheduled_at, l.duration_minutes, l.is_free_preview,
+                   l.video_seconds, (l.is_free_preview AND l.video_seconds > 0) AS can_preview
             FROM public_lessons l LEFT JOIN public_class_months m ON m.id = l.class_month_id
             WHERE l.class_id = :c ORDER BY m.month_start NULLS FIRST, l.sort_order
         """), {"c": r.id})).all()
@@ -234,7 +247,7 @@ async def class_detail(subject_slug: str, teacher_slug: str, class_slug: str) ->
 
 async def class_by_id(class_id: UUID) -> MarketClass:
     async with AppSession() as session:
-        r = (await session.execute(text(f"SELECT {_CARD} FROM public_classes pc WHERE pc.id = :id"),
+        r = (await session.execute(text(f"SELECT {_CARD} FROM {_CARDS} WHERE pc.id = :id"),
                                    {"id": class_id})).one_or_none()
     if r is None:
         raise _not_found("Class")

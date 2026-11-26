@@ -22,7 +22,7 @@ export function Field({
 }: {
   label: string;
   hint?: string;
-  error?: string;
+  error?: ReactNode;
   optional?: string;
   children: ReactNode;
   className?: string;
@@ -49,7 +49,7 @@ export function Field({
         </label>
       )}
       {error ? (
-        <span role="alert" className="text-xs font-medium text-danger">
+        <span role="alert" className="text-[0.8125rem] leading-relaxed font-medium text-danger">
           {error}
         </span>
       ) : (

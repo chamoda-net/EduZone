@@ -9,6 +9,7 @@ import { SiteShell } from "@/components/shell";
 import { TeacherAvatar } from "@/components/teacher-avatar";
 import { jsonLd, market } from "@/lib/market";
 import { siteOrigin } from "@/lib/site";
+import { OG_BASE } from "@/lib/seo";
 import { t } from "@eduzone/lib/i18n";
 import type { MarketClass } from "@eduzone/lib/types";
 import { Container } from "@eduzone/ui";
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<"/instructor/[slug]
   const { instructor: i } = await load(params);
   const title = t("market.instructor.metaTitle", { name: i.display_name });
   const description = i.headline ?? i.bio?.slice(0, 160) ?? undefined;
-  return { title, description, openGraph: { title, description, images: i.photo_url ? [i.photo_url] : undefined } };
+  return { title, description, alternates: { canonical: `/instructor/${i.slug}` }, openGraph: { ...OG_BASE, title, description, images: i.photo_url ? [i.photo_url] : undefined } };
 }
 
 /** /instructor/<slug>: one page per person, with every course and tuition class they teach on EduZone. */

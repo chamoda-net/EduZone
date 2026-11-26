@@ -59,7 +59,7 @@ export default function DesignPage() {
     <Container className="flex flex-col gap-16 py-12">
       <div className="flex items-center justify-between">
         <Logo name="EduZone" sub="Design system" />
-        <Badge tone="gold">v1 · placeholder brand</Badge>
+        <Badge tone="gold">v1</Badge>
       </div>
 
       <PageHeader

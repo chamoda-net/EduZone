@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, FileText, Lock, MonitorPlay, ShieldCheck, Video } from "lucide-react";
+import { Armchair, ArrowRight, CalendarClock, ChevronRight, FileText, Lock, MonitorPlay, PlayCircle, ShieldCheck, Video } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -9,12 +9,16 @@ import { TeacherAvatar } from "@/components/teacher-avatar";
 import { getCart, inCart } from "@/lib/cart";
 import { classMeta, priceParts } from "@/lib/catalog";
 import { jsonLd, market } from "@/lib/market";
+import { seatBadge } from "@/lib/seats";
 import { getMe } from "@/lib/session";
 import { siteOrigin } from "@/lib/site";
+import { OG_BASE } from "@/lib/seo";
 import { formatDateTime, formatMoney, formatMonth } from "@eduzone/lib/format";
 import { t } from "@eduzone/lib/i18n";
 import type { LessonType, MarketClassDetail, MarketLesson, MarketMonth } from "@eduzone/lib/types";
 import { Badge, ClassCover, Container, StatusPill, buttonStyles, type PillState } from "@eduzone/ui";
+
+import { JoinNowButton, LessonPreview } from "./join";
 
 type Params = { subject: string; teacher: string; class: string };
 
@@ -27,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<"/[subject]/[teache
   const { d } = await load(params);
   const title = t("market.class.metaTitle", { title: d.class.title, teacher: d.teacher.display_name });
   const description = d.description?.slice(0, 160) ?? t("market.class.metaDescription", { subject: d.class.subject_name, teacher: d.teacher.display_name });
-  return { title, description, openGraph: { title, description } };
+  return { title, description, alternates: { canonical: d.class.path }, openGraph: { ...OG_BASE, title, description } };
 }
 
 const monthPill: Record<string, PillState> = { open: "unpaid", upcoming: "upcoming", closed: "closed" };
@@ -47,7 +51,16 @@ export default async function MarketClassPage({ params }: PageProps<"/[subject]/
   // What "Add to cart" adds: the open month of a monthly class, or a one-time class (free classes are joined).
   const openMonth = d.months.find((m) => m.status === "open");
   const cartMonth = c.pricing_model === "monthly" ? openMonth?.id : c.pricing_model === "one_time" ? null : undefined;
-  const cart = cartMonth !== undefined ? await getCart() : null;
+  // Full, closed or ask-first classes are not added to a cart here: the student area has the right next step.
+  const blocked = c.is_full || c.registration === "closed" || c.registration === "ask";
+  const cart = cartMonth !== undefined && !blocked ? await getCart() : null;
+  const seat = seatBadge(c);
+  const schedule = liveSchedule(d.lessons);
+  const signIn = `/login?next=${encodeURIComponent(learnHref)}`;
+  // The main button: buy the open month (or the one-time class) straight away; guests sign in or register in the cart.
+  const joinLabel = cartMonth && openMonth
+    ? t("market.class.joinMonthPrice", { month: formatMonth(openMonth.month_start), price: price.amount })
+    : t("market.class.buyPrice", { price: price.amount });
 
   return (
     <SiteShell bare>
@@ -69,9 +82,12 @@ export default async function MarketClassPage({ params }: PageProps<"/[subject]/
               <ChevronRight className="size-3.5" />
               <Link href={`/${c.subject_slug}/${c.teacher_slug}`} className="hover:text-foreground">{c.teacher_name}</Link>
             </nav>
-            <p className="ez-rise text-xs font-bold tracking-[0.14em] text-brand-600 uppercase">
-              {classMeta(t, { subject: c.subject_name, exam: c.exam, batch_year: c.batch_year, medium: c.medium })}
-            </p>
+            <div className="ez-rise flex flex-wrap items-center gap-3">
+              <p className="text-xs font-bold tracking-[0.14em] text-brand-600 uppercase">
+                {classMeta(t, { subject: c.subject_name, exam: c.exam, batch_year: c.batch_year, medium: c.medium })}
+              </p>
+              {seat && <Badge tone={seat.tone}><Armchair className="size-3" />{seat.label}</Badge>}
+            </div>
             <h1 className="ez-rise font-display text-4xl leading-[1.05] font-semibold sm:text-5xl" style={{ "--i": 1 } as React.CSSProperties}>
               {c.title}
             </h1>
@@ -100,27 +116,45 @@ export default async function MarketClassPage({ params }: PageProps<"/[subject]/
                   <span className="font-display text-3xl font-semibold tabular-nums">{price.amount}</span>
                   {price.unit && <span className="text-muted">{price.unit}</span>}
                 </p>
-                {c.open_month_start && (
+                {c.open_month_start && !c.is_full && c.registration !== "closed" && !(cart && cartMonth !== undefined) && (
                   <p className="text-sm font-semibold text-gold-strong">{t("market.card.joinMonth", { month: formatMonth(c.open_month_start) })}</p>
                 )}
-                <Link href={me ? learnHref : `/login?next=${encodeURIComponent(learnHref)}`} className={buttonStyles("primary", "lg", "w-full")}>
-                  {me ? t("market.class.joinOrPay") : t("class.signInToJoin")}
-                  <ArrowRight className="size-4.5" />
-                </Link>
-                {cart && cartMonth !== undefined && (
-                  <AddToCartButton
-                    block
-                    classId={c.id}
-                    monthId={cartMonth}
-                    inCart={inCart(cart, c.id, cartMonth)}
-                    label={openMonth && cartMonth ? t("cart.addMonth", { month: formatMonth(openMonth.month_start) }) : undefined}
-                  />
+                {schedule && (
+                  <p className="flex items-start gap-2 text-sm font-medium">
+                    <CalendarClock className="mt-0.5 size-4 shrink-0 text-brand-600" />
+                    {schedule}
+                  </p>
                 )}
-                {!me && (
-                  <Link href={`/register?next=${encodeURIComponent(learnHref)}`} className="text-center text-sm font-semibold text-brand hover:underline">
-                    {t("auth.createAccount")}
+                <SeatPanel c={c} />
+                {cart && cartMonth !== undefined ? (
+                  inCart(cart, c.id, cartMonth) ? (
+                    <Link href="/cart" className={buttonStyles("primary", "lg", "w-full")}>
+                      {t("market.class.goToCart")}<ArrowRight className="size-4.5" />
+                    </Link>
+                  ) : (
+                    <>
+                      <JoinNowButton classId={c.id} monthId={cartMonth} label={joinLabel} />
+                      <AddToCartButton
+                        block
+                        classId={c.id}
+                        monthId={cartMonth}
+                        label={openMonth && cartMonth ? t("cart.addMonth", { month: formatMonth(openMonth.month_start) }) : undefined}
+                      />
+                    </>
+                  )
+                ) : (
+                  <Link href={me ? learnHref : signIn} className={buttonStyles("primary", "lg", "w-full")}>
+                    {c.is_full || c.registration === "closed" ? t("seat.notifyMe")
+                      : c.registration === "ask" ? t("seat.askButton")
+                      : c.pricing_model === "free" ? t("market.class.joinFree")
+                      : t("market.class.seeMonths")}
+                    <ArrowRight className="size-4.5" />
                   </Link>
                 )}
+                <Link href={me ? learnHref : signIn} className="text-center text-sm font-semibold text-brand hover:underline">
+                  {blocked && c.pricing_model === "monthly" ? t("seat.alreadyIn")
+                    : me ? t("market.class.openMine") : t("market.class.signInStudent")}
+                </Link>
                 <ul className="flex flex-col gap-2 border-t border-border pt-4 text-sm text-muted">
                   <li className="flex gap-2"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-600" />{t("class.trust.secure")}</li>
                   {c.pricing_model === "monthly" && (
@@ -161,7 +195,10 @@ export default async function MarketClassPage({ params }: PageProps<"/[subject]/
                             {[t(`lessons.type.${l.lesson_type}`), l.scheduled_at && formatDateTime(l.scheduled_at)].filter(Boolean).join(" · ")}
                           </span>
                         </span>
-                        {l.is_free_preview ? (
+                        {l.can_preview ? (
+                          <LessonPreview lessonId={l.id} title={l.title}
+                                         trigger={<Badge tone="gold"><PlayCircle className="size-3" />{t("market.class.preview")}</Badge>} />
+                        ) : l.is_free_preview ? (
                           <Link href={me ? `/learn/lessons/${l.id}` : `/login?next=${encodeURIComponent(`/learn/lessons/${l.id}`)}`}>
                             <Badge tone="gold">{t("class.freePreview")}</Badge>
                           </Link>
@@ -181,6 +218,34 @@ export default async function MarketClassPage({ params }: PageProps<"/[subject]/
   );
 }
 
+/** Seats of the open month (or class): how many are free when the teacher shows it, and why it can't be joined now. */
+function SeatPanel({ c }: { c: MarketClassDetail["class"] }) {
+  const state = c.registration == null ? null : c.is_full ? "full" : c.registration === "closed" ? "closed" : c.registration === "ask" ? "ask" : null;
+  const bar = c.seat_limit != null && c.seats_left != null;
+  if (!state && !bar) return null;
+  return (
+    <div className="flex flex-col gap-3 rounded-ez border border-border bg-sunken/50 p-3.5">
+      {bar && c.seat_limit != null && c.seats_left != null && (
+        <div className="flex flex-col gap-2">
+          <p className="flex items-center gap-2 text-sm font-semibold tabular-nums">
+            <Armchair className="size-4.5 text-brand-600" />
+            {t("seat.ofSeats", { left: c.seats_left, limit: c.seat_limit })}
+          </p>
+          <div aria-hidden className="h-2 overflow-hidden rounded-full bg-border">
+            <div className="h-full rounded-full bg-brand" style={{ width: `${Math.round(((c.seat_limit - c.seats_left) / c.seat_limit) * 100)}%` }} />
+          </div>
+        </div>
+      )}
+      {state && (
+        <div className="text-sm">
+          <p className="font-semibold">{t(`seat.panel.${state}`)}</p>
+          <p className="leading-relaxed text-muted">{t(`seat.panel.${state}Body`)}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MonthRow({ m, i }: { m: MarketMonth; i: number }) {
   const date = new Date(m.month_start);
   return (
@@ -195,9 +260,39 @@ function MonthRow({ m, i }: { m: MarketMonth; i: number }) {
         <p className="font-semibold">{formatMonth(m.month_start)}</p>
         <p className="text-sm text-muted tabular-nums">{m.fee_cents !== null ? formatMoney(m.fee_cents, m.currency) : "—"}</p>
       </div>
-      <StatusPill state={monthPill[m.status] ?? "closed"}>{t(`market.class.month.${m.status}` as "market.class.month.open")}</StatusPill>
+      <div className="flex shrink-0 flex-col items-end gap-1.5">
+        <StatusPill state={monthPill[m.status] ?? "closed"}>{t(`market.class.month.${m.status}` as "market.class.month.open")}</StatusPill>
+        {m.status === "open" && (m.is_full ? <Badge tone="danger">{t("seat.full")}</Badge>
+          : m.seats_left != null && <span className="text-xs font-semibold text-muted tabular-nums">{t("seat.left", { count: m.seats_left })}</span>)}
+      </div>
     </li>
   );
+}
+
+const colomboSlot = new Intl.DateTimeFormat("en", { weekday: "long", hour: "numeric", minute: "2-digit", timeZone: "Asia/Colombo" });
+
+/** When the class meets, from its live lessons: "Every Saturday, 8:00 AM" when one weekday and time repeats among the
+ * coming (or, failing that, all) live lessons, else the next live lesson's date, else nothing. */
+function liveSchedule(lessons: MarketLesson[]): string | null {
+  const live = lessons.filter((l) => l.lesson_type === "live" && l.scheduled_at)
+                      .sort((a, b) => (a.scheduled_at as string).localeCompare(b.scheduled_at as string));
+  if (live.length === 0) return null;
+  const now = Date.now();
+  const coming = live.filter((l) => new Date(l.scheduled_at as string).getTime() >= now);
+  const counts = new Map<string, { day: string; time: string; n: number }>();
+  for (const l of coming.length >= 2 ? coming : live) {
+    const parts = colomboSlot.formatToParts(new Date(l.scheduled_at as string));
+    const day = parts.find((p) => p.type === "weekday")?.value ?? "";
+    // "8:00 AM": the hour, minute and day period, without the weekday or the comma after it.
+    const time = parts
+      .filter((p) => p.type === "hour" || p.type === "minute" || p.type === "dayPeriod" || (p.type === "literal" && p.value.trim() !== ","))
+      .map((p) => p.value).join("").trim();
+    const key = `${day} ${time}`;
+    counts.set(key, { day, time, n: (counts.get(key)?.n ?? 0) + 1 });
+  }
+  const top = [...counts.values()].sort((a, b) => b.n - a.n)[0];
+  if (top && top.n >= 2) return t("market.class.weekly", { day: top.day, time: top.time });
+  return coming[0]?.scheduled_at ? t("market.class.nextLive", { when: formatDateTime(coming[0].scheduled_at) }) : null;
 }
 
 function groupLessons(lessons: MarketLesson[], months: MarketMonth[]) {

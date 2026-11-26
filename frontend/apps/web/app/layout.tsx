@@ -5,7 +5,8 @@ import { t, getMessages } from "@eduzone/lib/i18n";
 import { I18nProvider } from "@eduzone/lib/i18n/client";
 import { Toaster } from "@eduzone/ui";
 import { getBranding } from "@/lib/session";
-import { isMainHost } from "@/lib/site";
+import { OG_BASE } from "@/lib/seo";
+import { isMainHost, mainOrigin } from "@/lib/site";
 
 import "./globals.css";
 
@@ -14,9 +15,17 @@ const display = Fraunces({ variable: "--font-display-serif", subsets: ["latin"],
 const body = Instrument_Sans({ variable: "--font-body", subsets: ["latin"] });
 const sinhala = Noto_Sans_Sinhala({ variable: "--font-sinhala", subsets: ["sinhala"] });
 
+/** Defaults for every page: absolute URLs (canonicals, Open Graph images) resolve against the main site. Public pages
+ * set their own title, description and `alternates.canonical` (a path); private pages say noindex. */
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await getBranding();
-  return { title: branding?.name ?? "EduZone" };
+  return {
+    metadataBase: new URL(await mainOrigin()),
+    title: branding?.name ?? "EduZone",
+    description: t("about.meta"),
+    applicationName: "EduZone",
+    openGraph: { ...OG_BASE, type: "website" },
+  };
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

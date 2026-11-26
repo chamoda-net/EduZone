@@ -2,6 +2,8 @@
 # It finds the server behind each port and ends it with its child processes (Next's workers, Uvicorn's reloader,
 # PostgreSQL's processes). Terminal windows stay open; close them yourself or leave them.
 
+param([int]$Port = 0)   # -Port 3000: only what listens there
+
 $Root = Split-Path -Parent $PSScriptRoot
 
 $DbPort = 54393
@@ -26,15 +28,16 @@ function Get-ServerRoot([int]$ProcessId) {
 
 Write-Host "Stopping EduZone..." -ForegroundColor Cyan
 foreach ($entry in @(@(3001, "Admin app"), @(3000, "Web app"), @(8000, "API"), @($DbPort, "Database"))) {
-    $port, $name = $entry
-    $listeners = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
+    $entryPort, $name = $entry
+    if ($Port -ne 0 -and $entryPort -ne $Port) { continue }
+    $listeners = Get-NetTCPConnection -LocalPort $entryPort -State Listen -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess -Unique
-    if (-not $listeners) { Write-Host "  $name (port $port): not running"; continue }
+    if (-not $listeners) { Write-Host "  $name (port $entryPort): not running"; continue }
     foreach ($processId in $listeners) {
         $rootProcess = Get-ServerRoot $processId
         if (-not $rootProcess) { continue }
         & taskkill.exe /PID $rootProcess.ProcessId /T /F 2>&1 | Out-Null
-        Write-Host "  $name (port $port): stopped ($($rootProcess.Name))" -ForegroundColor Green
+        Write-Host "  $name (port $entryPort): stopped ($($rootProcess.Name))" -ForegroundColor Green
     }
 }
 Write-Host "Done. The database's data stays in tools\dev-db\data."

@@ -9,7 +9,7 @@ from app.modules.checkout import service as checkout
 from app.modules.checkout.router import PaymentGateway
 from app.modules.checkout.schemas import CheckoutCreate, CheckoutOut, OrderOut
 from app.modules.learn import service
-from app.modules.learn.schemas import MyRequest, Today, UpcomingLesson
+from app.modules.learn.schemas import MyRequest, MySeatRequestRow, MySeatWait, Today, UpcomingLesson
 from app.modules.learning import service as learning
 from app.modules.learning.schemas import (
     LateRequestCreate,
@@ -21,6 +21,9 @@ from app.modules.learning.schemas import (
     StudentClassView,
     StudentLessonDetail,
 )
+
+from app.modules.seats import requests as seat_requests
+from app.modules.seats.schemas import MySeatRequest, SeatRequestIn
 
 # The student area on any host: one account across every teacher. Lists span tenants; actions
 # on a class, month, lesson, file or order run in that entity's own tenant (see service.py).
@@ -45,6 +48,44 @@ async def my_classes(user: CurrentUser) -> list[MyClass]:
 @router.get("/requests", response_model=list[MyRequest])
 async def my_requests(user: CurrentUser) -> list[MyRequest]:
     return await service.my_requests(user)
+
+
+@router.get("/seat-requests", response_model=list[MySeatRequestRow])
+async def my_seat_requests(user: CurrentUser) -> list[MySeatRequestRow]:
+    return await service.my_seat_requests(user)
+
+
+@router.get("/seat-waits", response_model=list[MySeatWait])
+async def my_seat_waits(user: CurrentUser) -> list[MySeatWait]:
+    """Classes they asked to be told about; the ones with a seat open now come first."""
+    return await service.my_seat_waits(user)
+
+
+@router.post("/classes/{class_id}/seat-request", response_model=MySeatRequest, status_code=201)
+async def ask_for_seat(class_id: UUID, body: SeatRequestIn, user: CurrentUser) -> MySeatRequest:
+    async with service.in_tenant_of("class", class_id, user) as (session, auth, _):
+        return await seat_requests.ask(session, auth, class_id, body)
+
+
+@router.delete("/classes/{class_id}/seat-request", status_code=204)
+async def withdraw_seat_request(class_id: UUID, user: CurrentUser, class_month_id: UUID | None = None) -> Response:
+    async with service.in_tenant_of("class", class_id, user) as (session, auth, _):
+        await seat_requests.withdraw(session, auth, class_id, class_month_id)
+    return Response(status_code=204)
+
+
+@router.put("/classes/{class_id}/seat-wait", status_code=204)
+async def wait_for_seat(class_id: UUID, user: CurrentUser) -> Response:
+    async with service.in_tenant_of("class", class_id, user) as (session, auth, _):
+        await seat_requests.wait(session, auth, class_id)
+    return Response(status_code=204)
+
+
+@router.delete("/classes/{class_id}/seat-wait", status_code=204)
+async def stop_waiting(class_id: UUID, user: CurrentUser) -> Response:
+    async with service.in_tenant_of("class", class_id, user) as (session, auth, _):
+        await seat_requests.stop_waiting(session, auth, class_id)
+    return Response(status_code=204)
 
 
 @router.get("/payments", response_model=list[OrderOut])

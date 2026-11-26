@@ -6,7 +6,7 @@ import { mainOrigin } from "@/lib/site";
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const origin = await mainOrigin();
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/learn", "/teach", "/login", "/register", "/recover", "/verify-phone", "/verify-email", "/checkout", "/design", "/qr"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/learn", "/teach", "/login", "/register", "/recover", "/verify-phone", "/verify-email", "/checkout", "/checkouts", "/cart", "/design", "/qr"] },
     sitemap: `${origin}/sitemap.xml`,
   };
 }

@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "D:/EduZone/backend/.venv/Scripts/uvicorn.exe",
+      "runtimeArgs": ["app.main:app", "--app-dir", "D:/EduZone/backend", "--port", "8000"],
+      "port": 8000,
+      "url": "http://demo.localhost:8000"
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "D:/EduZone/frontend", "run", "dev:web"],
+      "port": 3000,
+      "url": "http://demo.localhost:3000"
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "D:/EduZone/frontend", "run", "dev:admin"],
+      "port": 3001,
+      "url": "http://localhost:3001"
+    }
+  ]
+}

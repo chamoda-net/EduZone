@@ -167,6 +167,7 @@ textarea {
 
   /* Fine film grain over dark hero panels. */
   .ez-grain {
+    --ez-logo-rim: var(--ez-gold-500); /* the logo's gold edge on dark panels */
     position: relative;
     isolation: isolate;
   }

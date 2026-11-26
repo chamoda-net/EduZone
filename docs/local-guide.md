@@ -24,7 +24,16 @@ through a **fake gateway** page, and lesson videos play from a public test strea
 
 ## 2. Start the servers yourself
 
-**The quick way:** double-click **`start-eduzone.bat`** in the repo root. It starts the database, brings it up to
+**The easiest way:** double-click **`EduZone Panel.vbs`** in the repo root. It starts everything with no terminal windows
+and opens the panel (http://localhost:3999): status, start, stop and restart of each part, **mobile codes** as they are
+sent, the local admin's mobile number and authenticator code, emails with their links, test accounts, logs and demo data
+tools. It is a development tool only: it never ships, and `scripts/dev_admin_codes.py` refuses any other environment or a
+database that isn't on this computer. Closing the panel keeps everything running;
+"Stop all and quit" ends it. Parts already started another way show as "started elsewhere" (their codes go to their own
+window; restart the API from the panel to see them). Only on this computer and only with `ENVIRONMENT=local`; code in
+`tools/panel`.
+
+**The older way:** double-click **`start-eduzone.bat`** in the repo root. It starts the database, brings it up to
 date (migrations), then opens the API, the web app and the admin app each in its own window, waits until they
 answer, and opens http://localhost:3000 and http://localhost:3001 in Chrome (or your default browser). Anything
 already running is left alone, and a lock file left by a crashed database is removed. SMS codes and emails appear in
@@ -444,7 +453,7 @@ The full plan for what comes next is in `docs/ROADMAP.md`.
 |---|---|
 | "The server is not reachable" on the site | Start the API (terminal 2); check the database (terminal 1) is `READY` |
 | API fails with "connection refused" to port 54393 | Start the database first |
-| "The email or password is wrong" | Type the password's value from `seed_demo.py`, not the word `DEMO_PASSWORD`. Too many tries locks for a few minutes |
+| "That password is wrong" | Type the password's value from `seed_demo.py`, not the word `DEMO_PASSWORD`. Too many tries locks for a few minutes |
 | No SMS code arrives | It's in the API terminal (terminal 2). Wait 60 s between codes |
 | Buttons do nothing, page looks unstyled | Use `localhost`, not `127.0.0.1` |
 | New pages or styles don't show in `npm run dev:*` | Stop it, delete `frontend/apps/web/.next` (or `apps/admin/.next`), start again |

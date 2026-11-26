@@ -21,6 +21,7 @@ from app.modules.learning.schemas import (
     LateRequestDecision,
     LateRequestRow,
 )
+from app.modules.seats import service as seats
 
 
 async def _audit(session: AsyncSession, actor: Actor, action: str, entity_type: str, entity_id: UUID,
@@ -63,24 +64,32 @@ async def create_grant(session: AsyncSession, actor: Actor, class_id: UUID, body
                                      {"m": body.student_member_id})).one_or_none()
     if student is None or student.role != "student" or student.status != "active":
         raise ApiError("STUDENT_INVALID", "Choose an active student of this organization.")
+    takes_seat = c.kind == "tuition"
     if c.pricing_model == "monthly":
         if body.class_month_id is None:
             raise ApiError("MONTH_REQUIRED", "Choose the month to give access to.")
         month = await repo.month_with_class(session, body.class_month_id)
         if month is None or month.class_id != c.id:
             raise ApiError("MONTH_INVALID", "That month does not belong to this class.")
+        takes_seat = takes_seat and month.status != "closed"     # a past month takes no seat
     elif body.class_month_id is not None:
         raise ApiError("MONTH_INVALID", "Only monthly classes give access per month.")
     if await access.active_grant_for(session, body.student_member_id, c.id, body.class_month_id) is not None:
         raise ApiError("ALREADY_HAS_ACCESS", "This student already has access.", status_code=409)
+    # Staff may go over the limit, but only on purpose. (load_class locked the class.)
+    over = takes_seat and await seats.over_limit(session, c.id, body.class_month_id, body.student_member_id)
+    if over and not body.allow_over_limit:
+        raise ApiError("CLASS_FULL", "Every seat is taken. Confirm to go over the limit.", status_code=409)
 
     await repo.upsert_enrollment(session, body.student_member_id, c.id)  # access implies membership
     grant_id = await repo.insert_grant(session, member_id=body.student_member_id, class_id=c.id,
                                        month_id=body.class_month_id, source=body.source,
-                                       granted_by=actor.auth.member_id)
+                                       granted_by=actor.auth.member_id, takes_seat=takes_seat)
+    if takes_seat:
+        await seats.seated(session, c.id, body.class_month_id, body.student_member_id)
     await _audit(session, actor, "access_grant.create", "access_grant", grant_id,
                  {"student_member_id": body.student_member_id, "class_id": c.id,
-                  "class_month_id": body.class_month_id, "source": body.source})
+                  "class_month_id": body.class_month_id, "source": body.source, "over_limit": over})
     g = (await session.execute(text("SELECT id, source, granted_at FROM access_grants WHERE id = :id"),
                                {"id": grant_id})).one()
     return GrantInfo(id=g.id, source=g.source, granted_at=g.granted_at)

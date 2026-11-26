@@ -27,7 +27,7 @@ from app.core.errors import ApiError
 from app.core.i18n import t
 from app.integrations.sms import SmsSender
 from app.modules.auth import otp
-from app.modules.auth.dependencies import client_ip, user_agent
+from app.modules.auth.dependencies import peer_ip, user_agent
 from app.modules.auth.schemas import OtpRequested, _PhoneBody
 from app.modules.auth.tokens import hash_refresh_token, new_refresh_token
 from app.modules.platform import totp
@@ -65,7 +65,7 @@ def _invalid() -> ApiError:
 def check_network(request: Request) -> str | None:
     """Platform routes are reachable only from the allowed networks (e.g. the VPN)."""
     s = get_settings()
-    ip = client_ip(request)
+    ip = peer_ip(request)  # never the address a header names
     if not s.platform_allowed_cidrs:
         if s.environment != "local":
             raise ApiError("NOT_FOUND", "Not found.", status_code=404)

@@ -777,8 +777,12 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   verification link. `POST /login` returns `{status: signed_in, tokens}` or, on an unknown device of an
   account with a verified phone, `{status: device_check, device_check: {challenge, phone_hint}}` and sends an
   SMS code; then `POST /device/verify` (the challenge is a 10-minute signed JWT bound to that device) or
-  `POST /device/resend`. A wrong password and an unknown email give the same `LOGIN_INVALID`; failures are
-  throttled per email and per IP (`login_attempts`). Passwords: argon2id (`passwords.py`).
+  `POST /device/resend`. A failed sign-in says **exactly what is wrong**: `LOGIN_EMAIL_UNKNOWN`,
+  `LOGIN_PASSWORD_WRONG` or `LOGIN_NO_PASSWORD` (Google sign-up, new owner). Failures, and registering a taken email
+  (`EMAIL_TAKEN`), are throttled together per email and per IP (`login_attempts`; `LOGIN_RATE_LIMITED`,
+  `REGISTER_RATE_LIMITED`). Passwords: argon2id (`passwords.py`). Recovery requests and the admin app still give one
+  answer for everyone. On the web the message sits under the wrong field with the button that fixes it; the email is
+  carried to the next form in a 5-minute httpOnly cookie (`ez_email`), never in the URL.
 - **One device per account:** every sign-in revokes the account's other sessions with reason
   `signed_in_on_another_device` (the old device then gets `SIGNED_IN_ELSEWHERE`), except for staff of any
   tenant (`user_is_staff_anywhere()`, SECURITY DEFINER).
@@ -800,8 +804,11 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
 - SMS: `app.integrations.sms`; email: `app.integrations.email`. Both `console` (log) or `file` (JSON lines at
   `SMS_OUTBOX_PATH` / `EMAIL_OUTBOX_PATH`, `ENVIRONMENT=local` only, for browser tests).
 - Phone input accepts local forms (`0771234567`, `94771234567`) and is normalised to E.164.
-- `client_ip()` uses the direct peer address; behind a proxy or CDN it must read the trusted
-  forwarded header instead.
+- **Visitor addresses:** the browser never calls the API, so the web server names the visitor (`lib/visitor.ts`:
+  `x-eduzone-client-ip`, from the last `WEB_PROXY_HOPS` entries of X-Forwarded-For) with the shared `WEB_SERVER_KEY`.
+  `client_ip()` believes it only with that key, else uses the direct peer; it is for limits and records only.
+  `peer_ip()` is the direct peer and the only one that decides access (the platform allowlist). The API refuses to
+  start without the key outside `ENVIRONMENT=local`. Every new server-side fetch to the API spreads `visitorHeaders()`.
 - Platform admins (`users.is_platform_admin`) use a separate login path and session
   (`platform_admin_sessions`, via `eduzone_admin`). `eduzone_app` cannot write `is_platform_admin`.
 
@@ -871,6 +878,48 @@ Gateway integration sits behind one interface in `integrations/gateways/`:
   fastest, the form as an airmail letter with topic chips and a tip per topic, `?topic=` preselects, a receipt with
   the reference after sending, quick answers); "Contact" in the header. Admin app: `/inbox` and `/inbox/[id]`
   (conversation, reply composer, close/reopen, staff note). Tests: `tests/test_contact.py`.
+
+### Seats and registration (`app/modules/seats`, migrations 0018 to 0020; `docs/SEATS.md`)
+- **Settings on a tuition class** (class form fields): `seat_limit` (NULL = no limit), `show_seat_count`, `registration`
+  for new students (open | ask | closed), `starts_on` + `registration_after_start` (switches by itself, Colombo date).
+  Refused (409 `SEATS_NOT_AVAILABLE`) while `SEATS_ENABLED` is false (the default); going back
+  to a default is always allowed. Courses have no seats (check constraint).
+- **`seats/service.py` holds the rules; the counting is in SQL functions it shares with the public view** (0020:
+  `seat_holders(class, month)`, `seat_last_month`, `seat_registration`). Nothing else counts seats. Per month (monthly) or per class: active grants with
+  `takes_seat` (a free grant only while enrolled) plus payments running now. **A pending order is the hold**
+  (`orders.seat_held_until`, `SEAT_HOLD_MINUTES` = 15): it stops counting by time, or at once when it fails or is
+  cancelled. `takes_seat` is false for past months (late purchases, grants in a closed month).
+- **Paying:** `price_item()` checks (`CLASS_FULL`, `SEAT_REQUEST_REQUIRED`, `REGISTRATION_CLOSED`; a student of the class's
+  previous month is never "new"), `create_order()` takes the hold after locking the class row, for the cart and the single
+  Pay. Restarting reuses a running hold; `SEAT_HOLDS_PER_DAY` (3) unfinished ones per class (`SEAT_HOLD_LIMIT`). A payment
+  after its hold ended always gives access; over the limit it writes audit `seat.over_limit`.
+- **Changed for every class:** a student joins when the payment **succeeds**, not when it starts; leaving a **free** class
+  ends its free access; a cart checkout that fails halfway marks the orders it had created `failed`.
+- **Renewals (S2, monthly classes):** students of the class's **previous month** (latest earlier month not upcoming), still
+  enrolled since they got that seat and in it before this month opened, keep their seat in the open month until
+  `class_months.renew_until`: the end of `classes.renewal_day` (7) in Colombo, at least 3 days after `opened_at`; set by
+  the catalogue when the month opens, then fixed (staff move it with `PATCH /months/{id}`). A kept seat is counted like
+  any other, lets its student renew whatever registration says, and lapses by time. Leaving gives it up; rejoining makes
+  them new.
+- **Requests (S3, `seats/requests.py`):** registration `ask`: `POST/DELETE /learn/classes/{id}/seat-request {class_month_id?,
+  note?}` (verified phone; only when asking is what's needed), `GET /learn/seat-requests`; staff `GET /seat-requests?status=`,
+  `POST /seat-requests/{id}/decision` (approve holds a seat `SEAT_REQUEST_HOLD_HOURS` = 48, refused when full; audited).
+  `expired` is computed, `used` is set by `seats.seated()` (paid, joined free, given access).
+- **Notify list:** `PUT/DELETE /learn/classes/{id}/seat-wait`, `GET /learn/seat-waits` (`available`: a seat is open now). In the
+  student area only; no email yet. **Students see** `StudentMonth.seat` / `StudentClassView.seat` (`SeatState`: numbers unless
+  hidden, `problem`, `kept_until`, `paying_until`, their request) and `Today.to_pay[].seat`.
+- **Public:** the view `public_seats` (per class or open month); market cards have `seat_limit`, `seats_left`, `is_full`,
+  `registration`, months `seats_left`/`is_full`, `GET /market/classes?seats=available`; the guest cart shows the same problems.
+  Hidden numbers are NULL in the view, and `students` of a limited class is the seats taken (0 when hidden).
+- **Staff:** `GET /classes/{id}/seats?month_id=` (limit, taken, free, over_by, who and why, `lapsed`: last month's students
+  without a seat); `PUT/DELETE /months/{id}/seat-keeps/{member_id}` (keep until | release, `seat_keeps`, audited); grants
+  and keeps need `allow_over_limit` when the class is full. Tests: `test_seats.py`, `test_seat_renewals.py`, `test_seat_requests.py`.
+- **Web (S4):** console class page `seats-card.tsx` (seat map, who and why, keep / release, renewal date, settings; hidden
+  while seats are off and unused), `/requests?type=seats`, grants that ask before going over; marketplace badges
+  (`lib/seats.ts: seatBadge`), the `seats=available` filter and the class page's seat panel; student `seat-panel.tsx` per month
+  (kept, held with a timer, ask, accepted, notify), Today banners, `/learn/requests`; cart problems link to the class. A class
+  with limited seats leads with paying; joining without paying is called following. Browser test: `e2e/seats.spec.ts`
+  (`SEAT_SCREENS=<dir>` photographs every step at 360 and 1440 px), demo class: `scripts/seed_seats.py`.
 
 ### Teacher onboarding (phase 5: `app/modules/onboarding`, `app/modules/platform/applications.py`)
 - **Apply** (`/api/v1/me/teacher-application`, signed in, **verified phone** else 403 `PHONE_NOT_VERIFIED`):
@@ -1006,7 +1055,14 @@ httpOnly cookies.
   `/contact`; final wording pending the legal review). Data from `/api/v1/market/...` (no sign-in) via
   `lib/market.ts`. Share tools (`components/share-tools.tsx`: WhatsApp, copy link, QR from `/qr?path=`, own
   paths only), Open Graph images (`opengraph-image.tsx` on teacher and class pages), JSON-LD (`Person`,
-  `Course`), `sitemap.ts`, `robots.ts`. Teachers edit their page at `/teach/<slug>/profile`
+  `Course`), `sitemap.ts`, `robots.ts`. **SEO and conversion (docs/marketing-audit.md P1):** the root layout sets
+  `metadataBase` (main origin) and defaults; every public page sets `alternates.canonical` (a path, no query) and
+  spreads `OG_BASE` (`lib/seo.ts`) into its own `openGraph` (Next replaces, not merges, it). The class page leads with
+  "Join December · Rs. 2,500" (`[class]/join.tsx`: into the cart, then `/cart`; already owned goes to `/learn`), shows
+  when it meets (from live lessons: "Every Saturday, 8:00 AM" or the next one) and plays free-preview lessons with a
+  video for anyone (`POST /market/lessons/{id}/preview`, `public_lessons.video_seconds`, migration 0021; no view, no
+  watermark). The home hides its live totals below 20 classes and 10 teachers. Marketing skills live in
+  `.claude/skills/` and read `.agents/product-marketing.md`. Teachers edit their page at `/teach/<slug>/profile`
   (`/api/v1/me/teacher-profile`); the class form picks a subject. Tenant subdomains now redirect: `/` to
   `/classes?org=<slug>` and `/classes/<slug>` to the marketplace page. Pages render per request (no caching
   yet; FRONTEND.md section 12 wants it, see the migration plan).
@@ -1072,7 +1128,7 @@ httpOnly cookies.
 | Commission tiers for large teachers | Idea: 20% normally, lower above a monthly volume |
 | SMS provider | Undecided |
 | Plan limits per tier | Needs Bunny pricing check |
-| EduZone brand | Colours and fonts decided (forest green + gold, Fraunces + Instrument Sans); logo still placeholder |
+| EduZone brand | Decided (forest green + gold, Fraunces + Instrument Sans, Scholar Shield logo: `docs/brand/logo`, `docs/BRANDING.md`); trademark search still to do |
 | Sinhala at the pilot | Depends on the pilot teachers |
 | Email provider | Undecided |
 | Institute URL | `/institutes/<slug>` (assumed) |

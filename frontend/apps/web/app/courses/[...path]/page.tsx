@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { t } from "@eduzone/lib/i18n";
 
 import { CategoryView, categoryPage } from "../category-view";
+import { OG_BASE } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/courses/[...path]">): Promise<Metadata> {
   const { path } = await params;
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: PageProps<"/courses/[...path]
   const page = await categoryPage(path.at(-1) as string);
   const title = t("market.category.metaTitle", { name: page.category.name_en });
   const description = t("market.category.lead", { name: page.category.name_en });
-  return { title, description, openGraph: { title, description } };
+  return { title, description, alternates: { canonical: `/courses/${path.join("/")}` }, openGraph: { ...OG_BASE, title, description } };
 }
 
 /** /courses/<category> and /courses/<category>/<subcategory>. */

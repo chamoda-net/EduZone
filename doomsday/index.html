@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EduZone will return on Doomsday</title>
+<meta name="description" content="EduZone will return on 17 December 2026 at 12 noon, Sri Lanka time.">
+<meta name="theme-color" content="#020503">
+<meta property="og:title" content="EduZone will return on Doomsday">
+<meta property="og:description" content="17 December 2026, 12 noon. Doom does not skip past papers.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://eduzone.switchops.tech/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="doom.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Sans:wght@400..600&display=swap">
+<style>
+:root {
+  --void: #020503;
+  --doom: #0bb051;          /* the green of the picture */
+  --hex: #4dff9a;
+  --gold: #d4a03f;
+  --gold-light: #ecd08f;
+  --ivory: #fbfaf5;
+  --marvel: "Anton", Impact, "Arial Narrow", sans-serif;
+  --sans: "Instrument Sans", "Segoe UI", sans-serif;
+  --pad: clamp(18px, 3.4vw, 56px);
+  --px: 0; --py: 0;
+  --lx: 53%; --ly: 52%;     /* where the light falls on the mask */
+}
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--void); color: var(--ivory); font-family: var(--sans); -webkit-text-size-adjust: 100%; }
+button, a { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 4px; border-radius: 4px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[hidden] { display: none !important; }
+
+.scene { position: relative; isolation: isolate; min-height: 100svh; overflow: hidden; background: var(--void); display: flex; flex-direction: column; }
+
+/* The picture. The stage always keeps the picture's shape, so the eye and the light stay on the mask. */
+.frame { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.stage { --w: max(102vw, 104svh * 16 / 9); position: absolute; width: var(--w); aspect-ratio: 16 / 9; top: -7svh; right: -4px;
+  transform: translate(calc(var(--px) * -8px), calc(var(--py) * -6px)); }
+.stage > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stage img { display: block; }
+.light { mix-blend-mode: color-dodge; pointer-events: none;
+  background: radial-gradient(19% 30% at var(--lx) var(--ly), rgba(150, 255, 190, .62), rgba(40, 200, 100, .3) 45%, transparent 100%);
+  clip-path: polygon(0 0, 82% 0, 82% 20%, 60% 62%, 58.5% 70%, 69% 100%, 0 100%); }
+.eye { clip-path: polygon(46.4% 21.4%, 48.2% 15.4%, 53% 17.4%, 57% 26.6%, 54.3% 32.6%, 49.4% 28.4%); pointer-events: none; opacity: .8; animation: smoulder 5s ease-in-out infinite; }
+.eye i { position: absolute; left: 52.4%; top: 25%; width: 9%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(closest-side, #efffe9 7%, var(--hex) 18%, rgba(10, 173, 79, .5) 42%, transparent);
+  transform: translate(-50%, -50%) translate(calc(var(--px) * 1.1vw), calc(var(--py) * .7vw)); }
+@keyframes smoulder { 50% { opacity: .35; } }
+.stage > .mask { inset: 6% auto auto 30%; width: 34%; height: 84%; padding: 0; border: 0; background: none; cursor: pointer; clip-path: polygon(45% 0, 100% 8%, 96% 58%, 60% 100%, 0 70%, 14% 30%); -webkit-tap-highlight-color: transparent; }
+.woke .eye { animation: none; opacity: 1; }
+.woke .eye i { width: 13%; }
+.eye-in { mix-blend-mode: screen; filter: blur(5px); pointer-events: none; }
+.flash { position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; mix-blend-mode: color-dodge; background: linear-gradient(100deg, rgba(60, 160, 100, .3), rgba(190, 255, 215, .75)); }
+.flash.on { animation: flash .85s ease-out; }
+@keyframes flash { 0% { opacity: 0; } 6% { opacity: 1; } 18% { opacity: .2; } 26% { opacity: .65; } 100% { opacity: 0; } }
+.scrim { position: absolute; inset: auto 0 0; height: 52svh; z-index: -1; pointer-events: none; background: linear-gradient(transparent, rgba(2, 5, 3, .5) 36%, rgba(2, 5, 3, .93) 70%, var(--void) 90%); }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; padding: clamp(16px, 2.6vw, 36px) var(--pad); z-index: 3; pointer-events: none; }
+.top > * { pointer-events: auto; }
+.top img { display: block; height: clamp(34px, 4.4vw, 52px); width: auto; }
+.snd { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 16px; border-radius: 6px; cursor: pointer; border: 0; background: rgba(2, 5, 3, .82); font-size: 14px; font-weight: 500; }
+.snd:hover { background: #000; }
+.bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+.bars i { width: 3px; height: 4px; background: #9fb8aa; }
+[aria-pressed="true"] .bars i { background: var(--hex); animation: bar .7s ease-in-out infinite alternate; }
+.bars i:nth-child(2) { animation-delay: -.35s !important; } .bars i:nth-child(3) { animation-delay: -.55s !important; }
+@keyframes bar { to { height: 14px; } }
+
+.decree { position: absolute; left: var(--pad); top: 31svh; width: min(25vw, 400px); z-index: 2; }
+.decree p { font: 400 clamp(26px, 2.7vw, 46px)/1.16 var(--marvel); text-wrap: balance; transition: opacity .5s; color: #eef6f0; }
+.decree p.out { opacity: 0; }
+.decree small { display: block; margin-top: 18px; font-size: 15px; color: #9fb8aa; }
+
+/* Countdown: black on the green */
+.clock { position: absolute; right: var(--pad); top: 13.5svh; z-index: 2; display: grid; gap: 2.2svh; color: #020503; }
+.unit { display: grid; grid-template-columns: auto 3.6em; align-items: end; gap: 12px; font: 400 clamp(17px, 1.5vw, 23px)/.95 var(--marvel); }
+.digits { display: flex; justify-content: flex-end; gap: .07em; font-size: min(9.4svh, 7vw); line-height: 1; }
+.digits svg { display: block; height: 1em; width: .84em; overflow: visible; fill: currentColor; }
+.digits .hit { animation: stamp .32s cubic-bezier(.2, 1.1, .4, 1); }
+@keyframes stamp { 0% { transform: scale(1.18); opacity: .4; } }
+.unit small { font-size: 1em; padding-bottom: .1em; }
+
+/* Title */
+.main { margin-top: auto; padding: 0 var(--pad) clamp(16px, 3svh, 32px); z-index: 2; pointer-events: none; }
+.main > * { pointer-events: auto; }
+h1 { pointer-events: none; }
+.lead { display: block; font: 400 clamp(24px, min(3.2vw, 5svh), 54px)/1 var(--marvel); letter-spacing: .01em; margin: 0 0 clamp(8px, 1.6svh, 16px) .1em; text-shadow: 0 2px 16px #000, 0 0 3px #000; }
+.title { display: block; width: min(86vw, 138svh); height: auto; overflow: visible; margin-left: -.4vw; }
+.foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 28px; margin-top: clamp(12px, 2.4svh, 26px); }
+.when { font-size: clamp(16px, 1.3vw, 19px); font-weight: 500; }
+.fine { font-size: 12.5px; color: #8fa398; }
+.acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 22px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 15px; font-weight: 600; border: 1px solid rgba(159, 184, 170, .5); background: rgba(2, 5, 3, .6); transition: background .2s, border-color .2s; }
+.btn:hover { border-color: var(--hex); background: #0a2a1d; }
+.btn.gold { border-color: var(--gold); background: var(--gold); color: #1a1204; }
+.btn.gold:hover { background: var(--gold-light); border-color: var(--gold-light); }
+
+/* Entrance: an eye in the dark, then a strike shows the mask */
+.js .stage img { animation: reveal 1.9s .9s both; }
+.js .light { animation: fade 1.2s 2.2s both; }
+.js .eye-in { animation: fade .8s .2s both; }
+.js .lead { animation: up .7s 1.7s both; }
+.js .title { animation: slam .6s 1.95s cubic-bezier(.2, .9, .25, 1) both; }
+.js .unit { animation: left .6s both; }
+.js .unit:nth-child(1) { animation-delay: 2.2s; } .js .unit:nth-child(2) { animation-delay: 2.32s; } .js .unit:nth-child(3) { animation-delay: 2.44s; } .js .unit:nth-child(4) { animation-delay: 2.56s; }
+.js .decree, .js .foot { animation: fade 1s 2.7s both; }
+@keyframes reveal { 0% { opacity: 0; } 8% { opacity: 1; filter: brightness(1.9) contrast(1.25); } 22% { filter: brightness(.12); } 100% { opacity: 1; } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes up { from { opacity: 0; transform: translateY(16px); } }
+@keyframes left { from { opacity: 0; transform: translateX(40px); } }
+@keyframes slam { from { opacity: 0; transform: scale(1.35); } }
+.quake { animation: quake .5s linear; }
+@keyframes quake { 20% { transform: translate(-5px, 3px); } 40% { transform: translate(5px, -3px); } 60% { transform: translate(-3px, -2px); } 80% { transform: translate(2px, 2px); } }
+
+/* Phones and tall screens: picture above, a green slab for the countdown */
+@media (max-aspect-ratio: 11/10) {
+  .frame { inset: 0 0 auto; height: 60svh; }
+  .stage { --w: calc(62svh * 16 / 9); top: -1svh; right: auto; left: calc(50vw - var(--w) * .505); }
+  .scrim { inset: 28svh 0 auto; height: 33svh; background: linear-gradient(transparent, rgba(2, 5, 3, .45) 50%, var(--void) 96%); }
+  .main { display: contents; }
+  h1 { margin-top: auto; padding: 45svh var(--pad) 0; z-index: 2; }
+  .top { position: absolute; inset: 0 0 auto; }
+  .lead { margin-left: 0; font-size: clamp(22px, 5.6vw, 46px); }
+  .title { width: calc(100vw - var(--pad) * 2 + 4px); margin-left: 0; }
+  .clock { position: static; order: 2; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: clamp(14px, 2.4svh, 28px); padding: clamp(12px, 2svh, 24px) calc(var(--pad) - 8px); background: var(--doom); }
+  .unit { grid-template-columns: 1fr; justify-items: center; gap: 8px; font-size: clamp(15px, 3.6vw, 22px); }
+  .digits { font-size: min(10.6vw, 8svh); }
+  .unit small { padding: 0; }
+  .decree { order: 3; position: static; width: auto; padding: clamp(12px, 2svh, 24px) var(--pad) 0; min-height: 4.2em; }
+  .decree p { font-size: clamp(20px, 5vw, 32px); }
+  .decree small { display: none; }
+  .foot { order: 4; padding: 0 var(--pad) 16px; margin-top: 8px; gap: 12px; justify-content: flex-start; z-index: 2; }
+  .when, .fine { flex-basis: 100%; }
+  .btn { padding: 0 16px; }
+}
+/* phones held sideways */
+@media (max-height: 480px) and (min-aspect-ratio: 11/10) {
+  .decree, .fine { display: none; }
+  .top { padding-block: 12px; }
+  .clock { top: 68px; gap: 1.8svh; }
+  .digits { font-size: 8.6svh; }
+  .unit { font-size: 15px; }
+  .title { width: 66vw; }
+  .foot { margin-top: 10px; justify-content: flex-start; }
+  .btn { min-height: 44px; padding: 0 14px; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js");</script>
+
+<!-- Digits drawn to match the title -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <path id="n0" fill-rule="evenodd" d="M18 0H58L76 18V82L58 100H18L0 82V18ZM26 29V71L31 76H45L50 71V29L45 24H31Z"/>
+  <path id="n1" d="M14 18 34 0H56V100H29V36L14 44Z"/>
+  <path id="n2" d="M2 0H58L76 18V46L61 61H27V76H76V100H0V55L16 39H49V24H2Z"/>
+  <path id="n3" d="M2 0H58L76 18V41L67 50 76 59V82L58 100H2V76H49V61H16V39H49V24H2Z"/>
+  <path id="n4" d="M0 0H27V40H49V0H76V100H49V64H14L0 50Z"/>
+  <path id="n5" d="M74 0H0V45L15 61H49V76H0V100H58L76 82V55L60 39H27V24H74Z"/>
+  <path id="n6" fill-rule="evenodd" d="M72 0H18L0 18V82L18 100H58L76 82V54L60 38H26V24H72ZM26 60H45L50 65V71L45 76H31L26 71Z"/>
+  <path id="n7" d="M0 0H76V28L46 100H17L46 24H0Z"/>
+  <path id="n8" fill-rule="evenodd" d="M17 0H59L74 15V40L66 49 76 58V83L59 100H17L0 83V58L10 49 2 40V15ZM27 23V39H49V23ZM26 60V77H50V60Z"/>
+  <path id="n9" fill-rule="evenodd" d="M4 100H58L76 82V18L58 0H18L0 18V46L16 62H50V76H4ZM50 40H31L26 35V29L31 24H45L50 29Z"/>
+</defs></svg>
+
+<div class="scene" id="scene">
+  <div class="frame">
+    <div class="stage" id="stage">
+      <img src="doom.webp" width="2000" height="1125" alt="A villain in a dark hood and a riveted steel mask, looking down, against bright green">
+      <div class="light"></div>
+      <div class="eye-in"><div class="eye" style="position:absolute;inset:0"><i></i></div></div>
+      <button class="mask" id="mask" type="button" aria-label="Touch the mask"></button>
+    </div>
+  </div>
+  <div class="scrim"></div>
+  <div class="flash" id="flash"></div>
+  <canvas id="air" aria-hidden="true"></canvas>
+
+  <header class="top">
+    <img src="logo.svg" alt="EduZone" width="882" height="256">
+    <button class="snd" id="snd" type="button" aria-pressed="false"><span class="bars" aria-hidden="true"><i></i><i></i><i></i></span><span id="sndt">Tap for sound</span></button>
+  </header>
+
+  <div class="decree"><p id="decree">Doom does not skip past papers.</p><small>Do not touch the mask.</small></div>
+
+  <div class="clock" id="clock" role="timer" aria-live="off">
+    <div class="unit" data-u="d"><div class="digits" aria-hidden="true"></div><small>days</small></div>
+    <div class="unit" data-u="h"><div class="digits" aria-hidden="true"></div><small>hours</small></div>
+    <div class="unit" data-u="m"><div class="digits" aria-hidden="true"></div><small>minutes</small></div>
+    <div class="unit" data-u="s"><div class="digits" aria-hidden="true"></div><small>seconds</small></div>
+  </div>
+
+  <main class="main">
+    <h1><span class="lead" id="lead">EduZone will return on</span> <span class="sr">Doomsday</span>
+      <svg class="title" viewBox="-24 -22 812 150" aria-hidden="true">
+        <defs>
+          <linearGradient id="steel" x1="0" y1="-16" x2="0" y2="122" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#eef5f1"/><stop offset=".26" stop-color="#b3c6bc"/><stop offset=".5" stop-color="#6b8478"/><stop offset=".53" stop-color="#30473b"/><stop offset=".74" stop-color="#587367"/><stop offset="1" stop-color="#16271e"/>
+          </linearGradient>
+          <filter id="forge" x="-4%" y="-20%" width="108%" height="140%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency=".05 .16" numOctaves="5" seed="11" result="brush"/>
+            <feColorMatrix in="brush" type="matrix" values="0 0 0 0 0  0 0 0 0 .06  0 0 0 0 .03  0 0 0 -1.5 .92" result="grime"/>
+            <feComposite in="grime" in2="SourceAlpha" operator="in" result="wear"/>
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2.1" result="soft"/>
+            <feSpecularLighting in="soft" surfaceScale="7" specularConstant="1.15" specularExponent="22" lighting-color="#eafff2" result="spec"><feDistantLight azimuth="235" elevation="38"/></feSpecularLighting>
+            <feComposite in="spec" in2="SourceAlpha" operator="in" result="edge"/>
+            <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="fat"/>
+            <feFlood flood-color="#1fe07a"/><feComposite in2="fat" operator="in" result="rim"/>
+            <feMorphology in="SourceAlpha" operator="dilate" radius="2.7" result="fatter"/>
+            <feFlood flood-color="#010402"/><feComposite in2="fatter" operator="in" result="black"/>
+            <feGaussianBlur in="rim" stdDeviation="8" result="glow"/>
+            <feMerge><feMergeNode in="glow"/><feMergeNode in="black"/><feMergeNode in="rim"/><feMergeNode in="SourceGraphic"/><feMergeNode in="wear"/><feMergeNode in="edge"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#forge)"><g transform="skewX(-9)" fill="url(#steel)" fill-rule="evenodd">
+          <path d="M0-16H78L106 12V88L72 122H0ZM33 14V92H60L73 79V25L62 14Z"/>
+          <path transform="translate(116 0)" d="M20 0H66L86 20V80L66 100H20L0 80V20ZM28 31V69L35 76H51L58 69V31L51 24H35Z"/>
+          <path transform="translate(211 0)" d="M20 0H66L86 20V80L66 100H20L0 80V20ZM28 31V69L35 76H51L58 69V31L51 24H35Z"/>
+          <path transform="translate(306 0)" d="M0 100V0H29L54 42 79 0H108V100H81V46L60 82H48L27 46V100Z"/>
+          <path transform="translate(423 0)" d="M84 0H18L0 18V45L16 61H56V76H2L-4 100H66L84 82V55L68 39H28V24H78Z"/>
+          <path transform="translate(516 0)" d="M0 0H62L84 22V78L62 100H0ZM28 24V76H50L56 70V30L50 24Z"/>
+          <path transform="translate(606 0)" d="M0 100 32 0H62L94 100H65L60 82H34L29 100ZM40 59H54L47 33Z"/>
+          <path transform="translate(683 0)" d="M0 0H31L46 36 61 0H92L60 62V100L38 122H32V62Z"/>
+          <path d="M112 109H700L697 114H112Z"/>
+        </g></g>
+      </svg>
+    </h1>
+    <div class="foot">
+      <p class="when" id="when">17 December 2026, 12 noon Sri Lanka time</p>
+      <div class="acts" id="acts">
+        <button class="btn gold" id="cal" type="button">Add to calendar</button>
+        <a class="btn" id="wa" target="_blank" rel="noopener" href="#">Warn on WhatsApp</a>
+      </div>
+      <div class="acts" id="enter" hidden><a class="btn gold" id="go" href="/">Enter EduZone</a></div>
+      <p class="fine">A fan tribute, not affiliated with Marvel. EduZone is by SwitchOps Tech (Pvt) Ltd.</p>
+    </div>
+  </main>
+  <p class="sr" id="live" aria-live="polite"></p>
+</div>
+
+<script>
+(() => {
+  /* ---------- Settings ---------- */
+  const RETURN_AT = "2026-12-17T12:00:00+05:30";      // 12 noon, Sri Lanka
+  const SITE_URL = "https://eduzone.switchops.tech/"; // where "Enter EduZone" goes
+  const DECREES = [
+    "Doom does not skip past papers.",
+    "Kneel. Then revise.",
+    "Every timeline ends. So does your study break.",
+    "Doom read the whole syllabus. Twice.",
+    "Even gods hand in their homework on time.",
+    "You may rewind the lesson. Not the exam.",
+    "There is no multiverse where you pass without studying.",
+    "Doom sits in the front row.",
+  ];
+  const TAUNTS = ["You touched the mask. Detention.", "Again? Doom is calling your parents.", "Even Doom graduated. You are next.", "Fine. One selfie. Then revise."];
+
+  const $ = (id) => document.getElementById(id);
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const test = new URLSearchParams(location.search).get("in"); // ?in=10 rehearses the last 10 seconds
+  const target = test !== null && +test >= 0 ? Date.now() + (+test) * 1000 : Date.parse(RETURN_AT);
+  const scene = $("scene"), stage = $("stage");
+
+  /* ---------- Countdown ---------- */
+  const units = {};
+  document.querySelectorAll(".unit").forEach((u) => (units[u.dataset.u] = u.querySelector(".digits")));
+  function show(key, text) {
+    const box = units[key];
+    while (box.children.length < text.length) box.insertAdjacentHTML("beforeend", '<svg viewBox="-4 0 84 100"><use transform="skewX(-9) translate(8 0)"/></svg>');
+    while (box.children.length > text.length) box.lastChild.remove();
+    [...text].forEach((c, i) => {
+      const cell = box.children[i], ref = "#n" + c, use = cell.firstChild;
+      if (use.getAttribute("href") === ref) return;
+      use.setAttribute("href", ref);
+      cell.classList.remove("hit"); void cell.getBoundingClientRect(); cell.classList.add("hit");
+    });
+  }
+  const two = (n) => String(n).padStart(2, "0");
+  let last = -1, over = false, lastMin = -1;
+  function tick() {
+    const left = Math.max(0, Math.ceil((target - Date.now()) / 1000));
+    if (left === last) return;
+    const first = last === -1;
+    last = left;
+    const d = Math.floor(left / 86400), h = Math.floor(left / 3600) % 24, m = Math.floor(left / 60) % 60, s = left % 60;
+    show("d", two(d)); show("h", two(h)); show("m", two(m)); show("s", two(s));
+    if (m !== lastMin) { lastMin = m; $("clock").setAttribute("aria-label", `${d} days, ${h} hours and ${m} minutes left`); }
+    if (left === 0) return finish(first);
+    if (!first) { sound.tick(left <= 10); if (left <= 10) strike(left <= 5); }
+  }
+  function finish(quiet) {
+    if (over) return;
+    over = true;
+    clearInterval(timer);
+    stage.classList.add("woke");
+    $("lead").textContent = "EduZone has returned. Welcome to";
+    document.title = "EduZone has returned";
+    $("clock").hidden = true; $("acts").hidden = true; $("enter").hidden = false;
+    $("when").textContent = "The wait is over. Back to class.";
+    $("go").href = SITE_URL;
+    $("live").textContent = "EduZone has returned.";
+    if (!quiet) { strike(true); setTimeout(() => strike(true), 900); }
+  }
+
+  /* ---------- Decrees and the mask ---------- */
+  let di = 0, hold = 0, touches = 0, sleep = 0;
+  function say(text) { const p = $("decree"); p.classList.add("out"); setTimeout(() => { p.textContent = text; p.classList.remove("out"); }, calm ? 0 : 500); }
+  setInterval(() => { if (Date.now() > hold) say(DECREES[(di = (di + 1) % DECREES.length)]); }, 6500);
+  $("mask").addEventListener("click", () => {
+    const line = TAUNTS[touches++ % TAUNTS.length];
+    hold = Date.now() + 6000;
+    say(line); $("live").textContent = line;
+    stage.classList.add("woke"); clearTimeout(sleep);
+    sleep = setTimeout(() => { if (!over) stage.classList.remove("woke"); }, 5000);
+    strike(true);
+  });
+
+  /* ---------- Light on the mask: follows the pointer, drifts by itself on touch screens ---------- */
+  if (!calm) {
+    const fine = matchMedia("(pointer: fine)").matches;
+    let tx = 0, ty = 0, x = 0, y = 0, lx = 53, ly = 52, gx = 53, gy = 52, moved = -9e9;
+    addEventListener("pointermove", (e) => {
+      if (!fine) return;
+      moved = performance.now();
+      tx = e.clientX / innerWidth * 2 - 1; ty = e.clientY / innerHeight * 2 - 1;
+      const r = stage.getBoundingClientRect();
+      gx = (e.clientX - r.left) / r.width * 100; gy = (e.clientY - r.top) / r.height * 100;
+    }, { passive: true });
+    (function step(now = 0) {
+      if (now - moved > 4000) { gx = 50 + Math.sin(now * .00045) * 9; gy = 46 + Math.cos(now * .0006) * 28; }
+      x += (tx - x) * .07; y += (ty - y) * .07; lx += (gx - lx) * .06; ly += (gy - ly) * .06;
+      stage.style.setProperty("--px", x.toFixed(3)); stage.style.setProperty("--py", y.toFixed(3));
+      stage.style.setProperty("--lx", lx.toFixed(2) + "%"); stage.style.setProperty("--ly", ly.toFixed(2) + "%");
+      requestAnimationFrame(step);
+    })();
+  }
+
+  /* ---------- In the air: embers, lost exam papers, lightning ---------- */
+  const cv = $("air"), g = cv.getContext("2d");
+  let W = 0, H = 0, bolt = null;
+  const R = (a, z) => a + Math.random() * (z - a);
+  function size() {
+    const k = Math.min(devicePixelRatio || 1, 1.5);
+    W = scene.clientWidth; H = scene.clientHeight; cv.width = W * k; cv.height = H * k; g.setTransform(k, 0, 0, k, 0, 0);
+  }
+  const sprite = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d")); return c; };
+  const spark = sprite(32, 32, (q) => { const r = q.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, "#f0fff7"); r.addColorStop(.25, "rgba(77,255,154,.9)"); r.addColorStop(1, "rgba(77,255,154,0)"); q.fillStyle = r; q.fillRect(0, 0, 32, 32); });
+  const sheets = ["A+", "100", "π", "E=mc²", "75", "√2"].map((mark) => sprite(120, 160, (q) => {
+    q.fillStyle = "#cfdcd0"; q.beginPath(); q.moveTo(0, 0); q.lineTo(104, 0); q.lineTo(120, 16); q.lineTo(120, 160); q.lineTo(0, 160); q.fill();
+    q.fillStyle = "#93a896"; q.beginPath(); q.moveTo(104, 0); q.lineTo(104, 16); q.lineTo(120, 16); q.fill();
+    q.fillStyle = "rgba(10,42,29,.6)"; for (let y = 62; y < 150; y += 12) q.fillRect(14, y, R(50, 92), 3);
+    q.fillStyle = "#0a2a1d"; q.font = "700 " + (mark.length > 3 ? 24 : 38) + "px Georgia"; q.fillText(mark, 13, 44);
+  }));
+  const small = innerWidth < 700;
+  const lane = () => (W > H ? R(.02, .34) : R(0, .16)); // over the dark cloth, off the face
+  size();
+  const embers = Array.from({ length: small ? 30 : 64 }, () => ({ x: R(0, .85), y: R(0, 1), s: R(2, 8), v: R(.00003, .00011), w: R(0, 6.3) }));
+  const papers = Array.from({ length: small ? 3 : 6 }, (_, i) => ({ x: lane(), y: i / 6, s: R(.22, .5), v: R(.00002, .00004), a: R(0, 6.3), r: R(-.0004, .0004), t: R(0, 6.3), img: sheets[i % sheets.length] }));
+  function makeBolt() {
+    const lines = [];
+    const grow = (x, y, ang, len, w, depth) => {
+      let pts = [[x, y]];
+      for (let i = 0; i < len; i++) {
+        ang += R(-.42, .42); ang += (Math.PI / 2 - ang) * .18;
+        x += Math.cos(ang) * R(12, 30); y += Math.sin(ang) * R(12, 30); pts.push([x, y]);
+        if (depth < 2 && Math.random() < .13) grow(x, y, ang + R(-.9, .9), len * .4, w * .45, depth + 1);
+      }
+      lines.push({ pts, w });
+    };
+    const side = R(.03, .3);
+    grow(W * side, -10, Math.PI / 2, Math.round(H * .6 / 20), 3.2, 0);
+    return { lines, life: 1 };
+  }
+  function strike(big) {
+    sound.thunder(big);
+    if (calm) return;
+    bolt = makeBolt();
+    const fl = $("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
+    if (big) { scene.classList.remove("quake"); void scene.offsetWidth; scene.classList.add("quake"); }
+  }
+  let prev = 0;
+  function frame(now) {
+    const dt = Math.min(50, now - prev || 16), rush = over ? 3 : 1; prev = now;
+    g.clearRect(0, 0, W, H);
+    if (bolt) {
+      g.globalCompositeOperation = "lighter"; g.lineJoin = "round";
+      for (const l of bolt.lines) {
+        g.beginPath(); l.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+        g.strokeStyle = `rgba(77,255,154,${.2 * bolt.life})`; g.lineWidth = l.w * 5; g.stroke();
+        g.strokeStyle = `rgba(228,255,241,${bolt.life})`; g.lineWidth = l.w; g.stroke();
+      }
+      bolt.life -= dt / 480; if (bolt.life <= 0) bolt = null;
+      g.globalCompositeOperation = "source-over";
+    }
+    for (const p of papers) {
+      p.y -= p.v * dt * rush; p.a += p.r * dt; p.t += .0011 * dt;
+      if (p.y < -.2) { p.y = .85; p.x = lane(); }
+      const flip = Math.abs(Math.cos(p.t));
+      g.save(); g.translate(p.x * W, p.y * H); g.rotate(p.a); g.scale(p.s * (flip * .85 + .15), p.s);
+      g.globalAlpha = (.18 + .3 * flip) * Math.max(0, Math.min(1, (.6 - p.y) / .22));
+      g.drawImage(p.img, -60, -80); g.restore();
+    }
+    g.globalCompositeOperation = "lighter";
+    for (const e of embers) {
+      e.y -= e.v * dt * rush; e.x += Math.sin(now * .0009 + e.w) * .00004 * dt;
+      if (e.y < -.03) { e.y = 1.03; e.x = R(0, .85); }
+      g.globalAlpha = .3 + .5 * Math.sin(now * .004 + e.w * 3) ** 2;
+      g.drawImage(spark, e.x * W - e.s / 2, e.y * H - e.s / 2, e.s, e.s);
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+    if (!calm) requestAnimationFrame(frame);
+  }
+
+  /* ---------- Sound: on by itself. Browsers that block that get it on the first tap, click or key. ---------- */
+  const sound = (() => {
+    let ac = null, out = null, on = false, noise = null;
+    function build() {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      out = ac.createGain(); out.gain.value = 0; out.connect(ac.destination);
+      const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 210; lp.connect(out);
+      for (const [hz, g] of [[36.7, .5], [55, .22], [73.6, .2], [77.8, .1], [110.4, .06]]) {
+        const o = ac.createOscillator(), v = ac.createGain(); o.type = "sawtooth"; o.frequency.value = hz; v.gain.value = g; o.connect(v).connect(lp); o.start();
+      }
+      const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = .07; lg.gain.value = 90; lfo.connect(lg).connect(lp.frequency); lfo.start();
+      noise = ac.createBuffer(1, ac.sampleRate * 3, ac.sampleRate);
+      const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return {
+      start() { if (!ac) build(); on = true; ac.resume(); out.gain.setTargetAtTime(.34, ac.currentTime, .4); },
+      stop() { on = false; if (ac) out.gain.setTargetAtTime(0, ac.currentTime, .15); },
+      playing() { return on && ac.state === "running"; },
+      onstate(fn) { if (ac) ac.onstatechange = fn; },
+      rest(hidden) { if (ac && on) hidden ? ac.suspend() : ac.resume(); },
+      thunder(big) {
+        if (!on || ac.state !== "running") return; // nothing queues up while blocked
+        const n = ac.createBufferSource(), lp = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime + .05;
+        n.buffer = noise; lp.type = "lowpass"; lp.frequency.setValueAtTime(big ? 1400 : 700, t); lp.frequency.exponentialRampToValueAtTime(60, t + 2.4);
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(big ? 1.6 : .9, t + .03); g.gain.exponentialRampToValueAtTime(.001, t + 2.8);
+        n.connect(lp).connect(g).connect(out); n.start(t); n.stop(t + 3);
+      },
+      tick(hard) {
+        if (!on || ac.state !== "running") return; // nothing queues up while blocked
+        const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime; o.frequency.setValueAtTime(hard ? 130 : 1500, t); o.frequency.exponentialRampToValueAtTime(hard ? 40 : 500, t + .05);
+        g.gain.setValueAtTime(hard ? 1.2 : .16, t); g.gain.exponentialRampToValueAtTime(.001, t + (hard ? .4 : .06)); o.connect(g).connect(out); o.start(t); o.stop(t + .5);
+      },
+    };
+  })();
+  const label = () => { const p = sound.playing(); $("snd").setAttribute("aria-pressed", p); $("sndt").textContent = p ? "Sound on" : muted ? "Sound off" : "Tap for sound"; };
+  let muted = false;
+  try { muted = localStorage.getItem("doom-muted") === "1"; } catch {}
+  function soundOn() { sound.start(); sound.onstate(label); label(); }
+  const WAKE = ["pointerdown", "pointerup", "keydown", "click"];
+  function wake(e) {
+    if (muted || sound.playing()) return WAKE.forEach((w) => removeEventListener(w, wake, true));
+    if (!$("snd").contains(e.target)) soundOn(); // the button looks after itself
+  }
+  WAKE.forEach((w) => addEventListener(w, wake, true));
+  $("snd").addEventListener("click", () => {
+    muted = sound.playing();
+    try { localStorage.setItem("doom-muted", muted ? "1" : "0"); } catch {}
+    if (muted) { sound.stop(); label(); } else soundOn();
+  });
+  if (!muted) soundOn(); else label();
+  document.addEventListener("visibilitychange", () => sound.rest(document.hidden));
+
+  /* ---------- Calendar and sharing ---------- */
+  const here = location.protocol.startsWith("http") ? location.origin + location.pathname : SITE_URL;
+  $("wa").href = "https://wa.me/?text=" + encodeURIComponent("EduZone will return on Doomsday. 17 December, 12 noon. " + here);
+  $("cal").addEventListener("click", () => {
+    const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//EduZone//Doomsday//EN", "BEGIN:VEVENT", "UID:doomsday-2026@eduzone.switchops.tech", "DTSTAMP:20261124T000000Z",
+      "DTSTART:20261217T063000Z", "DTEND:20261217T070000Z", "SUMMARY:EduZone returns (Doomsday)", "DESCRIPTION:Doom does not skip past papers.", "URL:" + SITE_URL,
+      "BEGIN:VALARM", "TRIGGER:-PT15M", "ACTION:DISPLAY", "DESCRIPTION:EduZone returns in 15 minutes", "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = "eduzone-doomsday.ics"; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+
+  /* ---------- Go ---------- */
+  new ResizeObserver(() => { if (scene.clientHeight !== H || scene.clientWidth !== W) { size(); if (calm) frame(0); } }).observe(scene);
+  if (calm) frame(0); else requestAnimationFrame(frame);
+  const timer = setInterval(tick, 200); tick();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && !over) tick(); });
+  if (!calm) {
+    setTimeout(() => strike(false), 950);
+    (function storm() { setTimeout(() => { if (!document.hidden) strike(false); storm(); }, R(8000, 16000)); })();
+  }
+})();
+</script>
+</body>
+</html>

@@ -28,6 +28,7 @@ from app.modules.market.schemas import (
     MarketCoursePage,
     ProfileOut,
     ProfileUpdate,
+    SeatFilter,
     SitemapOut,
     Sort,
     SubjectOut,
@@ -64,12 +65,13 @@ async def classes(
     medium: Medium | None = None,
     max_fee: Annotated[int | None, Query(ge=0)] = None,
     format: Format | None = None,
+    seats: SeatFilter | None = None,
     sort: Sort = "popular",
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=60)] = 24,
 ) -> MarketClassPage:
     return await service.search_classes(q=q, exam=exam, subject=subject, year=year, medium=medium, max_fee=max_fee,
-                                        fmt=format, sort=sort, cursor=cursor, limit=limit)
+                                        fmt=format, seats=seats, sort=sort, cursor=cursor, limit=limit)
 
 
 @router.get("/classes/by-id/{class_id}", response_model=MarketClass)
@@ -155,6 +157,12 @@ async def course_detail(slug: str, coupon: Annotated[str | None, Query(max_lengt
 @router.post("/course/{slug}/preview", response_model=CoursePreviewOut)
 async def course_preview(slug: str, body: CoursePreviewIn) -> CoursePreviewOut:
     return await courses.preview(slug, body.lecture_id)
+
+
+@router.post("/lessons/{lesson_id}/preview", response_model=CoursePreviewOut)
+async def lesson_preview(lesson_id: UUID) -> CoursePreviewOut:
+    """A tuition class's free-preview lesson with a video, for anyone (the class page's Preview)."""
+    return await courses.lesson_preview(lesson_id)
 
 
 @router.get("/instructors/{slug}", response_model=InstructorPage)

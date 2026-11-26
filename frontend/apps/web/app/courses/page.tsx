@@ -14,6 +14,7 @@ type Category = Schema<"CourseCategoryOut">;
 export const metadata: Metadata = {
   title: "Courses | EduZone",
   description: "Self-paced video courses with lifetime access, from teachers across Sri Lanka.",
+  alternates: { canonical: "/courses" },
 };
 
 /** Every course on the marketplace, with search and filters. */

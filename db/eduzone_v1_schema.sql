@@ -1027,7 +1027,11 @@ SELECT m.id, m.class_id, m.month_start, m.status, COALESCE(m.fee_cents, pc.month
 FROM class_months m JOIN public_classes pc ON pc.id = m.class_id;
 CREATE VIEW public_lessons AS
 SELECT l.id, l.class_id, l.class_month_id, l.title, l.lesson_type, l.sort_order, l.scheduled_at,
-       l.duration_minutes, l.is_free_preview
+       l.duration_minutes, l.is_free_preview,
+       -- migration 0021: length of the lesson's ready videos (a free preview with a video plays for anyone)
+       COALESCE((SELECT sum(a.duration_seconds) FROM lesson_resources r
+                 JOIN media_assets a ON a.id = r.media_asset_id AND a.kind = 'video' AND a.status = 'ready'
+                 WHERE r.lesson_id = l.id), 0)::int AS video_seconds
 FROM lessons l JOIN public_classes pc ON pc.id = l.class_id
 WHERE l.is_published;
 CREATE VIEW public_teachers AS
@@ -1493,3 +1497,86 @@ CREATE TABLE contact_replies (               -- forced RLS, no policies: eduzone
 );
 -- submit_contact_message(user, name, email, phone, topic, subject, message, ip, ua) RETURNS text
 -- (SECURITY DEFINER, eduzone_app may execute): the reference, or NULL past 3 messages an hour per email or account.
+
+-- =============================================================================
+-- Seats and registration for tuition classes, step S1 (migration 0018, docs/SEATS.md)
+-- =============================================================================
+ALTER TABLE classes
+    ADD COLUMN seat_limit      integer CHECK (seat_limit BETWEEN 1 AND 10000),   -- NULL = no limit
+    ADD COLUMN show_seat_count boolean NOT NULL DEFAULT true,                    -- show "3 seats left"
+    ADD COLUMN registration    text NOT NULL DEFAULT 'open' CHECK (registration IN ('open','ask','closed')),
+    ADD COLUMN starts_on       date,
+    ADD COLUMN registration_after_start text CHECK (registration_after_start IN ('open','ask','closed')),
+    ADD CONSTRAINT classes_seats_tuition_only CHECK (        -- courses keep the defaults
+        kind = 'tuition' OR (seat_limit IS NULL AND show_seat_count AND registration = 'open'
+                             AND starts_on IS NULL AND registration_after_start IS NULL)),
+    ADD CONSTRAINT classes_after_start_needs_date CHECK (
+        registration_after_start IS NULL OR starts_on IS NOT NULL);
+ALTER TABLE orders ADD COLUMN seat_held_until timestamptz;   -- a pending order holds a seat until then
+CREATE INDEX idx_order_items_class ON order_items (tenant_id, class_id, class_month_id);
+-- false: a past month bought late or given after it closed (takes no seat, makes nobody a returning student)
+ALTER TABLE access_grants ADD COLUMN takes_seat boolean NOT NULL DEFAULT true;
+
+-- Seats, step S2 (migration 0019): returning students keep their seat until a renewal date
+ALTER TABLE classes ADD COLUMN renewal_day smallint NOT NULL DEFAULT 7 CHECK (renewal_day BETWEEN 1 AND 28);
+-- classes_seats_tuition_only also requires renewal_day = 7 for courses.
+ALTER TABLE class_months
+    ADD COLUMN opened_at   timestamptz,                     -- when it opened (NULL while upcoming)
+    ADD COLUMN renew_until timestamptz;                     -- last month's students' seats are kept until then
+CREATE TABLE seat_keeps (                                   -- staff's decision about one kept seat; tenant RLS
+    id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id         uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    class_id          uuid NOT NULL,
+    class_month_id    uuid NOT NULL,
+    student_member_id uuid NOT NULL,
+    action            text NOT NULL CHECK (action IN ('keep','release')),
+    keep_until        timestamptz,
+    decided_by        uuid NOT NULL,
+    decided_at        timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (class_month_id, student_member_id),
+    UNIQUE (tenant_id, id),
+    CHECK ((action = 'keep') = (keep_until IS NOT NULL)),
+    FOREIGN KEY (tenant_id, class_id, class_month_id) REFERENCES class_months (tenant_id, class_id, id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, student_member_id) REFERENCES tenant_members (tenant_id, id),
+    FOREIGN KEY (tenant_id, decided_by) REFERENCES tenant_members (tenant_id, id)
+);
+
+-- Seats, step S3 (migration 0020): requests, the notify list, the shared counting, the public seat information
+CREATE TABLE seat_requests (                -- tenant RLS + SELECT of the student's own rows; app: no DELETE
+    id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id         uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    class_id          uuid NOT NULL,
+    class_month_id    uuid,
+    student_member_id uuid NOT NULL,
+    status            text NOT NULL DEFAULT 'pending'
+                      CHECK (status IN ('pending','approved','rejected','withdrawn','used')),  -- expired: approved, past held_until
+    student_note      text CHECK (char_length(student_note) <= 500),
+    decided_by        uuid,
+    decided_at        timestamptz,
+    decision_note     text CHECK (char_length(decision_note) <= 500),
+    held_until        timestamptz,
+    created_at        timestamptz NOT NULL DEFAULT now(),
+    UNIQUE NULLS NOT DISTINCT (class_id, class_month_id, student_member_id),
+    UNIQUE (tenant_id, id),
+    CHECK (status <> 'approved' OR held_until IS NOT NULL),
+    FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, class_id, class_month_id) REFERENCES class_months (tenant_id, class_id, id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, student_member_id) REFERENCES tenant_members (tenant_id, id),
+    FOREIGN KEY (tenant_id, decided_by) REFERENCES tenant_members (tenant_id, id)
+);
+CREATE TABLE seat_waits (                   -- tenant RLS + SELECT of the student's own rows
+    id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id         uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    class_id          uuid NOT NULL,
+    student_member_id uuid NOT NULL,
+    created_at        timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (class_id, student_member_id),
+    UNIQUE (tenant_id, id),
+    FOREIGN KEY (tenant_id, class_id) REFERENCES classes (tenant_id, id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, student_member_id) REFERENCES tenant_members (tenant_id, id)
+);
+-- seat_holders(class, month): everyone with a seat and why (access, paying, accepted, kept); seat_last_month(class,
+-- month): last month's students. SECURITY INVOKER, so RLS applies. seat_registration(...): registration today.
+-- public_seats_taken(class, month): SECURITY DEFINER count for the view public_seats (class_id, class_month_id,
+-- registration, seat_limit and seats_left when shown, is_full). public_classes.students of a class with limited seats
+-- is the seats taken (0 when hidden).

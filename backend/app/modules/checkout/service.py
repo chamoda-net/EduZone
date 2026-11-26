@@ -33,6 +33,7 @@ from app.modules.courses import coupons
 from app.modules.learning import access
 from app.modules.learning import repository as learning_repo
 from app.modules.ledger import posting
+from app.modules.seats import service as seats
 from app.modules.checkout.schemas import (
     CheckoutCreate,
     CheckoutOut,
@@ -101,6 +102,7 @@ class PricedItem:
     coupon_id: UUID | None = None
     coupon_code: str | None = None
     coupon_public: bool = False          # an automatic sale rather than a typed code
+    takes_seat: bool = True              # false for courses and past months (docs/SEATS.md)
 
 
 async def require_verified_phone(session: AsyncSession, user_id: UUID) -> None:
@@ -156,6 +158,9 @@ async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
         raise ApiError("NOTHING_TO_PAY", "There is nothing to pay for this.", status_code=409)
     if auth.member_id and await access.active_grant_for(session, auth.member_id, c.id, class_month_id) is not None:
         raise ApiError("ALREADY_HAS_ACCESS", "You already have access.", status_code=409)
+    takes_seat = c.kind == "tuition" and late_request_id is None
+    if takes_seat:
+        await seats.check(session, c.id, class_month_id, auth.member_id)
     discount = await coupons.best_discount(session, c.id, amount, coupon_code) if c.kind == "course" else None
     return PricedItem(class_id=c.id, class_month_id=class_month_id, teacher_member_id=c.teacher_member_id,
                       late_request_id=late_request_id, description=description,
@@ -164,21 +169,23 @@ async def price_item(session: AsyncSession, auth: AuthContext, class_id: UUID,
                       discount_cents=discount.cents if discount else 0,
                       coupon_id=discount.coupon_id if discount else None,
                       coupon_code=discount.code if discount else None,
-                      coupon_public=discount.is_public if discount else False)
+                      coupon_public=discount.is_public if discount else False, takes_seat=takes_seat)
 
 
 async def create_order(session: AsyncSession, auth: AuthContext, item: PricedItem, *, gateway: str,
                        payment_key: str, checkout_id: UUID | None = None,
                        checkout_payment_id: UUID | None = None) -> UUID:
-    """Pending order + its one item (commission and teacher snapshotted) + an initiated payment."""
-    await learning_repo.upsert_enrollment(session, auth.member_id, item.class_id)
+    """Pending order + its one item (commission and teacher snapshotted) + an initiated payment. The order holds
+    the seat while the student pays; they join the class when the payment succeeds."""
+    held_until = (await seats.hold(session, item.class_id, item.class_month_id, auth.member_id)
+                  if item.takes_seat else None)
     order_id: UUID = (await session.execute(text("""
         INSERT INTO orders (tenant_id, student_member_id, order_no, currency, subtotal_cents, discount_cents,
-                            total_cents, checkout_id)
-        VALUES (current_tenant_id(), :m, :no, :cur, :list, :disc, :amt, :co) RETURNING id
+                            total_cents, checkout_id, seat_held_until)
+        VALUES (current_tenant_id(), :m, :no, :cur, :list, :disc, :amt, :co, :held) RETURNING id
     """), {"m": auth.member_id, "no": await _new_order_no(session), "cur": item.currency, "amt": item.amount_cents,
            "list": item.list_price_cents or item.amount_cents, "disc": item.discount_cents,
-           "co": checkout_id})).scalar_one()
+           "co": checkout_id, "held": held_until})).scalar_one()
     await session.execute(text("""
         INSERT INTO order_items (tenant_id, order_id, class_id, class_month_id, teacher_member_id, late_request_id,
                                  description, amount_cents, commission_bps, list_price_cents, discount_cents, coupon_id)
@@ -400,10 +407,24 @@ async def fulfil_order(session: AsyncSession, p: Any, event: GatewayEvent, *, fe
     """), {"o": p.order_id})).all()
     entries: list[posting.Entry] = []
     for item in items:  # exactly one per order in v1, so the order's fee share belongs to it
+        takes_seat = item.late_request_id is None
+        await seats.lock(session, item.class_id)
+        await learning_repo.upsert_enrollment(session, p.student_member_id, item.class_id)
         if await access.active_grant_for(session, p.student_member_id, item.class_id, item.class_month_id) is None:
+            # Paid after its hold ended and the seat went to someone else: the student keeps what they paid for.
+            over = takes_seat and await seats.over_limit(session, item.class_id, item.class_month_id,
+                                                         p.student_member_id)
             await learning_repo.insert_grant(session, member_id=p.student_member_id, class_id=item.class_id,
                                              month_id=item.class_month_id, source="purchase", granted_by=None,
-                                             order_item_id=item.id)
+                                             order_item_id=item.id, takes_seat=takes_seat)
+            if takes_seat:
+                await seats.seated(session, item.class_id, item.class_month_id, p.student_member_id)
+            if over:
+                log.warning("order %s: paid for a class that is full; now over its seat limit", p.order_id)
+                await write_audit(session, actor_user_id=None, action="seat.over_limit", entity_type="class",
+                                  entity_id=item.class_id, details={
+                                      "order_id": p.order_id, "class_month_id": item.class_month_id,
+                                      "student_member_id": p.student_member_id})
         else:
             # Paid twice for the same month (two tabs): money is booked; staff should refund one.
             log.warning("order %s paid for access the student already had; refund needed", p.order_id)

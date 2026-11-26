@@ -22,11 +22,13 @@ from app.core.tenancy import tenant_transaction, user_transaction
 from app.modules.auth import repository as auth_repo
 from app.modules.auth.dependencies import AuthContext, UserContext, current_member
 from app.modules.checkout.schemas import OrderItemOut, OrderOut
-from app.modules.learn.schemas import MonthToPay, MyRequest, Today, UpcomingLesson
+from app.modules.learn.schemas import MonthToPay, MyRequest, MySeatRequestRow, MySeatWait, Today, UpcomingLesson
 from app.modules.learning import repository as learning_repo
 from app.modules.learning import service as learning
 from app.modules.learning.access import ACTIVE_GRANT, LESSON_UNLOCKED
 from app.modules.learning.schemas import MyClass, OrgRef
+from app.modules.seats import requests as seat_requests
+from app.modules.seats import service as seats
 
 Kind = Literal["class", "month", "lesson", "resource", "order"]
 _LABEL = {"class": "Class", "month": "Month", "lesson": "Lesson", "resource": "File", "order": "Order"}
@@ -131,7 +133,8 @@ async def today(user: UserContext) -> Today:
         live.extend(await _upcoming(session, member_id, org, 7))
         currency = (await session.execute(text("SELECT currency FROM tenants WHERE id = current_tenant_id()"))).scalar_one()
         for r in (await session.execute(text(_TO_PAY), {"member_id": member_id})).all():
-            to_pay.append(MonthToPay(**r._mapping, currency=currency, org=org))
+            seat = None if r.approved_late else await seats.state(session, r.class_id, r.month_id, member_id)
+            to_pay.append(MonthToPay(**r._mapping, currency=currency, seat=seat, org=org))
         counts = (await session.execute(text("""
             SELECT (SELECT count(*) FROM late_month_requests WHERE student_member_id = :m AND status = 'pending') AS pending,
                    (SELECT count(*) FROM class_enrollments e JOIN classes c ON c.id = e.class_id AND c.kind = 'tuition'
@@ -156,6 +159,20 @@ async def my_requests(user: UserContext) -> list[MyRequest]:
         """), {"m": member_id})).all()
         out.extend(MyRequest(**r._mapping, org=org) for r in rows)
     return sorted(out, key=lambda r: r.created_at, reverse=True)
+
+
+async def my_seat_requests(user: UserContext) -> list[MySeatRequestRow]:
+    out: list[MySeatRequestRow] = []
+    async for session, member_id, org in _per_tenant(user):
+        out.extend(MySeatRequestRow(**r.model_dump(), org=org) for r in await seat_requests.mine(session, member_id))
+    return sorted(out, key=lambda r: r.created_at, reverse=True)
+
+
+async def my_seat_waits(user: UserContext) -> list[MySeatWait]:
+    out: list[MySeatWait] = []
+    async for session, member_id, org in _per_tenant(user):
+        out.extend(MySeatWait(**w.model_dump(), org=org) for w in await seat_requests.my_waits(session, member_id))
+    return sorted(out, key=lambda w: (not w.available, -w.created_at.timestamp()))
 
 
 async def my_payments(user: UserContext) -> list[OrderOut]:

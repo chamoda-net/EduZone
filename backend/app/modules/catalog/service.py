@@ -9,7 +9,7 @@ import re
 import secrets
 import unicodedata
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import UTC, date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -18,6 +18,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import write_audit
+from app.core.config import get_settings
 from app.core.errors import ApiError
 from app.core.pagination import decode_cursor, encode_cursor
 from app.modules.auth.dependencies import STAFF_ROLES, Actor
@@ -36,6 +37,7 @@ from app.modules.catalog.schemas import (
     MonthUpdate,
 )
 from app.modules.market import profiles
+from app.modules.seats import settings as seat_settings
 
 # Allowed class status changes. A published class never goes back to draft:
 # students may already have paid for it.
@@ -67,8 +69,8 @@ async def _audit(session: AsyncSession, actor: Actor, action: str, entity_type: 
 # --- classes --------------------------------------------------------------------------
 
 def _class_out(c: ClassModel, currency: str) -> ClassOut:
-    return ClassOut.model_validate({**{k: getattr(c, k) for k in ClassOut.model_fields if k != "currency"},
-                                    "currency": currency})
+    own = {k: getattr(c, k) for k in ClassOut.model_fields if k not in ("currency", "seats_enabled")}
+    return ClassOut.model_validate({**own, "currency": currency, "seats_enabled": get_settings().seats_enabled})
 
 
 async def _load_class(session: AsyncSession, actor: Actor, class_id: UUID, *,
@@ -146,6 +148,7 @@ async def create_class(session: AsyncSession, actor: Actor, body: ClassCreate) -
         values["subject"] = await _subject_name(session, body.subject_id)
     await _check_teacher(session, actor, values["teacher_member_id"])
     _check_pricing(body.pricing_model, body.monthly_fee_cents, body.one_time_price_cents)
+    seat_settings.check(values, set(seat_settings.DEFAULTS))
     if body.slug is None:
         values["slug"] = await _unique_slug(session, body.title)
     elif await repo.class_slug_taken(session, body.slug):
@@ -184,6 +187,8 @@ async def update_class(session: AsyncSession, actor: Actor, class_id: UUID, body
     merged = {k: changes.get(k, getattr(c, k))
               for k in ("pricing_model", "monthly_fee_cents", "one_time_price_cents")}
     _check_pricing(merged["pricing_model"], merged["monthly_fee_cents"], merged["one_time_price_cents"])
+    seat_settings.check({k: changes.get(k, getattr(c, k)) for k in seat_settings.DEFAULTS},
+                        set(changes) & set(seat_settings.DEFAULTS))
 
     updated = await repo.update_class(session, c.id, changes)
     if updated.status == "published" and ({"status", "teacher_member_id"} & set(changes)):
@@ -220,7 +225,13 @@ def _month_out(m: ClassMonth, c: ClassModel, currency: str) -> MonthOut:
     effective = m.fee_cents if m.fee_cents is not None else c.monthly_fee_cents
     return MonthOut(id=m.id, class_id=m.class_id, month_start=m.month_start, fee_cents=m.fee_cents,
                     effective_fee_cents=effective or 0, currency=currency, status=m.status,
-                    created_at=m.created_at)
+                    opened_at=m.opened_at, renew_until=m.renew_until, created_at=m.created_at)
+
+
+def _opening(m_start: date, c: ClassModel) -> dict[str, Any]:
+    """A month opens: when, and until when last month's students keep their seats (docs/SEATS.md)."""
+    now = datetime.now(UTC)
+    return {"opened_at": now, "renew_until": seat_settings.renew_until(m_start, c.renewal_day, now)}
 
 
 async def _load_month(session: AsyncSession, actor: Actor, month_id: UUID) -> tuple[ClassMonth, ClassModel]:
@@ -246,7 +257,8 @@ async def create_month(session: AsyncSession, actor: Actor, class_id: UUID, body
         raise ApiError("NOT_MONTHLY", "Only monthly classes have months.")
     if await repo.month_exists(session, c.id, body.month_start):
         raise ApiError("MONTH_EXISTS", "This month already exists for the class.", status_code=409)
-    m = await repo.insert_month(session, {"class_id": c.id, **body.model_dump()})
+    opening = _opening(body.month_start, c) if body.status != "upcoming" else {}
+    m = await repo.insert_month(session, {"class_id": c.id, **body.model_dump(), **opening})
     await _audit(session, actor, "class_month.create", "class_month", m.id,
                  {"class_id": c.id, "month_start": m.month_start})
     return _month_out(m, c, await repo.get_currency(session))
@@ -255,8 +267,16 @@ async def create_month(session: AsyncSession, actor: Actor, class_id: UUID, body
 async def update_month(session: AsyncSession, actor: Actor, month_id: UUID, body: MonthUpdate) -> MonthOut:
     m, c = await _load_month(session, actor, month_id)
     changes = {k: v for k, v in body.changes().items() if getattr(m, k) != v}
+    status = changes.get("status", m.status)
+    if "renew_until" in changes and status != "open":
+        raise ApiError("MONTH_NOT_OPEN", "The renewal date belongs to an open month.", status_code=409)
     if changes:
-        m = await repo.update_month(session, m.id, changes)
+        opening: dict[str, Any] = {}
+        if status == "upcoming":
+            opening = {"opened_at": None, "renew_until": None}     # opened by mistake: it opens again later
+        elif m.opened_at is None:
+            opening = _opening(m.month_start, c)
+        m = await repo.update_month(session, m.id, {**opening, **changes})
         await _audit(session, actor, "class_month.update", "class_month", m.id, {"changes": changes})
     return _month_out(m, c, await repo.get_currency(session))
 

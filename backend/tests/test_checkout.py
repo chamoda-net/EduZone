@@ -111,7 +111,7 @@ async def test_checkout_creates_pending_order(client: AsyncClient, teacher: Head
     assert out["order"]["item"]["description"] == "A/L Physics - November 2026"
     assert out["redirect"]["method"] == "GET" and "/api/v1/dev/fake-gateway/" in out["redirect"]["url"]
     view = (await client.get(f"/api/v1/student/classes/{k['class']['slug']}", headers=student)).json()
-    assert view["enrolled"] is True                              # paying implies joining
+    assert view["enrolled"] is False                             # joined when the payment succeeds (test_seats)
     assert {m["month_start"]: m["access"] for m in view["months"]}["2026-11-01"] == "buy"   # not yet paid
 
 

@@ -60,9 +60,11 @@ async def _public(session: AsyncSession, class_id: UUID, month_id: UUID | None) 
                '/' || pc.subject_slug || '/' || pc.teacher_slug || '/' || pc.slug AS path,
                pc.teacher_photo_url, pc.org_slug, pc.org_name, pc.cover_image_url, pc.pricing_model,
                pc.one_time_price_cents, pc.currency,
-               m.id AS month_id, m.month_start, m.status AS month_status, m.fee_cents AS month_fee_cents
+               m.id AS month_id, m.month_start, m.status AS month_status, m.fee_cents AS month_fee_cents,
+               COALESCE(ps.is_full, false) AS is_full, ps.registration
         FROM public_classes pc
         LEFT JOIN public_class_months m ON m.class_id = pc.id AND m.id = CAST(:mo AS uuid)
+        LEFT JOIN public_seats ps ON ps.class_id = pc.id AND ps.class_month_id IS NOT DISTINCT FROM CAST(:mo AS uuid)
         WHERE pc.id = :c
     """), {"c": class_id, "mo": month_id})).one_or_none()
     if found is not None:
@@ -72,7 +74,7 @@ async def _public(session: AsyncSession, class_id: UUID, month_id: UUID | None) 
                '/course/' || pc.slug AS path, pc.teacher_photo_url, pc.org_slug, pc.org_name, pc.cover_image_url,
                pc.pricing_model, pc.one_time_price_cents, pc.currency,
                CAST(NULL AS uuid) AS month_id, CAST(NULL AS date) AS month_start, CAST(NULL AS text) AS month_status,
-               CAST(NULL AS bigint) AS month_fee_cents
+               CAST(NULL AS bigint) AS month_fee_cents, false AS is_full, CAST(NULL AS text) AS registration
         FROM public_courses pc WHERE pc.id = :c
     """), {"c": class_id})).one_or_none()
 
@@ -90,8 +92,12 @@ def _public_problem(r: Any, month_id: UUID | None) -> str | None:
             return "MONTH_NOT_OPEN"
         if r.month_status == "closed":
             return "LATE_APPROVAL_REQUIRED"     # may be approved for a signed-in student
-        return None
-    return "MONTH_INVALID" if month_id is not None else None
+    elif month_id is not None:
+        return "MONTH_INVALID"
+    # Seats: as a new student would find them; a returning one may still renew once signed in.
+    if r.is_full:
+        return "CLASS_FULL"
+    return {"closed": "REGISTRATION_CLOSED", "ask": "SEAT_REQUEST_REQUIRED"}.get(r.registration)
 
 
 @dataclass(frozen=True, slots=True)
@@ -327,6 +333,7 @@ async def start_checkout(user: UserContext, site_host: str, gateway: Gateway) ->
 
     # 3. One pending order per item, each in its own tenant. Prices are checked again inside the transaction
     #    that creates the order; if anything changed meanwhile, the whole checkout is abandoned.
+    created: list[tuple[UUID, UUID]] = []           # (tenant, order)
     try:
         for p in priced:
             async with in_tenant_of("class", p.class_id, user) as (session, auth, _):
@@ -334,12 +341,21 @@ async def start_checkout(user: UserContext, site_host: str, gateway: Gateway) ->
                 again = await checkout.price_item(session, auth, p.class_id, p.class_month_id, codes[p.class_id])
                 if again.amount_cents != p.amount_cents:
                     raise ApiError("CART_CHANGED", "A price in your cart just changed. Please check it again.", 409)
-                await checkout.create_order(session, auth, again, gateway=gateway_name,
-                                            payment_key=secrets.token_hex(16), checkout_id=checkout_id,
-                                            checkout_payment_id=cp_id)
-    except ApiError as exc:
+                order_id = await checkout.create_order(session, auth, again, gateway=gateway_name,
+                                                       payment_key=secrets.token_hex(16), checkout_id=checkout_id,
+                                                       checkout_payment_id=cp_id)
+                tenant_id = (await session.execute(text("SELECT current_tenant_id()"))).scalar_one()
+            created.append((tenant_id, order_id))
+    except Exception as exc:
+        # The orders already created will never be paid: failed, so the seats they hold are free again.
+        for tenant_id, order_id in created:
+            async with tenant_transaction(tenant_id) as session:
+                await session.execute(text("UPDATE payments SET status = 'failed', failure_reason = 'checkout abandoned' "
+                                           "WHERE order_id = :o AND status = 'initiated'"), {"o": order_id})
+                await session.execute(text("UPDATE orders SET status = 'failed' WHERE id = :o AND status = 'pending'"),
+                                      {"o": order_id})
         await _close(user.user_id, checkout_id, cp_id, "failed", "could not create every order")
-        if exc.code == "CART_CHANGED":
+        if not isinstance(exc, ApiError) or exc.code in ("CART_CHANGED", "SEAT_HOLD_LIMIT"):
             raise
         raise ApiError("CART_HAS_PROBLEMS", "Some items in your cart can't be paid for now.", 409) from exc
 

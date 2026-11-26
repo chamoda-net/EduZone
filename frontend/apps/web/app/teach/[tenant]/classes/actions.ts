@@ -159,18 +159,6 @@ export async function deleteLesson(classId: string, lessonId: string): Promise<F
 
 // --- students and access (step 6) -----------------------------------------------------
 
-export async function grantAccess(
-  classId: string, memberId: string, monthId: string | null, source: "manual" | "scholarship",
-): Promise<FormState> {
-  const res = await api(`~/classes/${classId}/grants`, {
-    method: "POST",
-    body: { student_member_id: memberId, class_month_id: monthId, source },
-  });
-  if (!res.ok) return { error: errorText(t, res.error) };
-  await refresh(classId);
-  return { ok: true };
-}
-
 export async function revokeAccess(classId: string, grantId: string): Promise<FormState> {
   const res = await api(`~/grants/${grantId}/revoke`, { method: "POST", body: {} });
   if (!res.ok) return { error: errorText(t, res.error) };

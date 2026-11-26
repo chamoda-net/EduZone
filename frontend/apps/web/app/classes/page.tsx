@@ -9,9 +9,10 @@ import { errorText, t } from "@eduzone/lib/i18n";
 import type { MarketClassPage, SubjectOut } from "@eduzone/lib/types";
 import { Button, Dialog, EmptyState, ErrorText, Field, Input, PageHeader, Select, buttonStyles } from "@eduzone/ui";
 
-export const metadata: Metadata = { title: "Classes | EduZone", description: "Find online classes for Grade 5, O/L and A/L." };
+export const metadata: Metadata = { title: "Classes | EduZone", description: "Find online classes for Grade 5, O/L and A/L.",
+  alternates: { canonical: "/classes" } };
 
-const FILTERS = ["q", "exam", "subject", "year", "medium", "format", "max_fee", "sort", "org"] as const;
+const FILTERS = ["q", "exam", "subject", "year", "medium", "format", "max_fee", "seats", "sort", "org"] as const;
 type Filters = Partial<Record<(typeof FILTERS)[number], string>>;
 
 /** The catalogue: every listed class, with search and filters (all in the URL, so links can be shared). */
@@ -132,6 +133,12 @@ function FilterForm({ filters, subjects }: { filters: Filters; subjects: Subject
       </Field>
       <Field label={t("market.filters.maxFee")}>
         <Input name="max_fee" type="number" inputMode="numeric" min={0} step={100} defaultValue={filters.max_fee} />
+      </Field>
+      <Field label={t("seat.filter")}>
+        <Select name="seats" defaultValue={filters.seats ?? ""}>
+          <option value="">{t("market.filters.any")}</option>
+          <option value="available">{t("seat.filterAvailable")}</option>
+        </Select>
       </Field>
       <Field label={t("market.filters.sort")}>
         <Select name="sort" defaultValue={filters.sort ?? "popular"}>

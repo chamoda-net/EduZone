@@ -18,6 +18,7 @@ import { Container, buttonStyles, cx } from "@eduzone/ui";
 export const metadata: Metadata = {
   title: `${t("about.eyebrow")} | EduZone`,
   description: t("about.meta"),
+  alternates: { canonical: "/about" },
 };
 
 const rise = (i: number) => ({ "--i": i }) as CSSProperties;

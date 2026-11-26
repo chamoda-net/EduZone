@@ -8,7 +8,8 @@ import { t } from "@eduzone/lib/i18n";
 import type { InstituteOut } from "@eduzone/lib/types";
 import { EmptyState, PageHeader } from "@eduzone/ui";
 
-export const metadata: Metadata = { title: "Institutes | EduZone", description: "Tuition institutes teaching on EduZone." };
+export const metadata: Metadata = { title: "Institutes | EduZone", description: "Tuition institutes teaching on EduZone.",
+  alternates: { canonical: "/institutes" } };
 
 export default async function InstitutesPage() {
   const institutes = await market<InstituteOut[]>("/institutes");

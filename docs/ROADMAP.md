@@ -157,8 +157,11 @@ Stages 2 and 3 can overlap: provider sign-ups and legal review take calendar tim
       site doesn't depend on another CDN. **S**
 - [ ] **Secrets:** in a secret manager. Never in the repo or the database (`JWT_SECRET`, `PAYOUT_ENCRYPTION_KEY`,
       Bunny keys, PayHere keys). **S**
-- [ ] **Behind a proxy or CDN:** make `client_ip()` read the trusted forwarded header (CLAUDE.md note), and set
-      `X-Forwarded-Proto`. **S**
+- [x] **Visitor addresses in code:** the web server names the visitor to the API with `WEB_SERVER_KEY`. Done.
+- [ ] **Behind a proxy or CDN:** set `WEB_SERVER_KEY` (same value on the API and the web server, not on the admin app),
+      `WEB_PROXY_HOPS` (how many of our proxies are in front of the web server) and `X-Forwarded-Proto`. Then check that
+      two visitors get different addresses in `login_attempts`. Re-check the 30 wrong sign-ins and 20 SMS codes per
+      address: phones on one mobile network can share an address. **S**
 - [ ] **Admin app:** on the private network / VPN with `PLATFORM_ALLOWED_CIDRS` (`docs/deploy-admin.md`). **S**
 - [ ] **CI:** lint, typecheck, the backend tests and the e2e suite on every push; deploy on merge. **M**
 - [ ] **Monitoring:** error tracking (e.g. Sentry) for the API and both web apps, structured logs, uptime checks,
