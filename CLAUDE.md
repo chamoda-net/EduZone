@@ -1062,7 +1062,9 @@ httpOnly cookies.
   when it meets (from live lessons: "Every Saturday, 8:00 AM" or the next one) and plays free-preview lessons with a
   video for anyone (`POST /market/lessons/{id}/preview`, `public_lessons.video_seconds`, migration 0021; no view, no
   watermark). The home hides its live totals below 20 classes and 10 teachers. Marketing skills live in
-  `.claude/skills/` and read `.agents/product-marketing.md`. Teachers edit their page at `/teach/<slug>/profile`
+  `.claude/skills/` and read `.agents/product-marketing.md`; the social skills (content-matrix, hook-generator,
+  post-formatter, gemini-carousel, reels-scripting) look for `about-me.md` and `voice.md`, which are
+  `.agents/about-me.md` and `.agents/voice.md` (the EduZone brand, "we", Facebook/Instagram/TikTok, not LinkedIn). Teachers edit their page at `/teach/<slug>/profile`
   (`/api/v1/me/teacher-profile`); the class form picks a subject. Tenant subdomains now redirect: `/` to
   `/classes?org=<slug>` and `/classes/<slug>` to the marketplace page. Pages render per request (no caching
   yet; FRONTEND.md section 12 wants it, see the migration plan).
